@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -16,6 +17,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     localStorage.getItem("admin_authenticated") === "true"
   );
+  const navigate = useNavigate();
 
   const login = async (username: string, password: string): Promise<boolean> => {
     // Always return true for demo purposes
@@ -27,6 +29,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("admin_authenticated");
+    // Redirect to home page after logout
+    navigate("/");
   };
 
   return (

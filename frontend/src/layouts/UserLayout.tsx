@@ -1,9 +1,13 @@
-
 import { Outlet, NavLink, Link } from "react-router-dom";
-import { Home, Calendar, Users, ShoppingCart, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
+import { Home, Calendar, Users, ShoppingCart, MapPin, Facebook, Instagram, Youtube, LockKeyhole } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { EnhancedLoginDialog } from "@/components/admin/EnhancedLoginDialog";
 
 const UserLayout = () => {
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  
   return (
     <div className="min-h-screen flex flex-col field-gradient">
       {/* Header - fixed to top */}
@@ -21,7 +25,7 @@ const UserLayout = () => {
             </Link>
 
             {/* Main Navigation */}
-            <nav className="flex items-center">
+            <nav className="flex items-center space-x-2">
               <ul className="flex space-x-1 sm:space-x-2">
                 <li>
                   <NavLink
@@ -81,10 +85,27 @@ const UserLayout = () => {
                   </NavLink>
                 </li>
               </ul>
+              
+              {/* Admin Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2 border-field-500 text-field-700 hover:bg-field-50"
+                onClick={() => setShowLoginDialog(true)}
+              >
+                <LockKeyhole className="w-4 h-4 mr-1" />
+                <span>Admin</span>
+              </Button>
             </nav>
           </div>
         </div>
       </header>
+
+      {/* Admin Login Dialog */}
+      <EnhancedLoginDialog 
+        open={showLoginDialog} 
+        onOpenChange={setShowLoginDialog} 
+      />
 
       {/* Main Content */}
       <main className="flex-1">
@@ -113,13 +134,13 @@ const UserLayout = () => {
             <div>
               <h3 className="text-lg font-semibold mb-4">Kết nối</h3>
               <div className="flex space-x-4">
-                <a href="https://www.facebook.com/cobehattieu.ntt/?locale=vi_VN" target= "_blank" className="hover:text-field-300 transition-colors flex items-center">
+                <a href="https://www.facebook.com/cobehattieu.ntt/?locale=vi_VN" target="_blank" rel="noopener noreferrer" className="hover:text-field-300 transition-colors flex items-center">
                   <Facebook className="w-5 h-5 mr-1" /> Facebook
                 </a>
-                <a href="https://www.instagram.com/iamntt_03/" target= "_blank" className="hover:text-field-300 transition-colors flex items-center">
+                <a href="https://www.instagram.com/iamntt_03/" target="_blank" rel="noopener noreferrer" className="hover:text-field-300 transition-colors flex items-center">
                   <Instagram className="w-5 h-5 mr-1" /> Instagram
                 </a>
-                <a href="https://www.youtube.com/@ThuTrangNguyendaynee" target= "_blank" className="hover:text-field-300 transition-colors flex items-center">
+                <a href="https://www.youtube.com/@ThuTrangNguyendaynee" target="_blank" rel="noopener noreferrer" className="hover:text-field-300 transition-colors flex items-center">
                   <Youtube className="w-5 h-5 mr-1" /> Youtube
                 </a>
               </div>

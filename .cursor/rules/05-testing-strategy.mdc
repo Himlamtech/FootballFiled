@@ -1,0 +1,436 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Testing Strategy
+
+## Backend Testing
+
+### Unit Tests
+Unit tests should verify individual functions and methods in isolation from their dependencies.
+
+```
+backend/src/tests/unit/
+├── controllers/        # Tests for controllers
+├── services/           # Tests for service functions
+├── middleware/         # Tests for middleware functions
+└── utils/              # Tests for utility functions
+```
+
+#### Example Service Test
+```javascript
+// backend/src/tests/unit/services/field.service.test.js
+const { expect } = require('chai');
+const sinon = require('sinon');
+const fieldService = require('../../../services/field.service');
+const Field = require('../../../models/field.model');
+
+describe('Field Service', () => {
+  describe('getAllFields', () => {
+    it('should return all fields', async () => {
+      // Arrange
+      const mockFields = [
+        { id: 1, name: 'Field A', status: 'available' },
+        { id: 2, name: 'Field B', status: 'maintenance' }
+      ];
+      
+      const findAllStub = sinon.stub(Field, 'findAll').resolves(mockFields);
+      
+      // Act
+      const result = await fieldService.getAllFields();
+      
+      // Assert
+      expect(result).to.deep.equal(mockFields);
+      expect(findAllStub.calledOnce).to.be.true;
+      
+      // Cleanup
+      findAllStub.restore();
+    });
+    
+    it('should filter fields by status', async () => {
+      // Arrange
+      const mockFields = [
+        { id: 1, name: 'Field A', status: 'available' }
+      ];
+      
+      const findAllStub = sinon.stub(Field, 'findAll').resolves(mockFields);
+      
+      // Act
+      const result = await fieldService.getAllFields({ status: 'available' });
+      
+      // Assert
+      expect(result).to.deep.equal(mockFields);
+      expect(findAllStub.calledWith({
+        where: { status: 'available' }
+      })).to.be.true;
+      
+      // Cleanup
+      findAllStub.restore();
+    });
+  });
+});
+```
+
+### Integration Tests
+Integration tests should verify that different modules work together correctly, focusing on API endpoints.
+
+```
+backend/src/tests/integration/
+├── auth.routes.test.js     # Tests for auth endpoints
+├── booking.routes.test.js  # Tests for booking endpoints
+├── field.routes.test.js    # Tests for field endpoints
+├── product.routes.test.js  # Tests for product endpoints
+└── setup.js                # Test database setup
+```
+
+#### Example API Test
+```javascript
+// backend/src/tests/integration/field.routes.test.js
+const request = require('supertest');
+const { expect } = require('chai');
+const app = require('../../app');
+const db = require('../../models');
+const { generateToken } = require('../fixtures/auth');
+
+describe('Field API Endpoints', () => {
+  let adminToken;
+  let userToken;
+  
+  before(async () => {
+    // Setup test database
+    await db.sequelize.sync({ force: true });
+    
+    // Create test users and generate tokens
+    adminToken = await generateToken('admin');
+    userToken = await generateToken('user');
+    
+    // Seed test data
+    await db.Field.bulkCreate([
+      { name: 'Field A', location: 'Downtown', size: '5-a-side', hourlyRate: 50, status: 'available' },
+      { name: 'Field B', location: 'Uptown', size: '11-a-side', hourlyRate: 100, status: 'maintenance' }
+    ]);
+  });
+  
+  describe('GET /api/v1/fields', () => {
+    it('should return all fields', async () => {
+      const res = await request(app)
+        .get('/api/v1/fields')
+        .set('Authorization', `Bearer ${userToken}`);
+      
+      expect(res.status).to.equal(200);
+      expect(res.body.fields).to.be.an('array');
+      expect(res.body.fields).to.have.lengthOf(2);
+    });
+    
+    it('should filter fields by status', async () => {
+      const res = await request(app)
+        .get('/api/v1/fields?status=available')
+        .set('Authorization', `Bearer ${userToken}`);
+      
+      expect(res.status).to.equal(200);
+      expect(res.body.fields).to.be.an('array');
+      expect(res.body.fields).to.have.lengthOf(1);
+      expect(res.body.fields[0].status).to.equal('available');
+    });
+  });
+  
+  describe('POST /api/v1/fields', () => {
+    it('should create a new field when admin is authenticated', async () => {
+      const newField = {
+        name: 'Field C',
+        location: 'Eastside',
+        size: '7-a-side',
+        hourlyRate: 75,
+        status: 'available'
+      };
+      
+      const res = await request(app)
+        .post('/api/v1/fields')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(newField);
+      
+      expect(res.status).to.equal(201);
+      expect(res.body).to.have.property('id');
+      expect(res.body.name).to.equal(newField.name);
+    });
+    
+    it('should return 403 when non-admin tries to create a field', async () => {
+      const newField = {
+        name: 'Field D',
+        location: 'Westside',
+        size: '5-a-side',
+        hourlyRate: 60,
+        status: 'available'
+      };
+      
+      const res = await request(app)
+        .post('/api/v1/fields')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(newField);
+      
+      expect(res.status).to.equal(403);
+    });
+  });
+});
+```
+
+### Test Fixtures
+Reusable test data and helper functions should be stored in fixtures:
+
+```
+backend/src/tests/fixtures/
+├── users.js       # Test user data
+├── fields.js      # Test field data
+├── bookings.js    # Test booking data
+├── products.js    # Test product data
+└── auth.js        # Authentication helpers
+```
+
+## Frontend Testing
+
+### Unit Tests
+Test individual React components in isolation.
+
+```
+frontend/src/tests/
+├── components/      # Component tests
+├── hooks/           # Custom hook tests
+└── utils/           # Utility function tests
+```
+
+#### Example Component Test
+```typescript
+// frontend/src/tests/components/ui/Button.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Button } from '../../../components/ui/button';
+
+describe('Button Component', () => {
+  it('renders correctly', () => {
+    render(<Button>Click Me</Button>);
+    expect(screen.getByRole('button')).toHaveTextContent('Click Me');
+  });
+  
+  it('handles click events', () => {
+    const handleClick = jest.fn();
+    render(<Button onClick={handleClick}>Click Me</Button>);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+  
+  it('applies variant styles correctly', () => {
+    render(<Button variant="destructive">Delete</Button>);
+    expect(screen.getByRole('button')).toHaveClass('bg-destructive');
+  });
+});
+```
+
+### API Mock Tests
+Test React components that interact with API endpoints using mock responses.
+
+```typescript
+// frontend/src/tests/components/BookingForm.test.tsx
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { BookingForm } from '../../components/BookingForm';
+import bookingsApi from '../../lib/api/bookings.api';
+
+// Mock the API module
+jest.mock('../../lib/api/bookings.api');
+
+describe('BookingForm Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
+  it('submits booking data correctly', async () => {
+    // Setup mock implementation
+    (bookingsApi.create as jest.Mock).mockResolvedValue({ id: 1 });
+    
+    // Render component
+    render(<BookingForm fieldId={2} />);
+    
+    // Fill out form
+    fireEvent.change(screen.getByLabelText(/date/i), {
+      target: { value: '2023-09-10' }
+    });
+    
+    fireEvent.change(screen.getByLabelText(/start time/i), {
+      target: { value: '14:00' }
+    });
+    
+    fireEvent.change(screen.getByLabelText(/end time/i), {
+      target: { value: '16:00' }
+    });
+    
+    // Submit form
+    fireEvent.click(screen.getByRole('button', { name: /book now/i }));
+    
+    // Assert API was called with correct data
+    await waitFor(() => {
+      expect(bookingsApi.create).toHaveBeenCalledWith({
+        fieldId: 2,
+        bookingDate: '2023-09-10',
+        startTime: '14:00',
+        endTime: '16:00'
+      });
+    });
+    
+    // Assert success message is shown
+    await waitFor(() => {
+      expect(screen.getByText(/booking successful/i)).toBeInTheDocument();
+    });
+  });
+});
+```
+
+## End-to-End Tests
+End-to-end tests should verify that the entire application works correctly from the user's perspective.
+
+```
+e2e-tests/
+├── cypress/                 # Cypress test framework
+│   ├── integration/         # Test specs
+│   │   ├── auth.spec.js     # Authentication flows
+│   │   ├── booking.spec.js  # Booking flows
+│   │   └── admin.spec.js    # Admin panel flows
+│   ├── fixtures/            # Test data
+│   └── support/             # Helper functions
+└── cypress.json             # Cypress configuration
+```
+
+#### Example E2E Test
+```javascript
+// e2e-tests/cypress/integration/booking.spec.js
+describe('Booking Flow', () => {
+  beforeEach(() => {
+    // Login as a user
+    cy.login('user@example.com', 'password123');
+  });
+  
+  it('allows users to book a field', () => {
+    // Visit booking page
+    cy.visit('/booking');
+    
+    // Select a field
+    cy.get('.field-card').first().click();
+    
+    // Fill booking form
+    cy.get('input[name="date"]').type('2023-09-15');
+    cy.get('select[name="startTime"]').select('14:00');
+    cy.get('select[name="endTime"]').select('16:00');
+    
+    // Add a product
+    cy.get('input[type="checkbox"]').first().check();
+    
+    // Submit form
+    cy.get('button[type="submit"]').click();
+    
+    // Verify success message
+    cy.contains('Booking successful').should('be.visible');
+    
+    // Verify booking appears in my bookings list
+    cy.visit('/my-bookings');
+    cy.contains('2023-09-15').should('be.visible');
+    cy.contains('14:00 - 16:00').should('be.visible');
+  });
+});
+```
+
+## Automated Testing Workflow
+
+### Backend Test Script (backend/package.json)
+```json
+{
+  "scripts": {
+    "test": "mocha src/tests/**/*.test.js",
+    "test:unit": "mocha src/tests/unit/**/*.test.js",
+    "test:integration": "mocha src/tests/integration/**/*.test.js",
+    "test:coverage": "nyc --reporter=lcov --reporter=text-summary npm test"
+  }
+}
+```
+
+### Frontend Test Script (frontend/package.json)
+```json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  }
+}
+```
+
+### E2E Test Script (e2e-tests/package.json)
+```json
+{
+  "scripts": {
+    "test": "cypress run",
+    "test:open": "cypress open"
+  }
+}
+```
+
+### CI/CD Integration
+Set up continuous integration to run tests on every pull request:
+
+```yaml
+# .github/workflows/test.yml
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: cd backend && npm install
+      - name: Run tests
+        run: cd backend && npm test
+  
+  frontend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: cd frontend && npm install
+      - name: Run tests
+        run: cd frontend && npm test
+  
+  e2e-tests:
+    needs: [backend-tests, frontend-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: |
+          cd backend && npm install
+          cd ../frontend && npm install
+          cd ../e2e-tests && npm install
+      - name: Start servers
+        run: |
+          cd backend && npm start &
+          cd frontend && npm start &
+          sleep 10
+      - name: Run Cypress tests
+        run: cd e2e-tests && npm test
+```

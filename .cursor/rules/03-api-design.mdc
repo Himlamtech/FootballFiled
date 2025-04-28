@@ -69,6 +69,36 @@ All API endpoints are prefixed with `/api/v1`
   }
   ```
 
+## Admin Authentication Endpoints
+
+### POST /api/v1/admin/login
+- **Description**: Authenticate an admin user
+- **Request Body**:
+  ```json
+  {
+    "username": "admin",
+    "password": "admin_password123"
+  }
+  ```
+- **Response**: 200 OK
+  ```json
+  {
+    "success": true,
+    "message": "Admin login successful",
+    "isAuthenticated": true
+  }
+  ```
+
+### POST /api/v1/admin/logout
+- **Description**: Log out an admin user
+- **Response**: 200 OK
+  ```json
+  {
+    "success": true,
+    "message": "Admin logout successful"
+  }
+  ```
+
 ## Field Endpoints
 
 ### GET /api/v1/fields

@@ -1,6 +1,6 @@
 ---
-description:
-globs:
+description: 
+globs: 
 alwaysApply: false
 ---
 # Database Schema
@@ -83,8 +83,18 @@ alwaysApply: false
   - Has many Bookings (one-to-many)
 - Key fields:
   - email (unique)
+  - username (unique)
   - password (hashed)
   - role (enum: 'user', 'admin')
+
+### Admins
+- Primary key: id
+- No relationships with other tables
+- Key fields:
+  - username (unique)
+  - password (hashed)
+  - created_at
+  - updated_at
 
 ### Fields
 - Primary key: id
