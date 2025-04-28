@@ -1,66 +1,91 @@
-const dbConfig = require("../config/db.config.js");
-const Sequelize = require("sequelize");
-const logger = require("../utils/logger");
+const fs = require('fs');
+const path = require('path');
+const Sequelize = require('sequelize');
+const config = require('../config/config');
+const logger = require('../utils/logger');
 
-// Create Sequelize instance
-const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
-  host: dbConfig.HOST,
-  port: dbConfig.PORT,
-  dialect: dbConfig.dialect,
-  operatorsAliases: 0,
-  logging: dbConfig.logging ? msg => logger.debug(msg) : false,
-  pool: {
-    max: dbConfig.pool.max,
-    min: dbConfig.pool.min,
-    acquire: dbConfig.pool.acquire,
-    idle: dbConfig.pool.idle
-  }
-});
-
+const basename = path.basename(__filename);
 const db = {};
 
-db.Sequelize = Sequelize;
-db.sequelize = sequelize;
+// Create Sequelize instance
+const sequelize = new Sequelize(
+  config.db.database,
+  config.db.username,
+  config.db.password,
+  {
+    host: config.db.host,
+    port: config.db.port,
+    dialect: 'mysql',
+    logging: config.env === 'development' ? msg => logger.debug(msg) : false,
+    timezone: '+07:00',
+    define: {
+      timestamps: true,
+      underscored: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+      deletedAt: 'deleted_at',
+      paranoid: true
+    },
+    pool: {
+      max: config.db.pool.max,
+      min: config.db.pool.min,
+      acquire: config.db.pool.acquire,
+      idle: config.db.pool.idle
+    }
+  }
+);
 
 // Import models
-db.User = require("./user.model.js")(sequelize, Sequelize);
-db.Field = require("./field.model.js")(sequelize, Sequelize);
-db.Product = require("./product.model.js")(sequelize, Sequelize);
-db.Booking = require("./booking.model.js")(sequelize, Sequelize);
-db.Feedback = require("./feedback.model.js")(sequelize, Sequelize);
-db.Opponent = require("./opponent.model.js")(sequelize, Sequelize);
-db.BookingProduct = require("./booking-product.model.js")(sequelize, Sequelize);
+fs.readdirSync(__dirname)
+  .filter(file => {
+    return (
+      file.indexOf('.') !== 0 &&
+      file !== basename &&
+      file.slice(-3) === '.js'
+    );
+  })
+  .forEach(file => {
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
 
 // Define associations
+db.User.hasMany(db.Booking, { foreignKey: 'user_id', as: 'bookings' });
+db.Booking.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
 
-// User <-> Booking
-db.User.hasMany(db.Booking, { foreignKey: 'userId', as: 'bookings' });
-db.Booking.belongsTo(db.User, { foreignKey: 'userId', as: 'user' });
+db.Field.hasMany(db.Booking, { foreignKey: 'field_id', as: 'bookings' });
+db.Booking.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 
-// Field <-> Booking
-db.Field.hasMany(db.Booking, { foreignKey: 'fieldId', as: 'bookings' });
-db.Booking.belongsTo(db.Field, { foreignKey: 'fieldId', as: 'field' });
+db.Booking.hasOne(db.Feedback, { foreignKey: 'booking_id', as: 'feedback' });
+db.Feedback.belongsTo(db.Booking, { foreignKey: 'booking_id', as: 'booking' });
 
-// Booking <-> Feedback (one-to-one)
-db.Booking.hasOne(db.Feedback, { foreignKey: 'bookingId', as: 'feedback' });
-db.Feedback.belongsTo(db.Booking, { foreignKey: 'bookingId', as: 'booking' });
+db.User.hasMany(db.Feedback, { foreignKey: 'user_id', as: 'feedback' });
+db.Feedback.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
 
-// Booking <-> Opponent (one-to-one)
-db.Booking.hasOne(db.Opponent, { foreignKey: 'bookingId', as: 'opponent' });
-db.Opponent.belongsTo(db.Booking, { foreignKey: 'bookingId', as: 'booking' });
+db.Field.hasMany(db.Feedback, { foreignKey: 'field_id', as: 'feedback' });
+db.Feedback.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 
-// Booking <-> Product (many-to-many)
+db.Booking.hasOne(db.Opponent, { foreignKey: 'booking_id', as: 'opponent' });
+db.Opponent.belongsTo(db.Booking, { foreignKey: 'booking_id', as: 'booking' });
+
+db.User.hasMany(db.Opponent, { foreignKey: 'user_id', as: 'opponent_requests' });
+db.Opponent.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
+
 db.Booking.belongsToMany(db.Product, { 
   through: db.BookingProduct,
-  foreignKey: 'bookingId',
-  otherKey: 'productId',
+  foreignKey: 'booking_id',
+  otherKey: 'product_id',
   as: 'products'
 });
+
 db.Product.belongsToMany(db.Booking, {
   through: db.BookingProduct,
-  foreignKey: 'productId',
-  otherKey: 'bookingId',
+  foreignKey: 'product_id',
+  otherKey: 'booking_id',
   as: 'bookings'
 });
+
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 
 module.exports = db; 

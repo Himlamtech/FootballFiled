@@ -1,48 +1,76 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
-const routes = require('./routes');
-const errorMiddleware = require('./middleware/error.middleware');
+const path = require('path');
+const config = require('./config/config');
+const errorHandler = require('./middleware/error.middleware');
 const logger = require('./utils/logger');
+
+// Import routes
+const authRoutes = require('./routes/auth.routes');
+const fieldRoutes = require('./routes/field.routes');
+const bookingRoutes = require('./routes/booking.routes');
+const productRoutes = require('./routes/product.routes');
+const feedbackRoutes = require('./routes/feedback.routes');
+const opponentRoutes = require('./routes/opponent.routes');
 
 // Initialize express app
 const app = express();
 
-// Middleware
-app.use(helmet()); // Security headers
+// Set up request logging
+if (config.env !== 'test') {
+  app.use(
+    morgan('combined', {
+      stream: { write: (message) => logger.info(message.trim()) },
+      skip: (req) => req.path === '/health' || req.path === '/favicon.ico',
+    })
+  );
+}
+
+// Set up security, CORS, and other middleware
+app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:9001',
-  credentials: true
+  origin: config.corsOrigin,
+  credentials: true,
+  optionsSuccessStatus: 200,
 }));
-app.use(express.json()); // Parse JSON request body
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request body
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(compression());
 
-// Request logging
-app.use(morgan('combined', {
-  stream: { write: message => logger.info(message.trim()) }
-}));
+// Serve static files if in production
+if (config.env === 'production') {
+  app.use(express.static(path.join(__dirname, '../../frontend/build')));
+}
 
-// API Routes
-app.use('/api/v1', routes);
-
-// Root route
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Welcome to Football Field Management System API',
-    version: '1.0.0'
-  });
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'UP', timestamp: new Date() });
 });
 
-// Error handling middleware
-app.use(errorMiddleware);
+// Set up API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/fields', fieldRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/opponents', opponentRoutes);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
+// Serve frontend in production
+if (config.env === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/build/index.html'));
   });
+}
+
+// Error handling middleware (must be after routes)
+app.use(errorHandler);
+
+// Handle 404 errors
+app.use((req, res) => {
+  res.status(404).json({ error: 'Not Found', message: 'The requested resource was not found' });
 });
 
 module.exports = app; 
