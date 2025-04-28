@@ -20,37 +20,37 @@ const register = async (userData) => {
     if (existingEmail) {
       throw new ApiError(400, 'Email already in use');
     }
-    
-    // Check if username already exists
-    const existingUsername = await User.findOne({ where: { username: userData.username } });
-    if (existingUsername) {
-      throw new ApiError(400, 'Username already taken');
-    }
-    
+
+    // No need to check username as it's not in the model
+
     // Hash password
     const hashedPassword = await bcrypt.hash(userData.password, authConfig.SALT_ROUNDS);
-    
+
     // Create new user
     const user = await User.create({
+      name: userData.name || 'User',
       email: userData.email,
-      username: userData.username,
       password: hashedPassword,
-      role: userData.role || 'user'
+      phone: userData.phone,
+      role: userData.role || 'user',
+      avatar_url: userData.avatar_url
     });
-    
+
     // Generate tokens
     const accessToken = jwtUtils.generateAccessToken(user);
     const refreshToken = jwtUtils.generateRefreshToken(user);
-    
+
     // Return user data (without password) and tokens
     const userResponse = {
       id: user.id,
+      name: user.name,
       email: user.email,
-      username: user.username,
       role: user.role,
+      phone: user.phone,
+      avatar_url: user.avatar_url,
       createdAt: user.createdAt
     };
-    
+
     return {
       user: userResponse,
       accessToken,
@@ -75,25 +75,27 @@ const login = async (email, password) => {
     if (!user) {
       throw new ApiError(401, 'Invalid email or password');
     }
-    
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       throw new ApiError(401, 'Invalid email or password');
     }
-    
+
     // Generate tokens
     const accessToken = jwtUtils.generateAccessToken(user);
     const refreshToken = jwtUtils.generateRefreshToken(user);
-    
+
     // Return user data (without password) and tokens
     const userResponse = {
       id: user.id,
+      name: user.name,
       email: user.email,
-      username: user.username,
-      role: user.role
+      role: user.role,
+      phone: user.phone,
+      avatar_url: user.avatar_url
     };
-    
+
     return {
       user: userResponse,
       accessToken,
@@ -117,16 +119,16 @@ const refreshToken = async (refreshToken) => {
     if (!decoded) {
       throw new ApiError(401, 'Invalid refresh token');
     }
-    
+
     // Find user
     const user = await User.findByPk(decoded.id);
     if (!user) {
       throw new ApiError(401, 'User not found');
     }
-    
+
     // Generate new access token
     const accessToken = jwtUtils.generateAccessToken(user);
-    
+
     return { accessToken };
   } catch (error) {
     logger.error('Token refresh error:', error);
@@ -143,23 +145,23 @@ const refreshToken = async (refreshToken) => {
 const adminLogin = async (username, password) => {
   try {
     // Find admin user
-    const admin = await User.findOne({ 
-      where: { 
-        username,
+    const admin = await User.findOne({
+      where: {
+        email: username, // Using email as username
         role: 'admin'
-      } 
+      }
     });
-    
+
     if (!admin) {
       throw new ApiError(401, 'Invalid admin credentials');
     }
-    
+
     // Check password
     const isPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isPasswordValid) {
       throw new ApiError(401, 'Invalid admin credentials');
     }
-    
+
     // Return success response
     return {
       success: true,
@@ -177,4 +179,4 @@ module.exports = {
   login,
   refreshToken,
   adminLogin
-}; 
+};

@@ -6,3 +6,20 @@
 2025-04-28 16:07:20 error: Unable to connect to the database: SQLITE_ERROR: Cannot add a NOT NULL column with default value NULL
 2025-04-28 16:09:05 error: Error generating data: Validation error
 2025-04-28 16:12:03 error: Error seeding database: Validation error
+2025-04-28 16:25:29 error: Unable to connect to the database: Access denied for user 'root'@'localhost' (using password: NO)
+2025-04-28 16:28:47 error: Unable to connect to the database: Column 'user_id' cannot be NOT NULL: needed in a foreign key constraint 'opponents_ibfk_4' SET NULL
+2025-04-28 16:42:09 error: 401 - No token provided - /api/bookings - GET - ::1
+2025-04-28 16:42:09 error: Error: No token provided
+2025-04-28 16:42:22 error: Login error: Invalid email or password
+2025-04-28 16:42:22 error: 401 - Invalid email or password - /api/auth/login - POST - ::1
+2025-04-28 16:42:22 error: Error: Invalid email or password
+2025-04-28 16:45:33 error: Unable to connect to the database: Column 'user_id' cannot be NOT NULL: needed in a foreign key constraint 'opponents_ibfk_4' SET NULL
+2025-04-28 16:46:23 error: Unable to connect to the database: Column 'user_id' cannot be NOT NULL: needed in a foreign key constraint 'opponents_ibfk_4' SET NULL
+2025-04-28 16:48:36 error: Login error: Invalid email or password
+2025-04-28 16:48:36 error: 401 - Invalid email or password - /api/auth/login - POST - ::1
+2025-04-28 16:48:36 error: Error: Invalid email or password
+2025-04-28 16:49:10 error: 400 - Password must contain at least one uppercase letter, one lowercase letter, and one number - /api/auth/register - POST - ::1
+2025-04-28 16:49:10 error: Error: Password must contain at least one uppercase letter, one lowercase letter, and one number
+2025-04-28 16:50:33 error: Error getting rating for field 1: Column 'id' in field list is ambiguous
+2025-04-28 16:50:33 error: 500 - Database error occurred - /api/fields/1 - GET - ::1
+2025-04-28 16:50:33 error: Error: Database error occurred

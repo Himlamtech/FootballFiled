@@ -5,48 +5,65 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    bookingId: {
+    user_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true, // Changed to true to allow ON DELETE SET NULL
       references: {
-        model: 'Bookings',
+        model: 'users',
         key: 'id'
       }
     },
-    teamName: {
+    booking_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'bookings',
+        key: 'id'
+      }
+    },
+    team_name: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    contactEmail: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      validate: {
-        isEmail: true
-      }
+    player_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
-    contactPhone: {
+    contact_phone: {
       type: DataTypes.STRING,
-      allowNull: true
+      allowNull: false
     },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: true
+    preferred_date: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    preferred_time: {
+      type: DataTypes.TIME,
+      allowNull: false
     },
     status: {
-      type: DataTypes.ENUM('searching', 'matched', 'cancelled'),
-      defaultValue: 'searching'
+      type: DataTypes.ENUM('open', 'matched', 'completed', 'cancelled'),
+      defaultValue: 'open',
+      allowNull: false
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+    matched_opponent_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'opponents',
+        key: 'id'
+      }
     },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+    notes: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   }, {
-    timestamps: true
+    tableName: 'opponents',
+    underscored: true,
+    timestamps: true,
+    paranoid: true
   });
 
   return Opponent;
-}; 
+};

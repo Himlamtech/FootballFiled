@@ -67,3 +67,65 @@
 2025-04-28 16:15:57 info: Server running on port 5000 in development mode
 2025-04-28 16:15:57 info: Database connection established successfully
 2025-04-28 16:15:59 info: Database synced successfully
+2025-04-28 16:24:05 info: Server running on port 9002 in development mode
+2025-04-28 16:24:05 info: Database connection established successfully
+2025-04-28 16:24:06 info: Database synced successfully
+2025-04-28 16:25:29 info: Server running on port 9002 in development mode
+2025-04-28 16:25:29 error: Unable to connect to the database: Access denied for user 'root'@'localhost' (using password: NO)
+2025-04-28 16:28:45 info: Server running on port 9002 in development mode
+2025-04-28 16:28:45 info: Database connection established successfully
+2025-04-28 16:28:47 error: Unable to connect to the database: Column 'user_id' cannot be NOT NULL: needed in a foreign key constraint 'opponents_ibfk_4' SET NULL
+2025-04-28 16:40:10 info: Server running on port 9002 in development mode
+2025-04-28 16:40:10 info: Database connection established successfully
+2025-04-28 16:40:11 info: Database synced successfully
+2025-04-28 16:40:47 info: ::1 - - [28/Apr/2025:09:40:47 +0000] "GET /api HTTP/1.1" 404 1482 "-" "curl/8.5.0"
+2025-04-28 16:41:17 info: ::1 - - [28/Apr/2025:09:41:17 +0000] "GET / HTTP/1.1" 404 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 16:41:42 info: ::1 - - [28/Apr/2025:09:41:42 +0000] "GET /api/fields HTTP/1.1" 200 1851 "-" "curl/8.5.0"
+2025-04-28 16:41:57 info: ::1 - - [28/Apr/2025:09:41:57 +0000] "GET /api/products HTTP/1.1" 200 3363 "-" "curl/8.5.0"
+2025-04-28 16:42:09 error: 401 - No token provided - /api/bookings - GET - ::1
+2025-04-28 16:42:09 error: Error: No token provided
+2025-04-28 16:42:09 info: ::1 - - [28/Apr/2025:09:42:09 +0000] "GET /api/bookings HTTP/1.1" 401 1289 "-" "curl/8.5.0"
+2025-04-28 16:42:14 info: ::1 - - [28/Apr/2025:09:42:14 +0000] "GET / HTTP/1.1" 404 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 16:42:19 info: ::1 - - [28/Apr/2025:09:42:19 +0000] "GET /docs HTTP/1.1" 404 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 16:42:22 error: Login error: Invalid email or password
+2025-04-28 16:42:22 error: 401 - Invalid email or password - /api/auth/login - POST - ::1
+2025-04-28 16:42:22 error: Error: Invalid email or password
+2025-04-28 16:42:22 info: ::1 - - [28/Apr/2025:09:42:22 +0000] "POST /api/auth/login HTTP/1.1" 401 317 "-" "curl/8.5.0"
+2025-04-28 16:43:33 info: Server running on port 9002 in development mode
+2025-04-28 16:43:33 info: Database connection established successfully
+2025-04-28 16:43:35 info: Database synced successfully
+2025-04-28 16:43:52 info: Server running on port 9002 in development mode
+2025-04-28 16:43:52 info: Database connection established successfully
+2025-04-28 16:43:53 info: Database synced successfully
+2025-04-28 16:44:12 info: Server running on port 9002 in development mode
+2025-04-28 16:44:12 info: Database connection established successfully
+2025-04-28 16:44:13 info: Database synced successfully
+2025-04-28 16:44:30 info: Server running on port 9002 in development mode
+2025-04-28 16:44:30 info: Database connection established successfully
+2025-04-28 16:44:31 info: Database synced successfully
+2025-04-28 16:44:48 info: Server running on port 9002 in development mode
+2025-04-28 16:44:48 info: Database connection established successfully
+2025-04-28 16:44:49 info: Database synced successfully
+2025-04-28 16:45:30 info: Server running on port 9002 in development mode
+2025-04-28 16:45:30 info: Database connection established successfully
+2025-04-28 16:45:33 error: Unable to connect to the database: Column 'user_id' cannot be NOT NULL: needed in a foreign key constraint 'opponents_ibfk_4' SET NULL
+2025-04-28 16:46:21 info: Server running on port 9002 in development mode
+2025-04-28 16:46:21 info: Database connection established successfully
+2025-04-28 16:46:23 error: Unable to connect to the database: Column 'user_id' cannot be NOT NULL: needed in a foreign key constraint 'opponents_ibfk_4' SET NULL
+2025-04-28 16:48:02 info: Server running on port 9002 in development mode
+2025-04-28 16:48:02 info: Database connection established successfully
+2025-04-28 16:48:05 info: Database synced successfully
+2025-04-28 16:48:36 error: Login error: Invalid email or password
+2025-04-28 16:48:36 error: 401 - Invalid email or password - /api/auth/login - POST - ::1
+2025-04-28 16:48:36 error: Error: Invalid email or password
+2025-04-28 16:48:36 info: ::1 - - [28/Apr/2025:09:48:36 +0000] "POST /api/auth/login HTTP/1.1" 401 317 "-" "curl/8.5.0"
+2025-04-28 16:49:10 error: 400 - Password must contain at least one uppercase letter, one lowercase letter, and one number - /api/auth/register - POST - ::1
+2025-04-28 16:49:10 error: Error: Password must contain at least one uppercase letter, one lowercase letter, and one number
+2025-04-28 16:49:10 info: ::1 - - [28/Apr/2025:09:49:10 +0000] "POST /api/auth/register HTTP/1.1" 400 812 "-" "curl/8.5.0"
+2025-04-28 16:49:23 info: ::1 - - [28/Apr/2025:09:49:23 +0000] "POST /api/auth/register HTTP/1.1" 201 456 "-" "curl/8.5.0"
+2025-04-28 16:49:45 info: ::1 - - [28/Apr/2025:09:49:45 +0000] "POST /api/auth/login HTTP/1.1" 200 487 "-" "curl/8.5.0"
+2025-04-28 16:50:18 info: ::1 - - [28/Apr/2025:09:50:18 +0000] "GET /api/fields HTTP/1.1" 200 1851 "-" "curl/8.5.0"
+2025-04-28 16:50:33 error: Error getting rating for field 1: Column 'id' in field list is ambiguous
+2025-04-28 16:50:33 error: 500 - Database error occurred - /api/fields/1 - GET - ::1
+2025-04-28 16:50:33 error: Error: Database error occurred
+2025-04-28 16:50:33 info: ::1 - - [28/Apr/2025:09:50:33 +0000] "GET /api/fields/1 HTTP/1.1" 500 1249 "-" "curl/8.5.0"

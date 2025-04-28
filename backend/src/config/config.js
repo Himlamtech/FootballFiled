@@ -41,8 +41,9 @@ const mysqlConfig = {
   }
 };
 
-// Use SQLite for development, MySQL for production
-const dbConfig = env === 'development' ? sqliteConfig : mysqlConfig;
+// Use MySQL for both development and production
+// const dbConfig = env === 'development' ? sqliteConfig : mysqlConfig;
+const dbConfig = process.env.DB_DIALECT === 'sqlite' ? sqliteConfig : mysqlConfig;
 
 const config = {
   env,
@@ -53,14 +54,14 @@ const config = {
   jwtAccessExpiration: process.env.JWT_ACCESS_EXPIRATION || '1h',
   jwtRefreshExpiration: process.env.JWT_REFRESH_EXPIRATION || '7d',
   jwtResetPasswordExpiration: process.env.JWT_RESET_PASSWORD_EXPIRATION || '10m',
-  
+
   db: dbConfig,
-  
+
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     format: process.env.LOG_FORMAT || 'combined'
   },
-  
+
   upload: {
     // Directory for file uploads, relative to project root
     directory: process.env.UPLOAD_DIR || 'uploads',
@@ -71,4 +72,4 @@ const config = {
   }
 };
 
-module.exports = config; 
+module.exports = config;
