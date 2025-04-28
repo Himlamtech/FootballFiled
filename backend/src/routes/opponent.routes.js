@@ -7,7 +7,8 @@ const {
   paginationValidation,
   bookingIdValidation,
   matchValidation
-} = require('../middleware/validation.middleware');
+} = require('../middleware/validation/opponent.validation');
+const { Opponent } = require('../models');
 
 const router = express.Router();
 
@@ -22,8 +23,8 @@ router.get('/available', opponentController.findAvailableOpponents);
 
 // Routes for creating and managing opponent requests
 router.post('/', opponentValidation, opponentController.createOpponent);
-router.put('/:id', idParamValidation, opponentValidation, opponentController.updateOpponent);
-router.delete('/:id', idParamValidation, opponentController.deleteOpponent);
+router.put('/:id', idParamValidation, isOwnerOrAdmin(Opponent), opponentValidation, opponentController.updateOpponent);
+router.delete('/:id', idParamValidation, isOwnerOrAdmin(Opponent), opponentController.deleteOpponent);
 
 // Route for matching opponents
 router.post('/match', matchValidation, opponentController.matchOpponents);

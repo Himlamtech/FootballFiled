@@ -2,3 +2,4 @@
 2025-04-28 14:59:10 error: Access denied for user 'root'@'localhost' (using password: NO)
 2025-04-28 15:01:47 error: Error generating data: notNull Violation: User.username cannot be null
 2025-04-28 15:13:28 error: Error generating data: Access denied for user 'root'@'localhost' (using password: NO)
+2025-04-28 15:31:21 error: Invalid choice. Please run the script again and select 1 or 2.

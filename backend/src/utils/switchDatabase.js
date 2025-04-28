@@ -9,6 +9,7 @@ const path = require('path');
 const readline = require('readline');
 const dotenv = require('dotenv');
 const logger = require('./logger');
+const { execSync } = require('child_process');
 
 // Path to .env file
 const envPath = path.join(__dirname, '../../.env');
@@ -145,8 +146,45 @@ function saveEnvFile(envVars) {
   }
 }
 
+// Execute npm script
+function runNpmScript(script) {
+  try {
+    logger.info(`Running npm script: ${script}`);
+    execSync(`npm run ${script}`, { stdio: 'inherit' });
+    logger.info(`Successfully completed: ${script}`);
+    return true;
+  } catch (error) {
+    logger.error(`Error running npm script ${script}:`, error.message);
+    return false;
+  }
+}
+
+// Setup SQLite database
+async function setupSQLiteDatabase() {
+  try {
+    await executeCommand('npm run setup-sqlite');
+    logger.info('SQLite database setup completed successfully');
+    return true;
+  } catch (error) {
+    logger.error('Error setting up SQLite database:', error);
+    throw error;
+  }
+}
+
+// Setup MySQL database
+async function setupMySQLDatabase() {
+  try {
+    await executeCommand('npm run setup-mysql-db');
+    logger.info('MySQL database setup completed successfully');
+    return true;
+  } catch (error) {
+    logger.error('Error setting up MySQL database:', error);
+    throw error;
+  }
+}
+
 // Switch to SQLite configuration
-function switchToSQLite() {
+function switchToSQLite(shouldSetupDb = false) {
   const env = loadEnvFile();
   
   // Update environment variables for SQLite
@@ -168,18 +206,22 @@ function switchToSQLite() {
   
   saveEnvFile(updatedEnv);
   logger.info('Switched to SQLite configuration');
+  
+  if (shouldSetupDb) {
+    setupSQLiteDatabase();
+  }
 }
 
 // Switch to MySQL configuration
-function switchToMySQL() {
+function switchToMySQL(options = {}, shouldSetupDb = false) {
   const env = loadEnvFile();
   
   // Get MySQL configuration from user if not already set
-  let dbHost = env.DB_HOST || 'localhost';
-  let dbPort = env.DB_PORT || '3306';
-  let dbUsername = env.DB_USERNAME || 'root';
-  let dbPassword = env.DB_PASSWORD || '';
-  let dbName = env.DB_DATABASE || 'football_field_db';
+  const dbHost = options.host || env.DB_HOST || 'localhost';
+  const dbPort = options.port || env.DB_PORT || '3306';
+  const dbUsername = options.username || env.DB_USERNAME || 'root';
+  const dbPassword = options.password || env.DB_PASSWORD || '';
+  const dbName = options.database || env.DB_DATABASE || 'football_field_db';
   
   // Update environment variables for MySQL
   const updatedEnv = {
@@ -200,6 +242,10 @@ function switchToMySQL() {
   
   saveEnvFile(updatedEnv);
   logger.info('Switched to MySQL configuration');
+  
+  if (shouldSetupDb) {
+    setupMySQLDatabase();
+  }
 }
 
 // Interactive CLI for database switching
@@ -209,16 +255,35 @@ function promptDatabaseChoice() {
     output: process.stdout
   });
 
-  rl.question('Choose database (1 for SQLite, 2 for MySQL): ', (answer) => {
+  console.log('\n=== Database Configuration Utility ===\n');
+  console.log('This utility will help you configure and set up the database for the Football Field Management System.');
+  console.log('You can choose between SQLite (for development) and MySQL (for production or more robust development).\n');
+
+  rl.question('Choose database type:\n1. SQLite (recommended for development)\n2. MySQL\n\nEnter your choice (1 or 2): ', async (answer) => {
     if (answer === '1') {
+      // Switch to SQLite
       switchToSQLite();
-      rl.question('Do you want to generate sample data for SQLite? (y/n): ', (generateData) => {
+      
+      rl.question('\nDo you want to generate sample data for SQLite? (y/n): ', async (generateData) => {
         if (generateData.toLowerCase() === 'y') {
-          logger.info('Please run "npm run setup-sqlite" to generate sample data');
+          console.log('\nGenerating sample data for SQLite...');
+          try {
+            await setupSQLiteDatabase();
+            console.log('\n✅ SQLite database setup completed successfully!');
+            console.log('You can now run the application with: npm run dev');
+          } catch (error) {
+            console.error('\n❌ Error setting up SQLite database');
+          }
+        } else {
+          console.log('\n✅ SQLite configuration saved. To generate sample data later, run:');
+          console.log('npm run setup-sqlite');
         }
         rl.close();
+        process.exit(0);
       });
     } else if (answer === '2') {
+      console.log('\n=== MySQL Configuration ===\n');
+      
       rl.question('Enter MySQL host (default: localhost): ', (host) => {
         const dbHost = host || 'localhost';
         
@@ -234,32 +299,28 @@ function promptDatabaseChoice() {
               rl.question('Enter MySQL database name (default: football_field_db): ', (dbName) => {
                 const dbDatabase = dbName || 'football_field_db';
                 
-                // Update env variables for MySQL
-                const env = loadEnvFile();
-                const updatedEnv = {
-                  ...env,
-                  NODE_ENV: 'development',
-                  DB_DIALECT: 'mysql',
-                  DB_HOST: dbHost,
-                  DB_PORT: dbPort,
-                  DB_USERNAME: dbUsername,
-                  DB_PASSWORD: dbPassword,
-                  DB_DATABASE: dbDatabase,
-                  DB_SYNC: 'true',
-                  DB_SYNC_ALTER: 'true'
-                };
+                // Switch to MySQL with the provided configuration
+                switchToMySQL(dbHost, dbPort, dbUsername, dbPassword, dbDatabase);
                 
-                // Remove SQLite specific variables
-                delete updatedEnv.DB_STORAGE;
-                
-                saveEnvFile(updatedEnv);
-                logger.info('Switched to MySQL configuration');
-                
-                rl.question('Do you want to setup MySQL database and generate sample data? (y/n): ', (setupDb) => {
+                rl.question('\nDo you want to setup MySQL database and generate sample data? (y/n): ', async (setupDb) => {
                   if (setupDb.toLowerCase() === 'y') {
-                    logger.info('Please run "npm run setup-mysql-db" to create database and generate sample data');
+                    console.log('\nSetting up MySQL database and generating sample data...');
+                    try {
+                      await setupMySQLDatabase();
+                      console.log('\n✅ MySQL database setup completed successfully!');
+                      console.log('You can now run the application with: npm run dev');
+                    } catch (error) {
+                      console.error('\n❌ Error setting up MySQL database');
+                      console.log('Make sure MySQL is running and the credentials are correct.');
+                      console.log('You can try setting up the database manually by running:');
+                      console.log('npm run setup-mysql-db');
+                    }
+                  } else {
+                    console.log('\n✅ MySQL configuration saved. To set up the database later, run:');
+                    console.log('npm run setup-mysql-db');
                   }
                   rl.close();
+                  process.exit(0);
                 });
               });
             });
@@ -267,8 +328,9 @@ function promptDatabaseChoice() {
         });
       });
     } else {
-      logger.error('Invalid choice. Please run the script again and select 1 or 2.');
+      console.error('\n❌ Invalid choice. Please run the script again and select 1 or 2.');
       rl.close();
+      process.exit(1);
     }
   });
 }
@@ -276,11 +338,30 @@ function promptDatabaseChoice() {
 // Execute based on command line arguments
 if (require.main === module) {
   const arg = process.argv[2];
+  const shouldSetupDb = process.argv.includes('--setup');
   
   if (arg === 'sqlite') {
-    switchToSQLite();
+    switchToSQLite(shouldSetupDb);
+    if (!shouldSetupDb) {
+      console.log("\nTo generate sample data, run:");
+      console.log("npm run setup-sqlite");
+    }
   } else if (arg === 'mysql') {
-    switchToMySQL();
+    // Check for MySQL options
+    const options = {};
+    process.argv.forEach(arg => {
+      if (arg.startsWith('--host=')) options.host = arg.split('=')[1];
+      if (arg.startsWith('--port=')) options.port = arg.split('=')[1];
+      if (arg.startsWith('--username=')) options.username = arg.split('=')[1];
+      if (arg.startsWith('--password=')) options.password = arg.split('=')[1];
+      if (arg.startsWith('--database=')) options.database = arg.split('=')[1];
+    });
+    
+    switchToMySQL(options, shouldSetupDb);
+    if (!shouldSetupDb) {
+      console.log("\nTo set up the MySQL database, run:");
+      console.log("npm run setup-mysql-db");
+    }
   } else {
     promptDatabaseChoice();
   }
@@ -288,5 +369,7 @@ if (require.main === module) {
 
 module.exports = {
   switchToSQLite,
-  switchToMySQL
+  switchToMySQL,
+  setupSQLiteDatabase,
+  setupMySQLDatabase
 }; 

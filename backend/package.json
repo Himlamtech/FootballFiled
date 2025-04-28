@@ -19,7 +19,9 @@
     "setup-mysql-db": "node src/utils/setupMySQLDatabase.js",
     "switch-db": "node src/utils/switchDatabase.js",
     "switch-db:sqlite": "node src/utils/switchDatabase.js sqlite",
-    "switch-db:mysql": "node src/utils/switchDatabase.js mysql"
+    "switch-db:mysql": "node src/utils/switchDatabase.js mysql",
+    "db:sqlite": "node src/utils/switchDatabase.js sqlite --setup",
+    "db:mysql": "node src/utils/switchDatabase.js mysql --setup"
   },
   "keywords": [
     "football",

@@ -6,7 +6,7 @@ This repository contains the backend code for the Football Field Management Syst
 
 - Node.js 14+
 - npm
-- Either SQLite or MySQL database
+- Either SQLite (for development) or MySQL (for production)
 
 ## Setup
 
@@ -17,78 +17,58 @@ This repository contains the backend code for the Football Field Management Syst
 npm install
 ```
 
-3. Create a `.env` file in the root directory of the backend folder with the following content:
-
-```
-NODE_ENV=development
-PORT=5000
-JWT_SECRET=your_jwt_secret_key
-JWT_ACCESS_EXPIRATION=1h
-JWT_REFRESH_EXPIRATION=7d
-```
-
-## Database Configuration
+## Database Configuration and Setup
 
 The application supports both SQLite (for development) and MySQL (for production or more robust development).
 
-### Using the Database Switcher
+### Using the Database Setup Utility
 
-We've provided a utility to easily switch between database types:
+The easiest way to set up the database is to use our interactive utility:
 
 ```bash
-# Interactive mode - will prompt for database type and settings
+# Interactive mode
 npm run switch-db
+```
 
-# Directly switch to SQLite
+This will prompt you to:
+1. Choose between SQLite and MySQL
+2. Configure database connection details (for MySQL)
+3. Generate sample data
+
+### Quick Setup Commands
+
+For faster setup, you can use these one-command shortcuts:
+
+```bash
+# Switch to SQLite and generate sample data
+npm run db:sqlite
+
+# Switch to MySQL and set up database
+npm run db:mysql
+```
+
+### Manual Database Configuration
+
+If you prefer to configure manually:
+
+#### Step 1: Switch Database Type
+
+```bash
+# Switch to SQLite
 npm run switch-db:sqlite
 
-# Directly switch to MySQL
+# Switch to MySQL
 npm run switch-db:mysql
 ```
 
-### Manual Configuration
+#### Step 2: Generate Sample Data
 
-If you prefer to configure manually, add these to your `.env` file:
-
-#### For SQLite:
-```
-NODE_ENV=development
-DB_DIALECT=sqlite
-DB_STORAGE=data/football_field_db.sqlite
-DB_SYNC=true
-DB_SYNC_ALTER=true
-```
-
-#### For MySQL:
-```
-NODE_ENV=development
-DB_DIALECT=mysql
-DB_HOST=localhost
-DB_PORT=3306
-DB_USERNAME=root
-DB_PASSWORD=your_password
-DB_DATABASE=football_field_db
-DB_SYNC=true
-DB_SYNC_ALTER=true
-```
-
-## Database Setup and Sample Data
-
-After configuring your database, you can set up the tables and generate sample data:
-
-### For SQLite:
 ```bash
-# Generate SQLite database and sample data
+# For SQLite
 npm run setup-sqlite
-```
 
-### For MySQL:
-```bash
-# Create MySQL database, tables, and generate sample data
+# For MySQL
 npm run setup-mysql-db
-
-# If you already have the database and just want to generate sample data:
-npm run setup-mysql
 ```
 
 ## Running the Application
@@ -138,24 +118,28 @@ backend/
 └── README.md           # This file
 ```
 
-## Testing
+## Available Scripts
 
-```bash
-# Run tests in watch mode
-npm test
-
-# Run tests for CI environment
-npm run test:ci
 ```
+# Application
+npm start               # Start the server in production mode
+npm run dev             # Start the server in development mode with hot-reloading
 
-## Linting
+# Database Management
+npm run switch-db       # Interactive database configuration utility
+npm run db:sqlite       # Switch to SQLite and generate sample data
+npm run db:mysql        # Switch to MySQL and set up database
+npm run switch-db:sqlite # Switch to SQLite without generating data
+npm run switch-db:mysql  # Switch to MySQL without generating data
+npm run setup-sqlite    # Generate sample data for SQLite
+npm run setup-mysql     # Generate sample data for MySQL
+npm run setup-mysql-db  # Create MySQL database and generate sample data
 
-```bash
-# Check code style
-npm run lint
-
-# Fix code style issues
-npm run lint:fix
+# Development Tools
+npm test                # Run tests in watch mode
+npm run test:ci         # Run tests in CI mode
+npm run lint            # Check code style
+npm run lint:fix        # Fix code style issues
 ```
 
 ## License

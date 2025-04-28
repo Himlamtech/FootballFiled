@@ -22,3 +22,8 @@
 2025-04-28 15:28:49 info: Switched to SQLite configuration
 2025-04-28 15:29:05 info: .env file updated successfully
 2025-04-28 15:29:05 info: Switched to MySQL configuration
+2025-04-28 15:31:04 info: .env file updated successfully
+2025-04-28 15:31:04 info: Switched to SQLite configuration
+2025-04-28 15:31:04 info: Running npm script: setup-sqlite
+2025-04-28 15:31:06 info: Successfully completed: setup-sqlite
+2025-04-28 15:31:21 error: Invalid choice. Please run the script again and select 1 or 2.
