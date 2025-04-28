@@ -1,0 +1,482 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# API Design
+
+## Base URL
+All API endpoints are prefixed with `/api/v1`
+
+## Authentication Endpoints
+
+### POST /api/v1/auth/register
+- **Description**: Register a new user
+- **Request Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123",
+    "username": "username"
+  }
+  ```
+- **Response**: 201 Created
+  ```json
+  {
+    "id": 1,
+    "email": "user@example.com",
+    "username": "username",
+    "role": "user",
+    "createdAt": "2023-08-15T12:00:00Z"
+  }
+  ```
+
+### POST /api/v1/auth/login
+- **Description**: Authenticate a user
+- **Request Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123"
+  }
+  ```
+- **Response**: 200 OK
+  ```json
+  {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "username": "username",
+      "role": "user"
+    }
+  }
+  ```
+
+### POST /api/v1/auth/refresh
+- **Description**: Refresh access token
+- **Request Body**:
+  ```json
+  {
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+  ```
+- **Response**: 200 OK
+  ```json
+  {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+  ```
+
+## Field Endpoints
+
+### GET /api/v1/fields
+- **Description**: Get all fields (with optional filters)
+- **Query Parameters**:
+  - `status` - Filter by status (available, maintenance, booked)
+  - `size` - Filter by field size
+  - `page` - Pagination page number
+  - `limit` - Results per page
+- **Response**: 200 OK
+  ```json
+  {
+    "totalItems": 10,
+    "totalPages": 2,
+    "currentPage": 1,
+    "fields": [
+      {
+        "id": 1,
+        "name": "Field A",
+        "location": "Downtown",
+        "size": "5-a-side",
+        "hourlyRate": 50.00,
+        "status": "available",
+        "imageUrl": "https://example.com/field-a.jpg"
+      }
+    ]
+  }
+  ```
+
+### GET /api/v1/fields/:id
+- **Description**: Get field by ID
+- **Response**: 200 OK
+  ```json
+  {
+    "id": 1,
+    "name": "Field A",
+    "location": "Downtown",
+    "size": "5-a-side",
+    "hourlyRate": 50.00,
+    "status": "available",
+    "imageUrl": "https://example.com/field-a.jpg",
+    "createdAt": "2023-08-15T12:00:00Z",
+    "updatedAt": "2023-08-15T12:00:00Z"
+  }
+  ```
+
+### POST /api/v1/fields
+- **Description**: Create a new field (admin only)
+- **Request Body**:
+  ```json
+  {
+    "name": "Field A",
+    "location": "Downtown",
+    "size": "5-a-side",
+    "hourlyRate": 50.00,
+    "imageUrl": "https://example.com/field-a.jpg"
+  }
+  ```
+- **Response**: 201 Created
+
+### PUT /api/v1/fields/:id
+- **Description**: Update a field (admin only)
+- **Request Body**:
+  ```json
+  {
+    "status": "maintenance",
+    "hourlyRate": 55.00
+  }
+  ```
+- **Response**: 200 OK
+
+### DELETE /api/v1/fields/:id
+- **Description**: Delete a field (admin only)
+- **Response**: 204 No Content
+
+## Booking Endpoints
+
+### GET /api/v1/bookings
+- **Description**: Get all bookings (filtered by user for regular users, all for admins)
+- **Query Parameters**:
+  - `userId` - Filter by user ID (admin only)
+  - `fieldId` - Filter by field ID
+  - `status` - Filter by booking status
+  - `date` - Filter by date
+  - `page` - Pagination page number
+  - `limit` - Results per page
+- **Response**: 200 OK
+  ```json
+  {
+    "totalItems": 25,
+    "totalPages": 3,
+    "currentPage": 1,
+    "bookings": [
+      {
+        "id": 1,
+        "userId": 1,
+        "fieldId": 2,
+        "bookingDate": "2023-08-20",
+        "startTime": "14:00:00",
+        "endTime": "16:00:00",
+        "status": "confirmed",
+        "totalPrice": 100.00,
+        "paymentStatus": "paid",
+        "user": {
+          "id": 1,
+          "username": "username"
+        },
+        "field": {
+          "id": 2,
+          "name": "Field B"
+        }
+      }
+    ]
+  }
+  ```
+
+### GET /api/v1/bookings/:id
+- **Description**: Get booking by ID
+- **Response**: 200 OK
+  ```json
+  {
+    "id": 1,
+    "userId": 1,
+    "fieldId": 2,
+    "bookingDate": "2023-08-20",
+    "startTime": "14:00:00",
+    "endTime": "16:00:00",
+    "status": "confirmed",
+    "totalPrice": 100.00,
+    "paymentStatus": "paid",
+    "paymentMethod": "credit_card",
+    "user": {
+      "id": 1,
+      "username": "username",
+      "email": "user@example.com"
+    },
+    "field": {
+      "id": 2,
+      "name": "Field B",
+      "location": "Uptown",
+      "hourlyRate": 50.00
+    },
+    "products": [
+      {
+        "id": 1,
+        "name": "Ball Rental",
+        "price": 10.00
+      }
+    ]
+  }
+  ```
+
+### POST /api/v1/bookings
+- **Description**: Create a new booking
+- **Request Body**:
+  ```json
+  {
+    "fieldId": 2,
+    "bookingDate": "2023-08-20",
+    "startTime": "14:00:00",
+    "endTime": "16:00:00",
+    "productIds": [1, 3]
+  }
+  ```
+- **Response**: 201 Created
+
+### PUT /api/v1/bookings/:id
+- **Description**: Update a booking
+- **Request Body**:
+  ```json
+  {
+    "status": "cancelled"
+  }
+  ```
+- **Response**: 200 OK
+
+### DELETE /api/v1/bookings/:id
+- **Description**: Delete a booking
+- **Response**: 204 No Content
+
+## Products Endpoints
+
+### GET /api/v1/products
+- **Description**: Get all products
+- **Query Parameters**:
+  - `category` - Filter by category
+  - `page` - Pagination page number
+  - `limit` - Results per page
+- **Response**: 200 OK
+  ```json
+  {
+    "totalItems": 15,
+    "totalPages": 2,
+    "currentPage": 1,
+    "products": [
+      {
+        "id": 1,
+        "name": "Ball Rental",
+        "description": "Official size soccer ball",
+        "price": 10.00,
+        "category": "equipment",
+        "imageUrl": "https://example.com/ball.jpg"
+      }
+    ]
+  }
+  ```
+
+### GET /api/v1/products/:id
+- **Description**: Get product by ID
+- **Response**: 200 OK
+
+### POST /api/v1/products
+- **Description**: Create a new product (admin only)
+- **Request Body**:
+  ```json
+  {
+    "name": "Water Bottles",
+    "description": "Pack of 6 water bottles",
+    "price": 12.00,
+    "category": "refreshment",
+    "imageUrl": "https://example.com/water.jpg"
+  }
+  ```
+- **Response**: 201 Created
+
+### PUT /api/v1/products/:id
+- **Description**: Update a product (admin only)
+- **Request Body**:
+  ```json
+  {
+    "price": 14.00
+  }
+  ```
+- **Response**: 200 OK
+
+### DELETE /api/v1/products/:id
+- **Description**: Delete a product (admin only)
+- **Response**: 204 No Content
+
+## Feedback Endpoints
+
+### GET /api/v1/feedback
+- **Description**: Get all feedback (admin only)
+- **Query Parameters**:
+  - `bookingId` - Filter by booking ID
+  - `rating` - Filter by rating
+  - `page` - Pagination page number
+  - `limit` - Results per page
+- **Response**: 200 OK
+  ```json
+  {
+    "totalItems": 30,
+    "totalPages": 3,
+    "currentPage": 1,
+    "feedback": [
+      {
+        "id": 1,
+        "bookingId": 5,
+        "rating": 5,
+        "comment": "Great experience!",
+        "booking": {
+          "id": 5,
+          "fieldId": 3,
+          "field": {
+            "name": "Field C"
+          }
+        }
+      }
+    ]
+  }
+  ```
+
+### POST /api/v1/feedback
+- **Description**: Submit feedback for a booking
+- **Request Body**:
+  ```json
+  {
+    "bookingId": 5,
+    "rating": 5,
+    "comment": "Great experience!"
+  }
+  ```
+- **Response**: 201 Created
+
+### GET /api/v1/feedback/:id
+- **Description**: Get feedback by ID
+- **Response**: 200 OK
+
+### PUT /api/v1/feedback/:id
+- **Description**: Update feedback
+- **Response**: 200 OK
+
+### DELETE /api/v1/feedback/:id
+- **Description**: Delete feedback (admin only)
+- **Response**: 204 No Content
+
+## Opponents Endpoints
+
+### GET /api/v1/opponents
+- **Description**: Get all opponent requests
+- **Query Parameters**:
+  - `status` - Filter by status (searching, matched, cancelled)
+  - `page` - Pagination page number
+  - `limit` - Results per page
+- **Response**: 200 OK
+  ```json
+  {
+    "totalItems": 8,
+    "totalPages": 1,
+    "currentPage": 1,
+    "opponents": [
+      {
+        "id": 1,
+        "bookingId": 10,
+        "teamName": "The Champions",
+        "contactEmail": "team@example.com",
+        "contactPhone": "123-456-7890",
+        "description": "Looking for a friendly match",
+        "status": "searching",
+        "booking": {
+          "bookingDate": "2023-08-25",
+          "startTime": "18:00:00",
+          "endTime": "20:00:00",
+          "field": {
+            "name": "Field D",
+            "location": "North Side"
+          }
+        }
+      }
+    ]
+  }
+  ```
+
+### POST /api/v1/opponents
+- **Description**: Create a new opponent request
+- **Request Body**:
+  ```json
+  {
+    "bookingId": 10,
+    "teamName": "The Champions",
+    "contactEmail": "team@example.com",
+    "contactPhone": "123-456-7890",
+    "description": "Looking for a friendly match"
+  }
+  ```
+- **Response**: 201 Created
+
+### GET /api/v1/opponents/:id
+- **Description**: Get opponent request by ID
+- **Response**: 200 OK
+
+### PUT /api/v1/opponents/:id
+- **Description**: Update an opponent request
+- **Response**: 200 OK
+
+### DELETE /api/v1/opponents/:id
+- **Description**: Delete an opponent request
+- **Response**: 204 No Content
+
+## Error Responses
+
+### 400 Bad Request
+```json
+{
+  "status": "error",
+  "statusCode": 400,
+  "message": "Validation error",
+  "errors": [
+    {
+      "field": "email",
+      "message": "Must be a valid email address"
+    }
+  ]
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "status": "error",
+  "statusCode": 401,
+  "message": "Authentication required"
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "status": "error",
+  "statusCode": 403,
+  "message": "Insufficient permissions"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "status": "error",
+  "statusCode": 404,
+  "message": "Resource not found"
+}
+```
+
+### 500 Internal Server Error
+```json
+{
+  "status": "error",
+  "statusCode": 500,
+  "message": "Internal server error"
+}
+```

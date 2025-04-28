@@ -1,0 +1,120 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 120 40% 98%;
+    --foreground: 120 10% 10%;
+
+    --card: 120 40% 98%;
+    --card-foreground: 120 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 120 10% 10%;
+
+    --primary: 122 39% 49%;
+    --primary-foreground: 120 10% 98%;
+
+    --secondary: 120 40% 96%;
+    --secondary-foreground: 120 5% 10%;
+
+    --muted: 120 40% 96%;
+    --muted-foreground: 120 5% 45%;
+
+    --accent: 120 40% 96%;
+    --accent-foreground: 120 5% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 120 20% 90%;
+    --input: 120 20% 90%;
+    --ring: 120 39% 49%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 120 40% 98%;
+    --sidebar-foreground: 120 5% 26%;
+    --sidebar-primary: 122 39% 49%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 120 5% 96%;
+    --sidebar-accent-foreground: 120 5% 10%;
+    --sidebar-border: 120 13% 90%;
+    --sidebar-ring: 120 39% 60%;
+  }
+
+  .dark {
+    --background: 120 15% 10%;
+    --foreground: 120 20% 98%;
+
+    --card: 120 15% 10%;
+    --card-foreground: 120 20% 98%;
+
+    --popover: 120 45% 10%;
+    --popover-foreground: 120 20% 98%;
+
+    --primary: 122 39% 49%;
+    --primary-foreground: 120 10% 98%;
+
+    --secondary: 120 15% 30%;
+    --secondary-foreground: 120 10% 98%;
+
+    --muted: 120 15% 30%;
+    --muted-foreground: 120 10% 60%;
+
+    --accent: 120 15% 30%;
+    --accent-foreground: 120 10% 98%;
+
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 120 10% 98%;
+
+    --border: 120 15% 30%;
+    --input: 120 15% 30%;
+    --ring: 120 39% 49%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+}
+
+@layer components {
+  .field-gradient {
+    @apply bg-gradient-field;
+  }
+  
+  .nav-link {
+    @apply relative px-4 py-2 rounded-md hover:bg-field-100 transition-colors duration-200;
+  }
+  
+  .nav-link.active {
+    @apply font-medium text-field-700 bg-field-100;
+  }
+  
+  .btn-primary {
+    @apply bg-field-600 hover:bg-field-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-field-100 hover:bg-field-200 text-field-800 font-medium py-2 px-4 rounded-md transition-colors duration-200;
+  }
+  
+  .card-field {
+    @apply bg-white rounded-lg shadow-md hover:shadow-lg p-4 transition-shadow duration-200 border border-field-100;
+  }
+}
+
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+html {
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+}

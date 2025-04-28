@@ -1,0 +1,49 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# FootballField Project Overview
+
+## Architecture
+This project follows a 3-tier architecture:
+- **Frontend**: React/TypeScript application running on port 9001
+- **Backend**: NodeJS RESTful API running on port 9002
+- **Database**: MySQL database on port 3306
+
+## Key Technologies
+- **Frontend**: React, TypeScript, TailwindCSS, ShadcnUI
+- **Backend**: Node.js, Express, Sequelize ORM
+- **Database**: MySQL
+- **Testing**: Jest, Supertest
+
+## Directory Structure
+```
+FootballField/
+├── frontend/         # React/TypeScript application
+├── backend/          # Node.js API server
+│   ├── src/          # Source code
+│   │   ├── controllers/  # Request handlers
+│   │   ├── models/       # Database models
+│   │   ├── routes/       # API routes
+│   │   ├── middleware/   # Express middleware
+│   │   ├── services/     # Business logic
+│   │   ├── utils/        # Utility functions
+│   │   ├── config/       # Configuration files
+│   │   ├── tests/        # Test suites
+│   │   └── app.js        # Express application entry
+│   ├── package.json      # Dependencies
+│   └── server.js         # Server entry point
+└── database/        # Database scripts and migrations
+```
+
+## Connection Flow
+1. Frontend makes API requests to Backend on port 9002
+2. Backend processes requests using business logic
+3. Backend interacts with MySQL database
+4. Backend returns responses to Frontend
+
+## Running the Application
+- Frontend: Port 9001
+- Backend: Port 9002
+- Database: MySQL on port 3306 (credentials in database config)
