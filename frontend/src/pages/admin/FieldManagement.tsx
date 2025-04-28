@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -28,6 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { fieldAPI, bookingAPI } from "@/lib/api";
 
 interface TimeSlot {
   id: number;
@@ -83,55 +84,18 @@ const timeSlots: TimeSlot[] = [
   { id: 18, time: "23:00 - 00:00", weekdayPrice: 300000, weekendPrice: 350000 },
 ];
 
-// Dữ liệu giả định về trạng thái các sân
-const generateFieldStatus = (): FieldStatus[] => {
-  const fields = [1, 2, 3, 4]; // 4 sân
-  const dates = Array.from({ length: 14 }, (_, i) => addDays(startOfDay(new Date()), i)); // 2 tuần
-  
-  const statuses: FieldStatus[] = [];
-  
-  // Tạo dữ liệu cho mỗi sân trong 14 ngày
-  fields.forEach(fieldId => {
-    dates.forEach(date => {
-      statuses.push({
-        fieldId,
-        date,
-        timeSlots: timeSlots.map(slot => {
-          const randomValue = Math.random();
-          const isBooked = randomValue > 0.7; // 30% khả năng đã đặt
-          
-          return {
-            id: slot.id,
-            time: slot.time,
-            isBooked,
-            isLocked: randomValue > 0.95, // 5% khả năng bị khóa
-            ...(isBooked ? {
-              customer: {
-                name: `Khách hàng ${Math.floor(Math.random() * 100)}`,
-                phone: `09${Math.floor(10000000 + Math.random() * 90000000)}`
-              }
-            } : {})
-          };
-        })
-      });
-    });
-  });
-  
-  return statuses;
-};
-
-const fields = [
-  { id: 1, name: "Sân A", type: "Sân 5 người" },
-  { id: 2, name: "Sân B", type: "Sân 5 người" },
-  { id: 3, name: "Sân C", type: "Sân 7 người" },
-  { id: 4, name: "Sân D", type: "Sân 7 người" },
-];
+// Đã xóa hàm tạo dữ liệu mẫu cũ
 
 const FieldManagement = () => {
+  console.log("FieldManagement component rendering...");
+
+  const [fields, setFields] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>("1"); // Default is Sân A
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [bookings] = useState<Booking[]>([]);
-  const [fieldStatuses, setFieldStatuses] = useState<FieldStatus[]>(generateFieldStatus());
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [fieldStatuses, setFieldStatuses] = useState<FieldStatus[]>([]);
+
+  console.log("Initial state setup");
   const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null);
   const [weekdayPrice, setWeekdayPrice] = useState<string>("");
   const [weekendPrice, setWeekendPrice] = useState<string>("");
@@ -143,43 +107,214 @@ const FieldManagement = () => {
   const [bulkPrice, setBulkPrice] = useState<string>("");
   const [bulkPriceType, setBulkPriceType] = useState<"weekday" | "weekend" | "both">("both");
   const [dayLocked, setDayLocked] = useState<Record<string, boolean>>({});
-  
+  const [loading, setLoading] = useState<boolean>(true);
+
   const { toast } = useToast();
-  
+
+  // Fetch fields from API
+  useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        console.log("Fetching fields from API...");
+        // Gọi API trực tiếp bằng fetch để kiểm tra
+        const response = await fetch('/api/fields');
+        const data = await response.json();
+        console.log("Fields API response:", data);
+        console.log("Fields API response status:", response.status);
+        console.log("Fields API response headers:", response.headers);
+
+        // Xử lý dữ liệu dựa trên cấu trúc thực tế
+        let fieldsData = [];
+
+        if (data.fields && Array.isArray(data.fields)) {
+          // Cấu trúc API trả về { fields: [...] }
+          fieldsData = data.fields.map((field: any) => ({
+            id: field.id,
+            name: field.name,
+            type: field.size || "Sân tiêu chuẩn"
+          }));
+        } else if (Array.isArray(data)) {
+          // Cấu trúc API trả về trực tiếp mảng
+          fieldsData = data.map((field: any) => ({
+            id: field.id,
+            name: field.name,
+            type: field.size || "Sân tiêu chuẩn"
+          }));
+        } else {
+          console.error("Unexpected API response structure:", data);
+        }
+        console.log("Processed fields data:", fieldsData);
+
+        setFields(fieldsData);
+
+        if (fieldsData.length > 0) {
+          setActiveTab(fieldsData[0].id.toString());
+        }
+      } catch (error) {
+        console.error("Error fetching fields:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách sân bóng",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchFields();
+  }, []);
+
+  // Fetch bookings for the selected field and date
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!activeTab) return;
+
+      setLoading(true);
+      try {
+        const formattedDate = format(selectedDate, "yyyy-MM-dd");
+        const url = `/api/bookings/field/${activeTab}?date=${formattedDate}`;
+
+        console.log("Fetching bookings from:", url);
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log("Bookings API response:", data);
+        console.log("Bookings API response type:", typeof data);
+        console.log("Bookings API response keys:", Object.keys(data));
+
+        if (data.bookings) {
+          console.log("Setting bookings:", data.bookings);
+          setBookings(data.bookings);
+          // Generate field statuses based on bookings
+          generateFieldStatus(data.bookings);
+        } else {
+          console.log("API returned no bookings - using empty field status");
+          // Use empty field status if no bookings
+          setFieldStatuses(createEmptyFieldStatus());
+        }
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải thông tin đặt sân",
+          variant: "destructive",
+        });
+        // Use empty field status if API fails
+        setFieldStatuses(createEmptyFieldStatus());
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, [activeTab, selectedDate]);
+
+  // Generate field status based on bookings data
+  const generateFieldStatus = (bookingsData: any[]) => {
+    console.log("Generating field status from bookings:", bookingsData);
+
+    const statuses: FieldStatus[] = [];
+
+    // Create a status object for the selected field and date
+    const fieldId = parseInt(activeTab);
+    const status: FieldStatus = {
+      fieldId,
+      date: selectedDate,
+      timeSlots: timeSlots.map(slot => {
+        // Check if this time slot is booked
+        const booking = bookingsData.find(b => {
+          console.log("Checking booking:", b);
+          // API trả về start_time dạng "08:00:00", cần chuyển về "08:00 - 09:00" format
+          if (!b.start_time) return false;
+
+          // Lấy giờ bắt đầu và giờ kết thúc
+          const startHour = b.start_time.substring(0, 5);
+          const endHour = b.end_time ? b.end_time.substring(0, 5) : null;
+
+          // Tạo chuỗi thời gian để so sánh
+          const timeRange = endHour ? `${startHour} - ${endHour}` : startHour;
+
+          console.log(`Comparing booking time ${timeRange} with slot time ${slot.time}`);
+
+          // So sánh với slot.time
+          return slot.time.includes(startHour);
+        });
+
+        return {
+          id: slot.id,
+          time: slot.time,
+          isBooked: !!booking,
+          isLocked: false, // Default to not locked
+          ...(booking ? {
+            customer: {
+              name: booking.user?.name || "Khách hàng",
+              phone: booking.user?.email || "Không có SĐT"
+            }
+          } : {})
+        };
+      })
+    };
+
+    statuses.push(status);
+    setFieldStatuses(statuses);
+  };
+
+  // Tạo trạng thái trống cho fallback khi không có dữ liệu từ API
+  const createEmptyFieldStatus = (): FieldStatus[] => {
+    console.log("Creating empty field status as fallback");
+    const fieldId = parseInt(activeTab);
+    const statuses: FieldStatus[] = [];
+
+    // Create a status object for the selected field and date with all slots empty
+    const status: FieldStatus = {
+      fieldId,
+      date: selectedDate,
+      timeSlots: timeSlots.map(slot => ({
+        id: slot.id,
+        time: slot.time,
+        isBooked: false,
+        isLocked: false
+      }))
+    };
+
+    statuses.push(status);
+    return statuses;
+  };
+
   const currentFieldStatus = fieldStatuses.find(
-    s => s.fieldId === parseInt(activeTab) && 
+    s => s.fieldId === parseInt(activeTab) &&
     format(s.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
   );
-  
+
+  console.log("Current field status:", currentFieldStatus);
+
   // Đếm số khung giờ trống
   const availableSlots = currentFieldStatus?.timeSlots.filter(
     slot => !slot.isBooked && !slot.isLocked
   ).length || 0;
-  
+
   // Đếm số khung giờ đã đặt
   const bookedSlots = currentFieldStatus?.timeSlots.filter(
     slot => slot.isBooked
   ).length || 0;
-  
+
   // Đếm số khung giờ bị khóa
   const lockedSlots = currentFieldStatus?.timeSlots.filter(
     slot => slot.isLocked
   ).length || 0;
-  
+
   // Kiểm tra xem ngày hiện tại có bị khóa không
   const isCurrentDayLocked = () => {
     const key = `${activeTab}_${format(selectedDate, "yyyy-MM-dd")}`;
     return dayLocked[key] || false;
   };
-  
+
   const handleUpdatePrice = () => {
     if (!editingTimeSlot) return;
-    
+
     toast({
       title: "Cập nhật giá thành công",
       description: `Khung giờ ${editingTimeSlot.time} đã được cập nhật.`,
     });
-    
+
     setEditingTimeSlot(null);
     setWeekdayPrice("");
     setWeekendPrice("");
@@ -195,7 +330,7 @@ const FieldManagement = () => {
 
   const handleBulkUpdatePrice = () => {
     if (!bulkPrice || selectedTimeSlots.length === 0) return;
-  
+
     toast({
       title: "Cập nhật giá hàng loạt thành công",
       description: `Đã cập nhật giá cho ${selectedTimeSlots.length} khung giờ.`,
@@ -205,18 +340,18 @@ const FieldManagement = () => {
     setBulkPrice("");
     setSelectedTimeSlots([]);
   };
-  
+
   const handleLockTimeSlot = () => {
     if (!lockingSlot) return;
-    
+
     setFieldStatuses(prev => {
       return prev.map(status => {
-        if (status.fieldId === lockingSlot.fieldId && 
+        if (status.fieldId === lockingSlot.fieldId &&
             format(status.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")) {
           return {
             ...status,
-            timeSlots: status.timeSlots.map(slot => 
-              slot.id === lockingSlot.slotId 
+            timeSlots: status.timeSlots.map(slot =>
+              slot.id === lockingSlot.slotId
                 ? { ...slot, isLocked: true }
                 : slot
             )
@@ -225,26 +360,26 @@ const FieldManagement = () => {
         return status;
       });
     });
-    
+
     toast({
       title: "Đã khóa khung giờ",
       description: lockReason || "Khung giờ đã được khóa",
     });
-    
+
     setShowLockDialog(false);
     setLockReason("");
     setLockingSlot(null);
   };
-  
+
   const handleUnlockTimeSlot = (slotId: number) => {
     setFieldStatuses(prev => {
       return prev.map(status => {
-        if (status.fieldId === parseInt(activeTab) && 
+        if (status.fieldId === parseInt(activeTab) &&
             format(status.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")) {
           return {
             ...status,
-            timeSlots: status.timeSlots.map(slot => 
-              slot.id === slotId 
+            timeSlots: status.timeSlots.map(slot =>
+              slot.id === slotId
                 ? { ...slot, isLocked: false }
                 : slot
             )
@@ -253,27 +388,27 @@ const FieldManagement = () => {
         return status;
       });
     });
-    
+
     toast({
       title: "Đã mở khóa khung giờ",
       description: "Khung giờ đã được mở khóa và có thể đặt sân"
     });
   };
-  
+
   // Khóa cả ngày
   const handleLockEntireDay = () => {
     const key = `${activeTab}_${format(selectedDate, "yyyy-MM-dd")}`;
     const currentlyLocked = dayLocked[key] || false;
-    
+
     // Nếu ngày đã bị khóa, mở khóa tất cả khung giờ
     if (currentlyLocked) {
       setFieldStatuses(prev => {
         return prev.map(status => {
-          if (status.fieldId === parseInt(activeTab) && 
+          if (status.fieldId === parseInt(activeTab) &&
               format(status.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")) {
             return {
               ...status,
-              timeSlots: status.timeSlots.map(slot => 
+              timeSlots: status.timeSlots.map(slot =>
                 !slot.isBooked ? { ...slot, isLocked: false } : slot
               )
             };
@@ -281,23 +416,23 @@ const FieldManagement = () => {
           return status;
         });
       });
-      
+
       setDayLocked({...dayLocked, [key]: false});
-      
+
       toast({
         title: "Đã mở khóa tất cả khung giờ trong ngày",
         description: "Tất cả khung giờ đã được mở khóa"
       });
-    } 
+    }
     // Ngược lại, khóa tất cả khung giờ trống
     else {
       setFieldStatuses(prev => {
         return prev.map(status => {
-          if (status.fieldId === parseInt(activeTab) && 
+          if (status.fieldId === parseInt(activeTab) &&
               format(status.date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")) {
             return {
               ...status,
-              timeSlots: status.timeSlots.map(slot => 
+              timeSlots: status.timeSlots.map(slot =>
                 !slot.isBooked ? { ...slot, isLocked: true } : slot
               )
             };
@@ -305,20 +440,20 @@ const FieldManagement = () => {
           return status;
         });
       });
-      
+
       setDayLocked({...dayLocked, [key]: true});
-      
+
       toast({
         title: "Đã khóa tất cả khung giờ trống trong ngày",
         description: "Tất cả khung giờ trống trong ngày đã bị khóa"
       });
     }
   };
-  
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Quản lý sân bóng</h1>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Left Panel - Price Management */}
         <div>
@@ -337,7 +472,7 @@ const FieldManagement = () => {
                   Chỉnh sửa hàng loạt
                 </Button>
               </div>
-              
+
               <div className="border rounded-md">
                 <div className="grid grid-cols-3 bg-gray-50 p-3 font-medium text-sm border-b">
                   <div>Khung giờ</div>
@@ -346,12 +481,12 @@ const FieldManagement = () => {
                 </div>
                 <div className="max-h-[500px] overflow-y-auto">
                   {timeSlots.map((slot) => (
-                    <div 
-                      key={slot.id} 
+                    <div
+                      key={slot.id}
                       className="grid grid-cols-3 p-3 border-b last:border-b-0 items-center text-sm hover:bg-gray-50"
                     >
                       <div className="flex items-center gap-2">
-                        <input 
+                        <input
                           type="checkbox"
                           className="rounded border-gray-300"
                           checked={selectedTimeSlots.includes(slot.id)}
@@ -364,8 +499,8 @@ const FieldManagement = () => {
                         <span>{slot.weekendPrice.toLocaleString()}đ</span>
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0"
                               onClick={() => setEditingTimeSlot(slot)}
@@ -405,7 +540,7 @@ const FieldManagement = () => {
                               </div>
                             </div>
                             <DialogFooter>
-                              <Button 
+                              <Button
                                 className="bg-field-600 hover:bg-field-700"
                                 onClick={handleUpdatePrice}
                               >
@@ -422,18 +557,18 @@ const FieldManagement = () => {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Right Panel - Field Status and Booking Management */}
         <div className="lg:col-span-3">
           <Card>
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold mb-4">Quản lý đặt sân</h2>
-              
+
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 {/* Field Selection */}
-                <Tabs 
-                  defaultValue="1" 
-                  value={activeTab} 
+                <Tabs
+                  defaultValue="1"
+                  value={activeTab}
                   onValueChange={setActiveTab}
                   className="space-y-4"
                 >
@@ -445,7 +580,7 @@ const FieldManagement = () => {
                     ))}
                   </TabsList>
                 </Tabs>
-                
+
                 {/* Date Picker */}
                 <Popover>
                   <PopoverTrigger asChild>
@@ -472,7 +607,7 @@ const FieldManagement = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-              
+
               {/* Field Status Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <Card className="bg-green-50 border-green-100">
@@ -486,7 +621,7 @@ const FieldManagement = () => {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-blue-50 border-blue-100">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
@@ -498,7 +633,7 @@ const FieldManagement = () => {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-red-50 border-red-100">
                   <CardContent className="p-4 flex items-center justify-between">
                     <div>
@@ -511,7 +646,7 @@ const FieldManagement = () => {
                   </CardContent>
                 </Card>
               </div>
-              
+
               {/* Time Slots Table */}
               <div className="rounded-md border mb-6">
                 <Table>
@@ -524,7 +659,16 @@ const FieldManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentFieldStatus?.timeSlots.map((slot) => (
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-8">
+                          <div className="flex justify-center items-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                            <span className="ml-3">Đang tải dữ liệu...</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : currentFieldStatus?.timeSlots.map((slot) => (
                       <TableRow key={slot.id}>
                         <TableCell className="font-medium">{slot.time}</TableCell>
                         <TableCell>
@@ -548,18 +692,18 @@ const FieldManagement = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           {slot.isLocked ? (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="h-8 text-red-500 hover:text-red-700"
                               onClick={() => handleUnlockTimeSlot(slot.id)}
                             >
                               <Lock className="h-5 w-5" />
                             </Button>
                           ) : !slot.isBooked ? (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               className="h-8 text-gray-700 hover:text-gray-900"
                               onClick={() => {
                                 setLockingSlot({ fieldId: parseInt(activeTab), slotId: slot.id });
@@ -572,8 +716,8 @@ const FieldManagement = () => {
                               </svg>
                             </Button>
                           ) : (
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="sm"
                               className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50"
                               onClick={() => {
@@ -592,13 +736,13 @@ const FieldManagement = () => {
                   </TableBody>
                 </Table>
               </div>
-              
+
               {/* Lock Entire Day */}
               <div className="flex justify-end items-center mt-4">
                 <div className="flex items-center gap-2">
                   <span className="text-sm">{isCurrentDayLocked() ? "Mở khóa tất cả" : "Khóa tất cả khung giờ trống"}</span>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className={isCurrentDayLocked() ? "text-red-500 hover:text-red-700" : "text-gray-700 hover:text-gray-900"}
                     onClick={handleLockEntireDay}
                   >
@@ -618,7 +762,7 @@ const FieldManagement = () => {
           </Card>
         </div>
       </div>
-      
+
       {/* Lock Time Slot Dialog */}
       <Dialog open={showLockDialog} onOpenChange={setShowLockDialog}>
         <DialogContent className="sm:max-w-[425px]">
@@ -641,13 +785,13 @@ const FieldManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowLockDialog(false)}
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               className="bg-field-600 hover:bg-field-700"
               onClick={handleLockTimeSlot}
             >
@@ -666,7 +810,7 @@ const FieldManagement = () => {
               Chọn các khung giờ và cập nhật giá cùng lúc
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="border rounded p-3 max-h-[200px] overflow-y-auto">
               {timeSlots.map(slot => (
@@ -712,10 +856,10 @@ const FieldManagement = () => {
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowBulkEditDialog(false);
                 setSelectedTimeSlots([]);
@@ -723,7 +867,7 @@ const FieldManagement = () => {
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               className="bg-field-600 hover:bg-field-700"
               onClick={handleBulkUpdatePrice}
               disabled={selectedTimeSlots.length === 0 || !bulkPrice}

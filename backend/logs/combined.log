@@ -136,3 +136,222 @@
 2025-04-28 16:51:08 error: 400 - Validation error: Field.hourlyRate cannot be null - /api/fields - POST - ::1
 2025-04-28 16:51:08 error: Error: Validation error: Field.hourlyRate cannot be null
 2025-04-28 16:51:08 info: ::1 - - [28/Apr/2025:09:51:08 +0000] "POST /api/fields HTTP/1.1" 400 1300 "-" "curl/8.5.0"
+2025-04-28 16:51:24 error: 400 - Price per hour must be a number, Price per hour must be greater than 0 - /api/fields - POST - ::1
+2025-04-28 16:51:24 error: Error: Price per hour must be a number, Price per hour must be greater than 0
+2025-04-28 16:51:24 info: ::1 - - [28/Apr/2025:09:51:24 +0000] "POST /api/fields HTTP/1.1" 400 774 "-" "curl/8.5.0"
+2025-04-28 16:53:14 error: Error creating field: notNull Violation: Field.hourlyRate cannot be null
+2025-04-28 16:53:14 error: 400 - Validation error: Field.hourlyRate cannot be null - /api/fields - POST - ::1
+2025-04-28 16:53:14 error: Error: Validation error: Field.hourlyRate cannot be null
+2025-04-28 16:53:14 info: ::1 - - [28/Apr/2025:09:53:14 +0000] "POST /api/fields HTTP/1.1" 400 1300 "-" "curl/8.5.0"
+2025-04-28 16:53:34 error: 400 - Field type is required, Field type must be 5v5, 7v7, or 11v11, Price per hour must be a number, Price per hour must be greater than 0 - /api/fields - POST - ::1
+2025-04-28 16:53:34 error: Error: Field type is required, Field type must be 5v5, 7v7, or 11v11, Price per hour must be a number, Price per hour must be greater than 0
+2025-04-28 16:53:34 info: ::1 - - [28/Apr/2025:09:53:34 +0000] "POST /api/fields HTTP/1.1" 400 900 "-" "curl/8.5.0"
+2025-04-28 16:53:52 info: ::1 - - [28/Apr/2025:09:53:52 +0000] "POST /api/fields HTTP/1.1" 201 310 "-" "curl/8.5.0"
+2025-04-28 16:54:10 info: ::1 - - [28/Apr/2025:09:54:10 +0000] "PUT /api/fields/6 HTTP/1.1" 200 352 "-" "curl/8.5.0"
+2025-04-28 16:54:27 error: Error deleting field ID 6: Unknown column 'Booking.fieldId' in 'where clause'
+2025-04-28 16:54:27 error: 500 - Database error occurred - /api/fields/6 - DELETE - ::1
+2025-04-28 16:54:27 error: Error: Database error occurred
+2025-04-28 16:54:27 info: ::1 - - [28/Apr/2025:09:54:27 +0000] "DELETE /api/fields/6 HTTP/1.1" 500 1010 "-" "curl/8.5.0"
+2025-04-28 16:54:45 info: ::1 - - [28/Apr/2025:09:54:45 +0000] "GET /api/products HTTP/1.1" 200 3363 "-" "curl/8.5.0"
+2025-04-28 16:55:05 info: ::1 - - [28/Apr/2025:09:55:05 +0000] "POST /api/products HTTP/1.1" 201 264 "-" "curl/8.5.0"
+2025-04-28 16:55:25 info: ::1 - - [28/Apr/2025:09:55:25 +0000] "PUT /api/products/21 HTTP/1.1" 200 307 "-" "curl/8.5.0"
+2025-04-28 16:55:44 info: ::1 - - [28/Apr/2025:09:55:44 +0000] "DELETE /api/products/21 HTTP/1.1" 204 - "-" "curl/8.5.0"
+2025-04-28 16:56:06 error: Error checking field availability (fieldId: undefined, date: undefined): Field not found
+2025-04-28 16:56:06 error: Error creating booking: Field not found
+2025-04-28 16:56:06 error: 404 - Field not found - /api/bookings - POST - ::1
+2025-04-28 16:56:06 error: Error: Field not found
+2025-04-28 16:56:06 info: ::1 - - [28/Apr/2025:09:56:06 +0000] "POST /api/bookings HTTP/1.1" 404 535 "-" "curl/8.5.0"
+2025-04-28 16:56:24 info: ::1 - - [28/Apr/2025:09:56:24 +0000] "GET /api/fields HTTP/1.1" 200 2209 "-" "curl/8.5.0"
+2025-04-28 16:56:42 error: Error checking field availability (fieldId: undefined, date: undefined): Field not found
+2025-04-28 16:56:42 error: Error creating booking: Field not found
+2025-04-28 16:56:42 error: 404 - Field not found - /api/bookings - POST - ::1
+2025-04-28 16:56:42 error: Error: Field not found
+2025-04-28 16:56:42 info: ::1 - - [28/Apr/2025:09:56:42 +0000] "POST /api/bookings HTTP/1.1" 404 535 "-" "curl/8.5.0"
+2025-04-28 16:57:22 info: Server running on port 9002 in development mode
+2025-04-28 16:57:22 info: Database connection established successfully
+2025-04-28 16:57:24 info: Database synced successfully
+2025-04-28 16:57:38 info: Server running on port 9002 in development mode
+2025-04-28 16:57:38 info: Database connection established successfully
+2025-04-28 16:57:39 info: Database synced successfully
+2025-04-28 16:57:55 info: Server running on port 9002 in development mode
+2025-04-28 16:57:55 info: Database connection established successfully
+2025-04-28 16:57:57 info: Database synced successfully
+2025-04-28 17:00:09 info: Server running on port 9002 in development mode
+2025-04-28 17:00:09 info: Database connection established successfully
+2025-04-28 17:00:12 info: Database synced successfully
+2025-04-28 17:02:31 info: Server running on port 9002 in development mode
+2025-04-28 17:02:31 info: Database connection established successfully
+2025-04-28 17:02:34 info: Database synced successfully
+2025-04-28 17:02:43 info: ::ffff:127.0.0.1 - - [28/Apr/2025:10:02:43 +0000] "GET /logo192.png HTTP/1.1" 404 - "http://localhost:9001/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 17:44:49 info: ::ffff:127.0.0.1 - - [28/Apr/2025:10:44:49 +0000] "GET /src/main.tsx HTTP/1.1" 404 - "http://localhost:9001/admin" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 17:47:52 info: Server running on port 9002 in development mode
+2025-04-28 17:47:52 info: Database connection established successfully
+2025-04-28 17:47:55 info: Database synced successfully
+2025-04-28 17:48:29 info: ::1 - - [28/Apr/2025:10:48:29 +0000] "GET / HTTP/1.1" 404 - "-" "PostmanRuntime/7.43.3"
+2025-04-28 17:48:44 info: ::1 - - [28/Apr/2025:10:48:44 +0000] "POST / HTTP/1.1" 404 - "-" "PostmanRuntime/7.43.3"
+2025-04-28 17:52:30 info: Server running on port 9002 in development mode
+2025-04-28 17:52:30 info: Database connection established successfully
+2025-04-28 17:52:32 info: Database synced successfully
+2025-04-28 17:53:02 info: ::1 - - [28/Apr/2025:10:53:02 +0000] "GET /api/fields HTTP/1.1" 200 1851 "-" "curl/8.5.0"
+2025-04-28 17:53:18 info: ::1 - - [28/Apr/2025:10:53:18 +0000] "GET /api/products HTTP/1.1" 200 3363 "-" "curl/8.5.0"
+2025-04-28 17:59:28 info: ::1 - - [28/Apr/2025:10:59:28 +0000] "GET /api HTTP/1.1" 404 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 18:01:03 info: ::1 - - [28/Apr/2025:11:01:03 +0000] "GET /api HTTP/1.1" 404 1482 "-" "curl/8.5.0"
+2025-04-28 18:01:58 info: Server running on port 9002 in development mode
+2025-04-28 18:01:59 info: Database connection established successfully
+2025-04-28 18:02:00 info: Database synced successfully
+2025-04-28 18:03:29 info: Server running on port 9002 in development mode
+2025-04-28 18:03:29 info: Database connection established successfully
+2025-04-28 18:03:30 info: Database synced successfully
+2025-04-28 18:06:50 info: ::1 - - [28/Apr/2025:11:06:50 +0000] "GET /api HTTP/1.1" 200 177 "-" "curl/8.5.0"
+2025-04-28 18:07:01 info: ::1 - - [28/Apr/2025:11:07:01 +0000] "GET /api/fields HTTP/1.1" 200 1851 "-" "curl/8.5.0"
+2025-04-28 18:14:04 info: ::1 - - [28/Apr/2025:11:14:04 +0000] "GET /api HTTP/1.1" 200 177 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 18:14:15 info: ::1 - - [28/Apr/2025:11:14:15 +0000] "GET /api/auth HTTP/1.1" 404 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 18:14:26 info: ::1 - - [28/Apr/2025:11:14:26 +0000] "GET /api/products HTTP/1.1" 200 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 18:14:36 error: 401 - No token provided - /api/opponents - GET - ::1
+2025-04-28 18:14:36 error: Error: No token provided
+2025-04-28 18:14:36 info: ::1 - - [28/Apr/2025:11:14:36 +0000] "GET /api/opponents HTTP/1.1" 401 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 18:14:48 error: 401 - No token provided - /api/bookings - GET - ::1
+2025-04-28 18:14:48 error: Error: No token provided
+2025-04-28 18:14:48 info: ::1 - - [28/Apr/2025:11:14:48 +0000] "GET /api/bookings HTTP/1.1" 401 - "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0"
+2025-04-28 18:15:09 info: Server running on port 9002 in development mode
+2025-04-28 18:15:09 info: Database connection established successfully
+2025-04-28 18:15:11 info: Database synced successfully
+2025-04-28 18:16:52 info: Server running on port 9002 in development mode
+2025-04-28 18:16:52 info: Database connection established successfully
+2025-04-28 18:16:53 info: Database synced successfully
+2025-04-28 18:17:57 info: ::1 - - [28/Apr/2025:11:17:57 +0000] "GET /api HTTP/1.1" 200 177 "-" "curl/8.5.0"
+2025-04-28 18:21:48 info: ::1 - - [28/Apr/2025:11:21:48 +0000] "GET /api/fields HTTP/1.1" 200 1851 "-" "curl/8.5.0"
+2025-04-28 18:23:14 info: ::1 - - [28/Apr/2025:11:23:14 +0000] "GET /api/auth HTTP/1.1" 404 1487 "-" "curl/8.5.0"
+2025-04-28 18:23:32 error: 401 - No token provided - /api/bookings - GET - ::1
+2025-04-28 18:23:32 error: Error: No token provided
+2025-04-28 18:23:32 info: ::1 - - [28/Apr/2025:11:23:32 +0000] "GET /api/bookings HTTP/1.1" 401 1289 "-" "curl/8.5.0"
+2025-04-28 18:40:54 error: 401 - No token provided - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:40:54 error: Error: No token provided
+2025-04-28 18:40:54 info: ::1 - - [28/Apr/2025:11:40:54 +0000] "GET /api/bookings/field/1 HTTP/1.1" 401 1289 "-" "curl/8.5.0"
+2025-04-28 18:41:20 info: Server running on port 9002 in development mode
+2025-04-28 18:41:20 info: Database connection established successfully
+2025-04-28 18:41:21 info: Database synced successfully
+2025-04-28 18:41:40 info: Server running on port 9002 in development mode
+2025-04-28 18:41:40 info: Database connection established successfully
+2025-04-28 18:41:41 info: Database synced successfully
+2025-04-28 18:42:04 info: Server running on port 9002 in development mode
+2025-04-28 18:42:04 info: Database connection established successfully
+2025-04-28 18:42:06 info: Database synced successfully
+2025-04-28 18:42:43 error: 400 - ID must be a positive integer - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:42:43 error: Error: ID must be a positive integer
+2025-04-28 18:42:43 info: ::1 - - [28/Apr/2025:11:42:43 +0000] "GET /api/bookings/field/1 HTTP/1.1" 400 692 "-" "curl/8.5.0"
+2025-04-28 18:44:26 info: Server running on port 9002 in development mode
+2025-04-28 18:44:26 info: Database connection established successfully
+2025-04-28 18:44:27 info: Database synced successfully
+2025-04-28 18:45:07 error: 500 - Cannot read properties of undefined (reading 'role') - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:45:07 error: Error: Cannot read properties of undefined (reading 'role')
+2025-04-28 18:45:07 info: ::1 - - [28/Apr/2025:11:45:07 +0000] "GET /api/bookings/field/1 HTTP/1.1" 500 1114 "-" "curl/8.5.0"
+2025-04-28 18:46:48 info: Server running on port 9002 in development mode
+2025-04-28 18:46:48 info: Database connection established successfully
+2025-04-28 18:46:50 info: Database synced successfully
+2025-04-28 18:47:31 error: Error fetching bookings: Unknown column 'Booking.fieldId' in 'where clause'
+2025-04-28 18:47:31 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:47:31 error: Error: Database error occurred
+2025-04-28 18:47:31 info: ::1 - - [28/Apr/2025:11:47:31 +0000] "GET /api/bookings/field/1 HTTP/1.1" 500 1258 "-" "curl/8.5.0"
+2025-04-28 18:48:59 info: Server running on port 9002 in development mode
+2025-04-28 18:48:59 info: Database connection established successfully
+2025-04-28 18:49:01 info: Database synced successfully
+2025-04-28 18:49:43 error: Error fetching bookings: Unknown column 'Booking.bookingDate' in 'order clause'
+2025-04-28 18:49:43 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:49:43 error: Error: Database error occurred
+2025-04-28 18:49:44 info: ::1 - - [28/Apr/2025:11:49:44 +0000] "GET /api/bookings/field/1 HTTP/1.1" 500 1258 "-" "curl/8.5.0"
+2025-04-28 18:51:13 info: Server running on port 9002 in development mode
+2025-04-28 18:51:13 info: Database connection established successfully
+2025-04-28 18:51:15 info: Database synced successfully
+2025-04-28 19:11:03 error: Error fetching bookings: Unknown column 'user.username' in 'field list'
+2025-04-28 19:11:03 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
+2025-04-28 19:11:03 error: Error: Database error occurred
+2025-04-28 19:11:03 info: ::1 - - [28/Apr/2025:12:11:03 +0000] "GET /api/bookings/field/1 HTTP/1.1" 500 1258 "-" "curl/8.5.0"
+2025-04-28 19:13:02 info: Server running on port 9002 in development mode
+2025-04-28 19:13:02 info: Database connection established successfully
+2025-04-28 19:13:04 info: Database synced successfully
+2025-04-28 19:13:52 info: ::1 - - [28/Apr/2025:12:13:52 +0000] "GET /api/bookings/field/1 HTTP/1.1" 200 2649 "-" "curl/8.5.0"
+2025-04-28 19:14:15 info: ::1 - - [28/Apr/2025:12:14:15 +0000] "GET /api/fields HTTP/1.1" 200 1851 "-" "curl/8.5.0"
+2025-04-28 19:25:09 info: Server running on port 9002 in development mode
+2025-04-28 19:25:09 info: Database connection established successfully
+2025-04-28 19:25:10 info: Database synced successfully
+2025-04-28 19:28:51 info: Server running on port 9002 in development mode
+2025-04-28 19:28:51 info: Database connection established successfully
+2025-04-28 19:28:52 info: Database synced successfully
+2025-04-28 19:30:49 info: Server running on port 9002 in development mode
+2025-04-28 19:30:49 info: Database connection established successfully
+2025-04-28 19:30:51 info: Database synced successfully
+2025-04-28 19:32:47 info: Server running on port 9002 in development mode
+2025-04-28 19:32:47 info: Database connection established successfully
+2025-04-28 19:32:49 info: Database synced successfully
+2025-04-28 19:34:12 info: [0mGET /api/fields [32m200[0m 27.073 ms - -[0m
+2025-04-28 19:51:39 info: [0mGET /api/fields [32m200[0m 10.042 ms - -[0m
+2025-04-28 19:52:42 info: [0mGET /api/fields [32m200[0m 8.703 ms - -[0m
+2025-04-28 19:59:20 info: [0mGET /api/fields [32m200[0m 9.073 ms - 1851[0m
+2025-04-28 19:59:30 info: [0mGET /api/bookings/field/1 [32m200[0m 21.827 ms - 2649[0m
+2025-04-28 20:00:35 info: [0mGET /api/fields [36m304[0m 29.025 ms - -[0m
+2025-04-28 20:00:35 info: [0mGET /api/bookings/field/1?date=2025-04-28 [32m200[0m 31.892 ms - -[0m
+2025-04-28 20:00:44 info: [0mGET /api/fields [36m304[0m 3.896 ms - -[0m
+2025-04-28 20:00:44 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 12.608 ms - -[0m
+2025-04-28 20:00:53 info: [0mGET /api/fields [36m304[0m 23.245 ms - -[0m
+2025-04-28 20:00:53 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 29.611 ms - -[0m
+2025-04-28 20:00:55 info: [0mGET /api/bookings/field/2?date=2025-04-28 [32m200[0m 7.773 ms - -[0m
+2025-04-28 20:00:55 info: [0mGET /api/bookings/field/3?date=2025-04-28 [32m200[0m 7.326 ms - 920[0m
+2025-04-28 20:00:56 info: [0mGET /api/bookings/field/4?date=2025-04-28 [32m200[0m 9.548 ms - 929[0m
+2025-04-28 20:00:56 info: [0mGET /api/bookings/field/5?date=2025-04-28 [32m200[0m 5.753 ms - 61[0m
+2025-04-28 20:01:24 info: [0mGET /api/fields [36m304[0m 16.511 ms - -[0m
+2025-04-28 20:01:24 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 16.835 ms - -[0m
+2025-04-28 20:01:25 info: [0mGET /api/fields [36m304[0m 7.254 ms - -[0m
+2025-04-28 20:01:25 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 7.521 ms - -[0m
+2025-04-28 20:01:29 info: [0mGET /api/fields [36m304[0m 3.183 ms - -[0m
+2025-04-28 20:01:29 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 8.083 ms - -[0m
+2025-04-28 20:01:59 info: [0mGET /api/fields [36m304[0m 18.776 ms - -[0m
+2025-04-28 20:01:59 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 19.067 ms - -[0m
+2025-04-28 20:02:01 info: [0mGET /api/fields [36m304[0m 3.300 ms - -[0m
+2025-04-28 20:02:01 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 7.217 ms - -[0m
+2025-04-28 20:02:14 info: [0mGET /api/fields [36m304[0m 18.387 ms - -[0m
+2025-04-28 20:02:14 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 20.005 ms - -[0m
+2025-04-28 20:30:12 info: [0mGET /api/fields [36m304[0m 12.597 ms - -[0m
+2025-04-28 20:30:12 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 13.503 ms - -[0m
+2025-04-28 20:31:48 info: [0mGET /api/products [32m200[0m 7.697 ms - 3363[0m
+2025-04-28 20:34:10 info: [0mGET /api/products [32m200[0m 10.702 ms - -[0m
+2025-04-28 20:34:16 info: [0mGET /api/products [36m304[0m 6.256 ms - -[0m
+2025-04-28 20:34:17 info: [0mGET /api/fields [36m304[0m 12.852 ms - -[0m
+2025-04-28 20:34:17 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 14.290 ms - -[0m
+2025-04-28 20:34:30 info: [0mGET /api/products [36m304[0m 15.332 ms - -[0m
+2025-04-28 20:34:34 info: [0mGET /api/products [36m304[0m 2.486 ms - -[0m
+2025-04-28 20:34:59 info: [0mGET /api/products [36m304[0m 12.173 ms - -[0m
+2025-04-28 20:35:29 info: [0mGET /api/products [36m304[0m 6.461 ms - -[0m
+2025-04-28 20:35:34 info: [0mGET /api/products [36m304[0m 5.369 ms - -[0m
+2025-04-28 20:35:36 info: [0mGET /api/products [36m304[0m 2.631 ms - -[0m
+2025-04-28 20:36:17 info: [0mGET /api/products [36m304[0m 7.888 ms - -[0m
+2025-04-28 20:36:18 info: [0mGET /api/products [36m304[0m 3.624 ms - -[0m
+2025-04-28 20:36:18 info: [0mGET /api/fields [36m304[0m 3.633 ms - -[0m
+2025-04-28 20:36:18 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 12.102 ms - -[0m
+2025-04-28 20:47:44 info: [0mGET /api/feedbacks [33m404[0m 2.748 ms - -[0m
+2025-04-28 20:47:47 info: [0mGET /api/products [36m304[0m 6.691 ms - -[0m
+2025-04-28 20:47:49 info: [0mGET /api/fields [36m304[0m 7.492 ms - -[0m
+2025-04-28 20:47:49 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 9.183 ms - -[0m
+2025-04-28 20:48:00 info: [0mGET /api/bookings/field/2?date=2025-04-28 [36m304[0m 9.040 ms - -[0m
+2025-04-28 20:48:00 info: [0mGET /api/bookings/field/3?date=2025-04-28 [36m304[0m 5.162 ms - -[0m
+2025-04-28 20:48:01 info: [0mGET /api/bookings/field/4?date=2025-04-28 [36m304[0m 4.952 ms - -[0m
+2025-04-28 20:48:01 info: [0mGET /api/bookings/field/5?date=2025-04-28 [36m304[0m 4.092 ms - -[0m
+2025-04-28 20:48:14 info: [0mGET /api/feedbacks [33m404[0m 0.769 ms - -[0m
+2025-04-28 20:48:29 info: [0mGET /api/products [36m304[0m 14.139 ms - -[0m
+2025-04-28 20:48:30 info: [0mGET /api/feedbacks [33m404[0m 1.046 ms - -[0m
+2025-04-28 20:48:30 info: [0mGET /api/products [36m304[0m 3.822 ms - -[0m
+2025-04-28 20:48:31 info: [0mGET /api/fields [36m304[0m 4.254 ms - -[0m
+2025-04-28 20:48:31 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 7.307 ms - -[0m
+2025-04-28 20:51:30 info: [0mGET /api/fields [36m304[0m 6.000 ms - -[0m
+2025-04-28 20:51:30 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 14.752 ms - -[0m
+2025-04-28 20:51:31 info: [0mGET /api/fields [36m304[0m 5.094 ms - -[0m
+2025-04-28 20:51:31 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 11.730 ms - -[0m
+2025-04-28 20:51:32 info: [0mGET /api/bookings/field/2?date=2025-04-28 [36m304[0m 5.399 ms - -[0m
+2025-04-28 20:51:33 info: [0mGET /api/bookings/field/3?date=2025-04-28 [36m304[0m 4.805 ms - -[0m
+2025-04-28 20:51:33 info: [0mGET /api/bookings/field/4?date=2025-04-28 [36m304[0m 6.600 ms - -[0m
+2025-04-28 20:51:34 info: [0mGET /api/bookings/field/5?date=2025-04-28 [36m304[0m 5.442 ms - -[0m
+2025-04-28 20:51:39 info: [0mGET /api/bookings/field/1?date=2025-04-28 [36m304[0m 4.630 ms - -[0m
+2025-04-28 20:51:50 info: [0mGET /api/fields [36m304[0m 6.843 ms - -[0m
+2025-04-28 20:52:08 info: [0mGET /api/fields [36m304[0m 10.417 ms - -[0m
+2025-04-28 20:55:30 info: [0mGET /api/products [36m304[0m 7.177 ms - -[0m
+2025-04-28 20:56:16 info: [0mGET /api/fields [32m200[0m 5.994 ms - -[0m

@@ -141,14 +141,14 @@ if [ -d "$CURRENT_DIR/frontend" ]; then
     echo "Installing frontend dependencies..."
     cd "$CURRENT_DIR/frontend"
 
-    # Make sure react-scripts is installed
-    if ! grep -q '"react-scripts"' package.json; then
-      echo "Adding react-scripts to package.json..."
-      npm install --save-dev react-scripts
+    # Make sure vite is installed
+    if ! grep -q '"vite"' package.json; then
+      echo "Adding vite to package.json..."
+      npm install --save-dev vite@4.4.5 @vitejs/plugin-react-swc --legacy-peer-deps
     fi
 
     # Install dependencies
-    npm install
+    npm install --legacy-peer-deps
 
     if [ $? -ne 0 ]; then
       echo "Warning: Failed to install frontend dependencies."
@@ -156,10 +156,10 @@ if [ -d "$CURRENT_DIR/frontend" ]; then
     fi
     cd "$CURRENT_DIR"
   else
-    # Check if react-scripts is installed in node_modules
-    if [ ! -d "$CURRENT_DIR/frontend/node_modules/react-scripts" ]; then
-      echo "Installing react-scripts..."
-      cd "$CURRENT_DIR/frontend" && npm install --save-dev react-scripts
+    # Check if vite is installed in node_modules
+    if [ ! -d "$CURRENT_DIR/frontend/node_modules/vite" ]; then
+      echo "Installing vite..."
+      cd "$CURRENT_DIR/frontend" && npm install --save-dev vite@4.4.5 @vitejs/plugin-react-swc --legacy-peer-deps
       cd "$CURRENT_DIR"
     fi
   fi
@@ -187,17 +187,17 @@ sleep 5
 # Start frontend server
 echo "Starting frontend server on port 9001..."
 if [ -d "$CURRENT_DIR/frontend" ]; then
-  # Check if react-scripts is installed
-  if [ -d "$CURRENT_DIR/frontend/node_modules/react-scripts" ]; then
+  # Check if vite is installed
+  if [ -d "$CURRENT_DIR/frontend/node_modules/vite" ]; then
     cd "$CURRENT_DIR/frontend"
-    # Use npx to ensure react-scripts is found
-    PORT=9001 npx react-scripts start &
+    # Use npx to ensure vite is found
+    npx vite --port 9001 &
     FRONTEND_PID=$!
     echo "Frontend server started with PID: $FRONTEND_PID"
   else
-    echo "Warning: react-scripts not found in node_modules."
+    echo "Warning: vite not found in node_modules."
     echo "Trying to start frontend server anyway..."
-    cd "$CURRENT_DIR/frontend" && PORT=9001 npm start &
+    cd "$CURRENT_DIR/frontend" && npm run dev -- --port 9001 &
     FRONTEND_PID=$!
   fi
 else

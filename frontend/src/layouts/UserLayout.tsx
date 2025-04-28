@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
-import { Home, Calendar, Users, ShoppingCart, MapPin, Facebook, Instagram, Youtube, LockKeyhole } from "lucide-react";
+import { Home, Calendar, Users, ShoppingCart, MapPin, Facebook, Instagram, Youtube, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { EnhancedLoginDialog } from "@/components/admin/EnhancedLoginDialog";
 
 const UserLayout = () => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
-  
+
   return (
     <div className="min-h-screen flex flex-col field-gradient">
       {/* Header - fixed to top */}
@@ -85,15 +85,15 @@ const UserLayout = () => {
                   </NavLink>
                 </li>
               </ul>
-              
+
               {/* Admin Button */}
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="ml-2 border-field-500 text-field-700 hover:bg-field-50"
                 onClick={() => setShowLoginDialog(true)}
               >
-                <LockKeyhole className="w-4 h-4 mr-1" />
+                <Lock className="w-4 h-4 mr-1" />
                 <span>Admin</span>
               </Button>
             </nav>
@@ -102,9 +102,9 @@ const UserLayout = () => {
       </header>
 
       {/* Admin Login Dialog */}
-      <EnhancedLoginDialog 
-        open={showLoginDialog} 
-        onOpenChange={setShowLoginDialog} 
+      <EnhancedLoginDialog
+        open={showLoginDialog}
+        onOpenChange={setShowLoginDialog}
       />
 
       {/* Main Content */}

@@ -22,7 +22,7 @@ const app = express();
 // Set up request logging
 if (config.env !== 'test') {
   app.use(
-    morgan('combined', {
+    morgan('dev', {
       stream: { write: (message) => logger.info(message.trim()) },
       skip: (req) => req.path === '/health' || req.path === '/favicon.ico',
     })
@@ -30,9 +30,12 @@ if (config.env !== 'test') {
 }
 
 // Set up security, CORS, and other middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false,
+}));
 app.use(cors({
-  origin: config.corsOrigin,
+  origin: '*', // Allow all origins
   credentials: true,
   optionsSuccessStatus: 200,
 }));
@@ -48,6 +51,22 @@ if (config.env === 'production') {
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'UP', timestamp: new Date() });
+});
+
+// API root endpoint
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    message: 'Welcome to Football Field Management API',
+    version: '1.0.0',
+    endpoints: [
+      '/api/auth',
+      '/api/fields',
+      '/api/bookings',
+      '/api/products',
+      '/api/feedback',
+      '/api/opponents'
+    ]
+  });
 });
 
 // Set up API routes
@@ -73,4 +92,4 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not Found', message: 'The requested resource was not found' });
 });
 
-module.exports = app; 
+module.exports = app;

@@ -28,3 +28,42 @@
 2025-04-28 16:51:08 error: Error creating field: notNull Violation: Field.hourlyRate cannot be null
 2025-04-28 16:51:08 error: 400 - Validation error: Field.hourlyRate cannot be null - /api/fields - POST - ::1
 2025-04-28 16:51:08 error: Error: Validation error: Field.hourlyRate cannot be null
+2025-04-28 16:51:24 error: 400 - Price per hour must be a number, Price per hour must be greater than 0 - /api/fields - POST - ::1
+2025-04-28 16:51:24 error: Error: Price per hour must be a number, Price per hour must be greater than 0
+2025-04-28 16:53:14 error: Error creating field: notNull Violation: Field.hourlyRate cannot be null
+2025-04-28 16:53:14 error: 400 - Validation error: Field.hourlyRate cannot be null - /api/fields - POST - ::1
+2025-04-28 16:53:14 error: Error: Validation error: Field.hourlyRate cannot be null
+2025-04-28 16:53:34 error: 400 - Field type is required, Field type must be 5v5, 7v7, or 11v11, Price per hour must be a number, Price per hour must be greater than 0 - /api/fields - POST - ::1
+2025-04-28 16:53:34 error: Error: Field type is required, Field type must be 5v5, 7v7, or 11v11, Price per hour must be a number, Price per hour must be greater than 0
+2025-04-28 16:54:27 error: Error deleting field ID 6: Unknown column 'Booking.fieldId' in 'where clause'
+2025-04-28 16:54:27 error: 500 - Database error occurred - /api/fields/6 - DELETE - ::1
+2025-04-28 16:54:27 error: Error: Database error occurred
+2025-04-28 16:56:06 error: Error checking field availability (fieldId: undefined, date: undefined): Field not found
+2025-04-28 16:56:06 error: Error creating booking: Field not found
+2025-04-28 16:56:06 error: 404 - Field not found - /api/bookings - POST - ::1
+2025-04-28 16:56:06 error: Error: Field not found
+2025-04-28 16:56:42 error: Error checking field availability (fieldId: undefined, date: undefined): Field not found
+2025-04-28 16:56:42 error: Error creating booking: Field not found
+2025-04-28 16:56:42 error: 404 - Field not found - /api/bookings - POST - ::1
+2025-04-28 16:56:42 error: Error: Field not found
+2025-04-28 18:14:36 error: 401 - No token provided - /api/opponents - GET - ::1
+2025-04-28 18:14:36 error: Error: No token provided
+2025-04-28 18:14:48 error: 401 - No token provided - /api/bookings - GET - ::1
+2025-04-28 18:14:48 error: Error: No token provided
+2025-04-28 18:23:32 error: 401 - No token provided - /api/bookings - GET - ::1
+2025-04-28 18:23:32 error: Error: No token provided
+2025-04-28 18:40:54 error: 401 - No token provided - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:40:54 error: Error: No token provided
+2025-04-28 18:42:43 error: 400 - ID must be a positive integer - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:42:43 error: Error: ID must be a positive integer
+2025-04-28 18:45:07 error: 500 - Cannot read properties of undefined (reading 'role') - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:45:07 error: Error: Cannot read properties of undefined (reading 'role')
+2025-04-28 18:47:31 error: Error fetching bookings: Unknown column 'Booking.fieldId' in 'where clause'
+2025-04-28 18:47:31 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:47:31 error: Error: Database error occurred
+2025-04-28 18:49:43 error: Error fetching bookings: Unknown column 'Booking.bookingDate' in 'order clause'
+2025-04-28 18:49:43 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
+2025-04-28 18:49:43 error: Error: Database error occurred
+2025-04-28 19:11:03 error: Error fetching bookings: Unknown column 'user.username' in 'field list'
+2025-04-28 19:11:03 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
+2025-04-28 19:11:03 error: Error: Database error occurred

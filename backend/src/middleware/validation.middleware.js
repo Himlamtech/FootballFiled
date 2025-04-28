@@ -174,6 +174,14 @@ const idValidation = [
   validateResults
 ];
 
+// Field ID parameter validation
+const fieldIdValidation = [
+  param('fieldId')
+    .isInt({ min: 1 })
+    .withMessage('Field ID must be a positive integer'),
+  validateResults
+];
+
 // Pagination validation
 const paginationValidation = [
   query('page')
@@ -225,7 +233,8 @@ module.exports = {
   opponentValidation,
   opponentMatchValidation,
   idValidation,
+  fieldIdValidation,
   paginationValidation,
   paymentStatusValidation,
   availabilityValidation
-}; 
+};

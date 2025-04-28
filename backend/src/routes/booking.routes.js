@@ -1,30 +1,30 @@
 const express = require('express');
 const bookingController = require('../controllers/booking.controller');
 const { verifyToken, isAdmin, isOwnerOrAdmin } = require('../middleware/auth.middleware');
-const { 
-  bookingValidation, 
+const {
+  bookingValidation,
   idValidation,
+  fieldIdValidation,
   paginationValidation,
   paymentStatusValidation
 } = require('../middleware/validation.middleware');
 
 const router = express.Router();
 
-// All booking routes require authentication
-router.use(verifyToken);
+// Public routes
+router.get('/field/:fieldId', fieldIdValidation, paginationValidation, bookingController.getBookingsByField);
 
-// Booking routes
-router.get('/', paginationValidation, bookingController.getAllBookings);
-router.get('/:id', idValidation, bookingController.getBookingById);
-router.post('/', bookingValidation, bookingController.createBooking);
-router.put('/:id', idValidation, bookingValidation, bookingController.updateBooking);
-router.delete('/:id', idValidation, bookingController.deleteBooking);
+// Protected routes - require authentication
+router.get('/', verifyToken, paginationValidation, bookingController.getAllBookings);
+router.get('/:id', verifyToken, idValidation, bookingController.getBookingById);
+router.post('/', verifyToken, bookingValidation, bookingController.createBooking);
+router.put('/:id', verifyToken, idValidation, bookingValidation, bookingController.updateBooking);
+router.delete('/:id', verifyToken, idValidation, bookingController.deleteBooking);
 
-// User & field specific bookings
-router.get('/user/:userId', idValidation, paginationValidation, isOwnerOrAdmin, bookingController.getBookingsByUser);
-router.get('/field/:fieldId', idValidation, paginationValidation, bookingController.getBookingsByField);
+// User specific bookings
+router.get('/user/:userId', verifyToken, idValidation, paginationValidation, isOwnerOrAdmin, bookingController.getBookingsByUser);
 
 // Payment update
-router.patch('/:id/payment', idValidation, paymentStatusValidation, bookingController.updatePaymentStatus);
+router.patch('/:id/payment', verifyToken, idValidation, paymentStatusValidation, bookingController.updatePaymentStatus);
 
-module.exports = router; 
+module.exports = router;

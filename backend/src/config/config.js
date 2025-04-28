@@ -7,7 +7,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 const env = process.env.NODE_ENV || 'development';
 const port = process.env.PORT || 5000;
 const host = process.env.HOST || 'localhost';
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:9001';
 
 const sqliteConfig = {
   dialect: 'sqlite',

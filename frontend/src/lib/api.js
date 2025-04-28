@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002/api/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9002/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -25,26 +25,26 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // If error is 401 and not already retrying
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      
+
       try {
         // Try to refresh the token
         const refreshToken = localStorage.getItem('refreshToken');
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
-        
+
         const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
           refreshToken,
         });
-        
+
         // Save the new token
         const { accessToken } = response.data;
         localStorage.setItem('accessToken', accessToken);
-        
+
         // Update the request header and retry
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
@@ -56,7 +56,7 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -124,4 +124,4 @@ export const opponentAPI = {
   matchOpponents: (matchData) => api.post('/opponents/match', matchData),
 };
 
-export default api; 
+export default api;

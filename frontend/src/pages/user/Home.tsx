@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Mail, Phone, Calendar, Users } from "lucide-react";
+import { MapPin, Mail, Phone, Calendar, Users, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -21,12 +22,33 @@ const Home = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      // Giả lập API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("Form data:", data);
-      toast.success("Cảm ơn bạn! Phản hồi đã được gửi thành công.");
-      reset();
+      console.log("Sending feedback:", data);
+
+      // Gửi phản hồi lên API
+      const response = await fetch('/api/feedbacks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: data.fullName,
+          email: data.email,
+          content: data.message,
+          date: new Date().toISOString().split('T')[0],
+          status: "new"
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success("Cảm ơn bạn! Phản hồi đã được gửi thành công.");
+        reset();
+      } else {
+        throw new Error(result.message || "Không thể gửi phản hồi");
+      }
     } catch (error) {
+      console.error("Error sending feedback:", error);
       toast.error("Rất tiếc! Đã xảy ra lỗi khi gửi phản hồi.");
     }
   };
@@ -37,10 +59,10 @@ const Home = () => {
     lat: 20.9732762,
     lng: 105.7875231,
   };
-  
+
   // Create Google Maps embed URL
   const googleMapsEmbedUrl = `https://maps.google.com/maps?q=${location.lat},${location.lng}&z=16&output=embed`;
-  
+
   const facilities = [
     {
       title: "Sân cỏ nhân tạo chất lượng cao",
@@ -63,13 +85,44 @@ const Home = () => {
       icon: "🥤",
     },
   ];
-  
-  const fields = [
-    { id: 1, name: "Sân A", size: "5 người", img: "https://images.unsplash.com/photo-1459865264687-595d652de67e?w=800&auto=format&fit=crop&q=80" },
-    { id: 2, name: "Sân B", size: "5 người", img: "https://images.unsplash.com/photo-1556056504-5c7696c4c28d?w=800&auto=format&fit=crop&q=80" },
-    { id: 3, name: "Sân C", size: "7 người", img: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=800&auto=format&fit=crop&q=80" },
-    { id: 4, name: "Sân D", size: "7 người", img: "https://images.unsplash.com/photo-1536122985607-4fe00b283652?w=800&auto=format&fit=crop&q=80" },
-  ];
+
+  const [fields, setFields] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch fields from API
+  useEffect(() => {
+    const fetchFields = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/fields');
+        const data = await response.json();
+
+        if (data && data.fields) {
+          console.log("Fields data:", data.fields);
+          const mappedFields = data.fields.map((field: any) => ({
+            id: field.id,
+            name: field.name,
+            size: field.capacity ? `${field.capacity} người` : "Không xác định",
+            img: field.image_url || "https://placehold.co/600x400?text=Football+Field",
+            description: field.description || "Sân bóng đá"
+          }));
+
+          setFields(mappedFields);
+        } else {
+          console.error("API returned no fields");
+          setFields([]);
+        }
+      } catch (error) {
+        console.error("Error fetching fields:", error);
+        toast.error("Không thể tải danh sách sân bóng");
+        setFields([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFields();
+  }, []);
 
   return (
     <div className="space-y-16">
@@ -106,26 +159,37 @@ const Home = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {fields.map((field) => (
-            <Card key={field.id} className="overflow-hidden hover:shadow-xl transition-shadow">
-              <img
-                src={field.img}
-                alt={field.name}
-                className="w-full h-48 object-cover"
-              />
-              <CardContent className="p-4 text-center">
-                <h3 className="font-bold text-xl mb-1">{field.name}</h3>
-                <p className="text-gray-600">Sân {field.size}</p>
-                <Link to="/dat-san">
-                  <Button variant="outline" className="mt-4 w-full border-field-500 text-field-700 hover:bg-field-50">
-                    Đặt sân này
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-field-600 mr-2" />
+            <span>Đang tải danh sách sân...</span>
+          </div>
+        ) : fields.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Không có sân bóng nào</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {fields.map((field) => (
+              <Card key={field.id} className="overflow-hidden hover:shadow-xl transition-shadow">
+                <img
+                  src={field.img}
+                  alt={field.name}
+                  className="w-full h-48 object-cover"
+                />
+                <CardContent className="p-4 text-center">
+                  <h3 className="font-bold text-xl mb-1">{field.name}</h3>
+                  <p className="text-gray-600">Sân {field.size}</p>
+                  <Link to="/dat-san">
+                    <Button variant="outline" className="mt-4 w-full border-field-500 text-field-700 hover:bg-field-50">
+                      Đặt sân này
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Facilities */}
@@ -172,16 +236,16 @@ const Home = () => {
               <p className="text-gray-600">Nơi đam mê hội tụ</p>
             </div>
           </div>
-          
+
           {/* Google Map */}
           <div className="mt-8 h-80 border border-gray-300 rounded-lg overflow-hidden">
-            <iframe 
+            <iframe
               src={googleMapsEmbedUrl}
-              width="100%" 
-              height="100%" 
-              style={{ border: 0 }} 
-              allowFullScreen={false} 
-              loading="lazy" 
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen={false}
+              loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               title="Sân Bóng Xanh location"
             />
@@ -287,7 +351,7 @@ const Home = () => {
                   </p>
                 )}
               </div>
-              <Button 
+              <Button
                 type="submit"
                 className="bg-field-600 hover:bg-field-700 text-white w-full"
                 disabled={isSubmitting}

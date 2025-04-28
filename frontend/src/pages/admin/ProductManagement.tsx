@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -21,136 +21,31 @@ import { useToast } from "@/components/ui/use-toast";
 interface Product {
   id: number;
   name: string;
-  price: number;
-  image: string;
+  price: string | number;
+  image_url?: string;
+  image?: string; // Để tương thích với dữ liệu mẫu cũ
   category: string;
-  type: "rent" | "sale";
+  type?: "rent" | "sale";
   description: string;
-  inventory: number;
-  salesCount: number;
+  stock_quantity?: number;
+  inventory?: number; // Để tương thích với dữ liệu mẫu cũ
+  is_available?: boolean;
+  salesCount?: number; // Để tương thích với dữ liệu mẫu cũ
+  created_at?: string;
+  updated_at?: string;
 }
 
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: "Áo bóng đá Nike",
-    price: 350000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=%C3%81o+b%C3%B3ng+%C4%91%C3%A1&font=roboto",
-    category: "clothes",
-    type: "sale",
-    description: "Áo bóng đá chất liệu thun lạnh, thoáng mát, thấm hút mồ hôi tốt",
-    inventory: 25,
-    salesCount: 12
-  },
-  {
-    id: 2,
-    name: "Giày đá bóng Adidas",
-    price: 1200000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=Gi%C3%A0y+b%C3%B3ng+%C4%91%C3%A1&font=roboto",
-    category: "shoes",
-    type: "sale",
-    description: "Giày đá bóng sân cỏ nhân tạo, đế TF bám sân tốt",
-    inventory: 12,
-    salesCount: 5
-  },
-  {
-    id: 3,
-    name: "Bóng đá size 5",
-    price: 450000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=B%C3%B3ng+%C4%91%C3%A1&font=roboto",
-    category: "equipment",
-    type: "sale",
-    description: "Bóng đá chất lượng cao, phù hợp cho mọi mặt sân",
-    inventory: 30,
-    salesCount: 18
-  },
-  {
-    id: 4,
-    name: "Áo thủ môn",
-    price: 280000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=%C3%81o+th%E1%BB%A7+m%C3%B4n&font=roboto",
-    category: "clothes",
-    type: "rent",
-    description: "Áo thủ môn chuyên dụng, có đệm bảo vệ",
-    inventory: 8,
-    salesCount: 0
-  },
-  {
-    id: 5,
-    name: "Giày đá bóng Nike",
-    price: 1500000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=Gi%C3%A0y+Nike&font=roboto",
-    category: "shoes",
-    type: "sale",
-    description: "Giày đá bóng cao cấp, nhẹ và bám sân tốt",
-    inventory: 5,
-    salesCount: 2
-  },
-  {
-    id: 6,
-    name: "Găng tay thủ môn",
-    price: 320000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=G%C4%83ng+tay&font=roboto",
-    category: "equipment",
-    type: "rent",
-    description: "Găng tay thủ môn có lớp đệm đặc biệt, bảo vệ tay tốt",
-    inventory: 15,
-    salesCount: 0
-  },
-  {
-    id: 7,
-    name: "Nước uống thể thao",
-    price: 25000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=N%C6%B0%E1%BB%9Bc+u%E1%BB%91ng&font=roboto",
-    category: "food",
-    type: "sale",
-    description: "Nước uống thể thao bổ sung điện giải, giúp phục hồi nhanh",
-    inventory: 50,
-    salesCount: 32
-  },
-  {
-    id: 8,
-    name: "Bánh năng lượng",
-    price: 35000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=B%C3%A1nh+n%C4%83ng+l%C6%B0%E1%BB%A3ng&font=roboto",
-    category: "food",
-    type: "sale",
-    description: "Bánh năng lượng giúp bổ sung nhanh năng lượng khi chơi thể thao",
-    inventory: 40,
-    salesCount: 25
-  },
-  {
-    id: 9,
-    name: "Bộ quần áo bóng đá",
-    price: 50000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=B%E1%BB%99+qu%E1%BA%A7n+%C3%A1o&font=roboto",
-    category: "clothes",
-    type: "rent",
-    description: "Bộ quần áo bóng đá cho thuê theo giờ",
-    inventory: 20,
-    salesCount: 0
-  },
-  {
-    id: 10,
-    name: "Đồng phục đội",
-    price: 80000,
-    image: "https://placehold.co/300x300/E8F5E9/388E3C?text=%C4%90%E1%BB%93ng+ph%E1%BB%A5c&font=roboto",
-    category: "clothes",
-    type: "rent",
-    description: "Bộ đồng phục đội bóng cho thuê theo trận",
-    inventory: 15,
-    salesCount: 0
-  },
-];
+// Đã xóa dữ liệu mẫu
 
 const ProductManagement = () => {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [activeTypeTab, setActiveTypeTab] = useState<"all" | "sale" | "rent">("all");
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showStats, setShowStats] = useState(false);
-  
+  const [loading, setLoading] = useState(true);
+
   // Form state
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -159,16 +54,62 @@ const ProductManagement = () => {
   const [productType, setProductType] = useState<"rent" | "sale">("sale");
   const [productDescription, setProductDescription] = useState("");
   const [productInventory, setProductInventory] = useState("");
-  
+
   const { toast } = useToast();
-  
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/products');
+        const data = await response.json();
+        console.log("Products API response:", data);
+
+        if (data.products) {
+          // Map API data to our Product interface
+          const mappedProducts = data.products.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image_url: product.image_url,
+            category: product.category || "equipment",
+            type: "sale", // Default to sale since API doesn't have this field
+            description: product.description,
+            stock_quantity: product.stock_quantity,
+            inventory: product.stock_quantity, // For compatibility
+            salesCount: 0, // Default value
+            is_available: product.is_available
+          }));
+
+          setProducts(mappedProducts);
+        } else {
+          console.error("API returned no products");
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách sản phẩm",
+          variant: "destructive",
+        });
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   // Lọc sản phẩm theo danh mục và loại (bán/thuê)
   const filteredProducts = products.filter(product => {
     const categoryMatch = activeTab === "all" ? true : product.category === activeTab;
     const typeMatch = activeTypeTab === "all" ? true : product.type === activeTypeTab;
     return categoryMatch && typeMatch;
   });
-  
+
   // Thống kê bán hàng theo danh mục
   const categorySales = products.reduce((acc, product) => {
     if (product.type === "sale") {
@@ -179,12 +120,17 @@ const ProductManagement = () => {
           name: getCategoryName(product.category)
         };
       }
-      acc[product.category].count += product.salesCount;
-      acc[product.category].revenue += product.salesCount * product.price;
+      // Sử dụng salesCount nếu có, nếu không thì mặc định là 0
+      const salesCount = product.salesCount || 0;
+      acc[product.category].count += salesCount;
+
+      // Chuyển đổi price thành số nếu nó là chuỗi
+      const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+      acc[product.category].revenue += salesCount * (price || 0);
     }
     return acc;
   }, {} as Record<string, {count: number, revenue: number, name: string}>);
-  
+
   // Thống kê cho thuê theo danh mục
   const categoryRentals = products.reduce((acc, product) => {
     if (product.type === "rent") {
@@ -200,7 +146,7 @@ const ProductManagement = () => {
     }
     return acc;
   }, {} as Record<string, {count: number, name: string}>);
-  
+
   function getCategoryName(category: string) {
     switch (category) {
       case "clothes": return "Quần áo";
@@ -210,7 +156,7 @@ const ProductManagement = () => {
       default: return category;
     }
   }
-  
+
   const handleAddProduct = () => {
     const newProduct: Product = {
       id: products.length + 1,
@@ -223,21 +169,21 @@ const ProductManagement = () => {
       inventory: parseInt(productInventory) || 0,
       salesCount: 0
     };
-    
+
     setProducts([...products, newProduct]);
     resetForm();
     setIsAddingProduct(false);
-    
+
     toast({
       title: "Thêm sản phẩm thành công",
       description: `Sản phẩm "${productName}" đã được thêm vào.`,
     });
   };
-  
+
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
-    
-    const updatedProducts = products.map(p => 
+
+    const updatedProducts = products.map(p =>
       p.id === editingProduct.id
         ? {
             ...p,
@@ -251,29 +197,29 @@ const ProductManagement = () => {
           }
         : p
     );
-    
+
     setProducts(updatedProducts);
     resetForm();
     setEditingProduct(null);
-    
+
     toast({
       title: "Cập nhật sản phẩm thành công",
       description: `Sản phẩm "${productName}" đã được cập nhật.`,
     });
   };
-  
+
   const handleDeleteProduct = (id: number) => {
     const productToDelete = products.find(p => p.id === id);
     if (!productToDelete) return;
-    
+
     setProducts(products.filter(p => p.id !== id));
-    
+
     toast({
       title: "Xóa sản phẩm thành công",
       description: `Sản phẩm "${productToDelete.name}" đã bị xóa.`,
     });
   };
-  
+
   const handleEditClick = (product: Product) => {
     setEditingProduct(product);
     setProductName(product.name);
@@ -284,7 +230,7 @@ const ProductManagement = () => {
     setProductDescription(product.description);
     setProductInventory(product.inventory.toString());
   };
-  
+
   const resetForm = () => {
     setProductName("");
     setProductPrice("");
@@ -294,11 +240,11 @@ const ProductManagement = () => {
     setProductDescription("");
     setProductInventory("");
   };
-  
+
   const totalSales = Object.values(categorySales).reduce((sum, cat) => sum + cat.count, 0);
   const totalRentals = Object.values(categoryRentals).reduce((sum, cat) => sum + cat.count, 0);
   const totalRevenue = Object.values(categorySales).reduce((sum, cat) => sum + cat.revenue, 0);
-  
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -313,14 +259,21 @@ const ProductManagement = () => {
           {showStats ? "Ẩn thống kê" : "Xem thống kê"}
         </Button>
       </div>
-      
+
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-lg">Đang tải dữ liệu...</span>
+        </div>
+      )}
+
       {/* Statistics Section */}
       {showStats && (
         <div className="mb-8">
           <Card>
             <CardContent className="p-6">
               <h2 className="text-lg font-semibold mb-4">Thống kê bán hàng</h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h3 className="text-sm text-green-700 mb-1">Tổng doanh thu</h3>
@@ -335,7 +288,7 @@ const ProductManagement = () => {
                   <p className="text-2xl font-bold text-purple-700">{totalRentals}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium mb-3">Thống kê bán hàng theo danh mục</h3>
@@ -344,8 +297,8 @@ const ProductManagement = () => {
                       <div key={key} className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded-full ${
-                            key === "clothes" ? "bg-blue-500" : 
-                            key === "shoes" ? "bg-purple-500" : 
+                            key === "clothes" ? "bg-blue-500" :
+                            key === "shoes" ? "bg-purple-500" :
                             key === "equipment" ? "bg-green-500" : "bg-yellow-500"
                           }`}></div>
                           <span>{data.name}</span>
@@ -358,7 +311,7 @@ const ProductManagement = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 <div>
                   <h3 className="text-sm font-medium mb-3">Thống kê cho thuê theo danh mục</h3>
                   <div className="space-y-3">
@@ -366,8 +319,8 @@ const ProductManagement = () => {
                       <div key={key} className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
                           <div className={`w-3 h-3 rounded-full ${
-                            key === "clothes" ? "bg-blue-500" : 
-                            key === "shoes" ? "bg-purple-500" : 
+                            key === "clothes" ? "bg-blue-500" :
+                            key === "shoes" ? "bg-purple-500" :
                             key === "equipment" ? "bg-green-500" : "bg-yellow-500"
                           }`}></div>
                           <span>{data.name}</span>
@@ -382,7 +335,7 @@ const ProductManagement = () => {
           </Card>
         </div>
       )}
-      
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="space-y-4 w-full">
           <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
@@ -394,7 +347,7 @@ const ProductManagement = () => {
               <TabsTrigger value="food">Đồ ăn & nước</TabsTrigger>
             </TabsList>
           </Tabs>
-          
+
           <Tabs defaultValue="all" value={activeTypeTab} onValueChange={(v) => setActiveTypeTab(v as "all" | "sale" | "rent")}>
             <TabsList>
               <TabsTrigger value="all">Tất cả</TabsTrigger>
@@ -403,7 +356,7 @@ const ProductManagement = () => {
             </TabsList>
           </Tabs>
         </div>
-        
+
         <Dialog open={isAddingProduct} onOpenChange={setIsAddingProduct}>
           <DialogTrigger asChild>
             <Button className="bg-field-600 hover:bg-field-700 whitespace-nowrap">
@@ -417,7 +370,7 @@ const ProductManagement = () => {
                 Nhập thông tin chi tiết cho sản phẩm mới
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="grid gap-4 py-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">Tên sản phẩm</label>
@@ -427,7 +380,7 @@ const ProductManagement = () => {
                   onChange={(e) => setProductName(e.target.value)}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Giá (VNĐ)</label>
@@ -448,7 +401,7 @@ const ProductManagement = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Danh mục</label>
@@ -475,7 +428,7 @@ const ProductManagement = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1 block">Link hình ảnh</label>
                 <Input
@@ -484,7 +437,7 @@ const ProductManagement = () => {
                   onChange={(e) => setProductImage(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1 block">Mô tả</label>
                 <Textarea
@@ -495,10 +448,10 @@ const ProductManagement = () => {
                 />
               </div>
             </div>
-            
+
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   resetForm();
                   setIsAddingProduct(false);
@@ -506,8 +459,8 @@ const ProductManagement = () => {
               >
                 Hủy
               </Button>
-              <Button 
-                className="bg-field-600 hover:bg-field-700" 
+              <Button
+                className="bg-field-600 hover:bg-field-700"
                 onClick={handleAddProduct}
                 disabled={!productName || !productPrice}
               >
@@ -516,7 +469,7 @@ const ProductManagement = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        
+
         <Dialog open={!!editingProduct} onOpenChange={(open) => !open && setEditingProduct(null)}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -525,7 +478,7 @@ const ProductManagement = () => {
                 Chỉnh sửa thông tin chi tiết cho sản phẩm
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="grid gap-4 py-4">
               <div>
                 <label className="text-sm font-medium mb-1 block">Tên sản phẩm</label>
@@ -535,7 +488,7 @@ const ProductManagement = () => {
                   onChange={(e) => setProductName(e.target.value)}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Giá (VNĐ)</label>
@@ -556,7 +509,7 @@ const ProductManagement = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Danh mục</label>
@@ -583,7 +536,7 @@ const ProductManagement = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1 block">Link hình ảnh</label>
                 <Input
@@ -592,7 +545,7 @@ const ProductManagement = () => {
                   onChange={(e) => setProductImage(e.target.value)}
                 />
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium mb-1 block">Mô tả</label>
                 <Textarea
@@ -603,10 +556,10 @@ const ProductManagement = () => {
                 />
               </div>
             </div>
-            
+
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   resetForm();
                   setEditingProduct(null);
@@ -614,8 +567,8 @@ const ProductManagement = () => {
               >
                 Hủy
               </Button>
-              <Button 
-                className="bg-field-600 hover:bg-field-700" 
+              <Button
+                className="bg-field-600 hover:bg-field-700"
                 onClick={handleUpdateProduct}
               >
                 Cập nhật
@@ -624,7 +577,7 @@ const ProductManagement = () => {
           </DialogContent>
         </Dialog>
       </div>
-      
+
       {/* Product Table */}
       <Card>
         <CardContent className="p-0">
@@ -671,8 +624,8 @@ const ProductManagement = () => {
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <Badge className={product.type === 'sale' ? 
-                        'bg-green-100 text-green-800' : 
+                      <Badge className={product.type === 'sale' ?
+                        'bg-green-100 text-green-800' :
                         'bg-blue-100 text-blue-800'
                       }>
                         {product.type === 'sale' ? 'Bán' : 'Cho thuê'}
@@ -681,31 +634,31 @@ const ProductManagement = () => {
                     <td className="p-4">{product.price.toLocaleString()}đ</td>
                     <td className="p-4">
                       <Badge className={`
-                        ${product.inventory > 10 ? "bg-green-100 text-green-800" : 
-                         product.inventory > 0 ? "bg-yellow-100 text-yellow-800" : 
+                        ${product.inventory > 10 ? "bg-green-100 text-green-800" :
+                         product.inventory > 0 ? "bg-yellow-100 text-yellow-800" :
                          "bg-red-100 text-red-800"}
                       `}>
                         {product.inventory}
                       </Badge>
                     </td>
                     <td className="p-4">
-                      {product.type === 'sale' ? 
+                      {product.type === 'sale' ?
                         <span className="text-green-700">{product.salesCount} sản phẩm</span> :
                         <span className="text-blue-700">{Math.floor(Math.random() * 30)} lượt</span>
                       }
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
                           onClick={() => handleEditClick(product)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => handleDeleteProduct(product.id)}
@@ -716,7 +669,7 @@ const ProductManagement = () => {
                     </td>
                   </tr>
                 ))}
-                
+
                 {filteredProducts.length === 0 && (
                   <tr>
                     <td colSpan={7} className="p-8 text-center text-gray-500">

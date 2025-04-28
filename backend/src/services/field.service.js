@@ -13,21 +13,21 @@ const { Op } = db.Sequelize;
  */
 const getAllFields = async (options = {}) => {
   try {
-    const { 
-      status, 
-      size, 
-      page = 1, 
-      limit = 10 
+    const {
+      status,
+      size,
+      page = 1,
+      limit = 10
     } = options;
-    
+
     // Build filter conditions
     const condition = {};
     if (status) condition.status = status;
     if (size) condition.size = size;
-    
+
     // Calculate pagination
     const offset = (page - 1) * limit;
-    
+
     // Query fields with pagination
     const { count, rows } = await Field.findAndCountAll({
       where: condition,
@@ -35,10 +35,10 @@ const getAllFields = async (options = {}) => {
       offset,
       order: [['id', 'ASC']],
     });
-    
+
     // Calculate total pages
     const totalPages = Math.ceil(count / limit);
-    
+
     return {
       totalItems: count,
       totalPages,
@@ -59,11 +59,11 @@ const getAllFields = async (options = {}) => {
 const getFieldById = async (id) => {
   try {
     const field = await Field.findByPk(id);
-    
+
     if (!field) {
       throw new ApiError(404, 'Field not found');
     }
-    
+
     return field;
   } catch (error) {
     logger.error(`Error fetching field ID ${id}:`, error);
@@ -80,7 +80,7 @@ const createField = async (fieldData) => {
   try {
     // Create field
     const field = await Field.create(fieldData);
-    
+
     return field;
   } catch (error) {
     logger.error('Error creating field:', error);
@@ -98,14 +98,14 @@ const updateField = async (id, fieldData) => {
   try {
     // Find field
     const field = await Field.findByPk(id);
-    
+
     if (!field) {
       throw new ApiError(404, 'Field not found');
     }
-    
+
     // Update field
     await field.update(fieldData);
-    
+
     return field;
   } catch (error) {
     logger.error(`Error updating field ID ${id}:`, error);
@@ -122,21 +122,21 @@ const deleteField = async (id) => {
   try {
     // Check if field exists
     const field = await Field.findByPk(id);
-    
+
     if (!field) {
       throw new ApiError(404, 'Field not found');
     }
-    
+
     // Check if field has associated bookings
     const bookings = await Booking.count({ where: { fieldId: id } });
-    
+
     if (bookings > 0) {
       throw new ApiError(400, 'Cannot delete field with existing bookings');
     }
-    
+
     // Delete field
     await field.destroy();
-    
+
     return true;
   } catch (error) {
     logger.error(`Error deleting field ID ${id}:`, error);
@@ -156,16 +156,19 @@ const checkFieldAvailability = async (fieldId, date, startTime, endTime) => {
   try {
     // Find field
     const field = await Field.findByPk(fieldId);
-    
+
     if (!field) {
       throw new ApiError(404, 'Field not found');
     }
-    
+
+    // Log field details for debugging
+    console.log('Field found:', field.toJSON());
+
     // Check if field is available
     if (field.status !== 'available') {
       return false;
     }
-    
+
     // Find bookings that overlap with the requested time slot
     const overlappingBookings = await Booking.count({
       where: {
@@ -191,7 +194,7 @@ const checkFieldAvailability = async (fieldId, date, startTime, endTime) => {
         ]
       }
     });
-    
+
     return overlappingBookings === 0;
   } catch (error) {
     logger.error(`Error checking field availability (fieldId: ${fieldId}, date: ${date}):`, error);
