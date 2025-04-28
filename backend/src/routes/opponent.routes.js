@@ -1,68 +1,31 @@
 const express = require('express');
 const opponentController = require('../controllers/opponent.controller');
-const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
-const validate = require('../middleware/validation.middleware');
+const { verifyToken, isAdmin, isOwnerOrAdmin } = require('../middleware/auth.middleware');
+const { 
+  opponentValidation, 
+  idParamValidation, 
+  paginationValidation,
+  bookingIdValidation,
+  matchValidation
+} = require('../middleware/validation.middleware');
 
 const router = express.Router();
 
-// Apply auth middleware to all routes
+// Apply verifyToken middleware to all routes
 router.use(verifyToken);
 
-// Get all opponent requests (with pagination and filtering)
-router.get(
-  '/',
-  validate('pagination'),
-  opponentController.getAllOpponents
-);
+// Routes for getting opponent requests
+router.get('/', paginationValidation, opponentController.getAllOpponents);
+router.get('/:id', idParamValidation, opponentController.getOpponentById);
+router.get('/booking/:bookingId', bookingIdValidation, opponentController.getOpponentByBooking);
+router.get('/available', opponentController.findAvailableOpponents);
 
-// Get a specific opponent request by ID
-router.get(
-  '/:id',
-  validate('paramId'),
-  opponentController.getOpponentById
-);
+// Routes for creating and managing opponent requests
+router.post('/', opponentValidation, opponentController.createOpponent);
+router.put('/:id', idParamValidation, opponentValidation, opponentController.updateOpponent);
+router.delete('/:id', idParamValidation, opponentController.deleteOpponent);
 
-// Create a new opponent request
-router.post(
-  '/',
-  validate('opponentCreate'),
-  opponentController.createOpponent
-);
-
-// Update an opponent request
-router.put(
-  '/:id',
-  validate('paramId'),
-  validate('opponentUpdate'),
-  opponentController.updateOpponent
-);
-
-// Delete an opponent request
-router.delete(
-  '/:id',
-  validate('paramId'),
-  opponentController.deleteOpponent
-);
-
-// Match two teams for a friendly match
-router.post(
-  '/match',
-  validate('opponentMatch'),
-  opponentController.matchOpponents
-);
-
-// Find available opponents
-router.get(
-  '/available',
-  validate('opponentFind'),
-  opponentController.findAvailableOpponents
-);
-
-// Get opponent request by booking ID
-router.get(
-  '/booking/:bookingId',
-  validate('paramId'),
-  opponentController.getOpponentByBooking
-);
+// Route for matching opponents
+router.post('/match', matchValidation, opponentController.matchOpponents);
 
 module.exports = router; 

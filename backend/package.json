@@ -10,7 +10,16 @@
     "test:ci": "jest --ci",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "seed": "node src/utils/seedDatabase.js"
+    "seed": "node src/utils/seedDatabase.js",
+    "init-db": "node src/utils/initDatabase.js",
+    "generate-data": "node src/utils/generateData.js",
+    "setup-db": "node src/utils/setupDatabase.js",
+    "setup-sqlite": "node src/utils/generateSQLiteData.js",
+    "setup-mysql": "node src/utils/generateMySQLData.js",
+    "setup-mysql-db": "node src/utils/setupMySQLDatabase.js",
+    "switch-db": "node src/utils/switchDatabase.js",
+    "switch-db:sqlite": "node src/utils/switchDatabase.js sqlite",
+    "switch-db:mysql": "node src/utils/switchDatabase.js mysql"
   },
   "keywords": [
     "football",
@@ -27,6 +36,7 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.1",
+    "express-validator": "^7.0.1",
     "helmet": "^7.0.0",
     "joi": "^17.10.2",
     "jsonwebtoken": "^9.0.2",
@@ -34,6 +44,7 @@
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.1",
     "sequelize": "^6.33.0",
+    "sqlite3": "^5.1.7",
     "winston": "^3.10.0"
   },
   "devDependencies": {
@@ -48,4 +59,4 @@
   "engines": {
     "node": ">=14.0.0"
   }
-} 
+}

@@ -1,184 +1,163 @@
 # Football Field Management System - Backend
 
-This is the backend API for the Football Field Management System, a platform that allows users to book football fields, order products, find opponents, and provide feedback.
+This repository contains the backend code for the Football Field Management System. The system is designed to manage football field bookings, products, users, and more.
 
-## Technologies
+## Requirements
 
-- Node.js
-- Express.js
-- MySQL
-- Sequelize ORM
-- JWT Authentication
-- Winston Logger
+- Node.js 14+
+- npm
+- Either SQLite or MySQL database
 
-## Prerequisites
+## Setup
 
-- Node.js (v14 or higher)
-- MySQL (v8.0 or higher)
-- npm or yarn
-
-## Installation
-
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   cd football-field/backend
-   ```
-
+1. Clone the repository
 2. Install dependencies:
-   ```
-   npm install
-   ```
 
-3. Set up environment variables:
-   Create a `.env` file in the root of the backend directory with the following variables:
-   ```
-   # Server
-   NODE_ENV=development
-   PORT=5000
+```bash
+npm install
+```
 
-   # Database
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=your_password
-   DB_NAME=football_field_db
+3. Create a `.env` file in the root directory of the backend folder with the following content:
 
-   # JWT
-   JWT_SECRET=your_jwt_secret
-   JWT_ACCESS_EXPIRATION=1h
-   JWT_REFRESH_EXPIRATION=7d
+```
+NODE_ENV=development
+PORT=5000
+JWT_SECRET=your_jwt_secret_key
+JWT_ACCESS_EXPIRATION=1h
+JWT_REFRESH_EXPIRATION=7d
+```
 
-   # Logging
-   LOG_LEVEL=info
-   ```
+## Database Configuration
 
-4. Create the database:
-   ```
-   mysql -u root -p
-   CREATE DATABASE football_field_db;
-   exit
-   ```
+The application supports both SQLite (for development) and MySQL (for production or more robust development).
 
-5. Run database migrations and seeders:
-   ```
-   npx sequelize-cli db:migrate
-   npx sequelize-cli db:seed:all
-   ```
+### Using the Database Switcher
 
-## Available Scripts
+We've provided a utility to easily switch between database types:
 
-- `npm start`: Starts the server in production mode
-- `npm run dev`: Starts the server with nodemon for development
-- `npm test`: Runs all tests in watch mode
-- `npm run test:ci`: Runs tests in CI mode
-- `npm run lint`: Runs ESLint to check code quality
-- `npm run lint:fix`: Fixes linting issues
-- `npm run seed`: Runs the database seeders
+```bash
+# Interactive mode - will prompt for database type and settings
+npm run switch-db
 
-## API Endpoints
+# Directly switch to SQLite
+npm run switch-db:sqlite
 
-### Authentication
+# Directly switch to MySQL
+npm run switch-db:mysql
+```
 
-- `POST /api/auth/register`: Register a new user
-- `POST /api/auth/login`: Login user
-- `POST /api/auth/refresh-token`: Refresh access token
-- `GET /api/auth/profile`: Get current user profile
-- `POST /api/auth/admin/login`: Admin login
+### Manual Configuration
 
-### Fields
+If you prefer to configure manually, add these to your `.env` file:
 
-- `GET /api/fields`: Get all fields
-- `GET /api/fields/:id`: Get a field by ID
-- `GET /api/fields/availability`: Check field availability
-- `POST /api/fields`: Create a new field (Admin only)
-- `PUT /api/fields/:id`: Update a field (Admin only)
-- `DELETE /api/fields/:id`: Delete a field (Admin only)
+#### For SQLite:
+```
+NODE_ENV=development
+DB_DIALECT=sqlite
+DB_STORAGE=data/football_field_db.sqlite
+DB_SYNC=true
+DB_SYNC_ALTER=true
+```
 
-### Bookings
+#### For MySQL:
+```
+NODE_ENV=development
+DB_DIALECT=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=your_password
+DB_DATABASE=football_field_db
+DB_SYNC=true
+DB_SYNC_ALTER=true
+```
 
-- `GET /api/bookings`: Get all bookings
-- `GET /api/bookings/:id`: Get a booking by ID
-- `POST /api/bookings`: Create a new booking
-- `PUT /api/bookings/:id`: Update a booking
-- `DELETE /api/bookings/:id`: Delete a booking
-- `GET /api/bookings/user/:userId`: Get bookings by user ID
-- `GET /api/bookings/field/:fieldId`: Get bookings by field ID
-- `PATCH /api/bookings/:id/payment`: Update payment status
+## Database Setup and Sample Data
 
-### Products
+After configuring your database, you can set up the tables and generate sample data:
 
-- `GET /api/products`: Get all products
-- `GET /api/products/:id`: Get a product by ID
-- `GET /api/products/category/:category`: Get products by category
-- `POST /api/products`: Create a new product (Admin only)
-- `PUT /api/products/:id`: Update a product (Admin only)
-- `DELETE /api/products/:id`: Delete a product (Admin only)
+### For SQLite:
+```bash
+# Generate SQLite database and sample data
+npm run setup-sqlite
+```
 
-### Feedback
+### For MySQL:
+```bash
+# Create MySQL database, tables, and generate sample data
+npm run setup-mysql-db
 
-- `GET /api/feedback`: Get all feedback
-- `GET /api/feedback/:id`: Get feedback by ID
-- `POST /api/feedback`: Create new feedback
-- `PUT /api/feedback/:id`: Update feedback
-- `DELETE /api/feedback/:id`: Delete feedback
-- `GET /api/feedback/booking/:bookingId`: Get feedback by booking ID
-- `GET /api/feedback/field/:fieldId/rating`: Get field rating
+# If you already have the database and just want to generate sample data:
+npm run setup-mysql
+```
 
-### Opponents
+## Running the Application
 
-- `GET /api/opponents`: Get all opponent requests
-- `GET /api/opponents/:id`: Get an opponent request by ID
-- `POST /api/opponents`: Create a new opponent request
-- `PUT /api/opponents/:id`: Update an opponent request
-- `DELETE /api/opponents/:id`: Delete an opponent request
-- `POST /api/opponents/match`: Match two teams
-- `GET /api/opponents/available`: Find available opponents
-- `GET /api/opponents/booking/:bookingId`: Get opponent by booking ID
+```bash
+# Development mode with nodemon (auto-restart on file changes)
+npm run dev
 
-## Project Structure
+# Production mode
+npm start
+```
+
+## API Documentation
+
+The API endpoints are organized into the following categories:
+
+- Authentication (`/api/auth`)
+- Fields (`/api/fields`)
+- Bookings (`/api/bookings`)
+- Products (`/api/products`)
+- Feedback (`/api/feedback`)
+- Opponents (`/api/opponents`)
+
+For detailed API documentation, refer to the Postman collection or Swagger documentation (if available).
+
+## Directory Structure
 
 ```
 backend/
-├── src/
-│   ├── config/           # Configuration files
-│   ├── controllers/      # Request handlers
-│   ├── database/         # Migrations and seeders
-│   ├── middleware/       # Custom middleware
-│   ├── models/           # Sequelize models
-│   ├── routes/           # API routes
-│   ├── services/         # Business logic
-│   ├── utils/            # Utility functions
-│   ├── tests/            # Test files
-│   ├── app.js            # Express app setup
-│   └── server.js         # Server entry point
-├── .env                  # Environment variables
-├── .sequelizerc          # Sequelize CLI config
-├── package.json          # Dependencies and scripts
-└── README.md             # Documentation
+├── data/               # SQLite database and other data files
+├── logs/               # Application logs
+├── src/                # Source code
+│   ├── config/         # Configuration files
+│   ├── controllers/    # Request handlers
+│   ├── middleware/     # Express middleware
+│   ├── models/         # Database models
+│   ├── routes/         # API routes
+│   ├── services/       # Business logic
+│   ├── utils/          # Utility functions
+│   ├── app.js          # Express application setup
+│   └── server.js       # Server entry point
+├── .env                # Environment variables
+├── .eslintrc.js        # ESLint configuration
+├── .gitignore          # Git ignore file
+├── jest.config.js      # Jest configuration
+├── package.json        # Node.js dependencies
+└── README.md           # This file
 ```
 
-## Error Handling
+## Testing
 
-The API uses standardized error responses:
+```bash
+# Run tests in watch mode
+npm test
 
-```json
-{
-  "status": "error",
-  "message": "Error message",
-  "code": 400,
-  "stack": "Error stack trace (development only)"
-}
+# Run tests for CI environment
+npm run test:ci
 ```
 
-## Authentication and Authorization
+## Linting
 
-The API uses JWT for authentication. Include the token in the Authorization header:
+```bash
+# Check code style
+npm run lint
 
-```
-Authorization: Bearer <token>
+# Fix code style issues
+npm run lint:fix
 ```
 
 ## License
 
-ISC 
+This project is licensed under the ISC License. 
