@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     size: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       comment: "Field size, e.g. '5-a-side', '11-a-side'"
     },
     hourlyRate: {

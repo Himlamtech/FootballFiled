@@ -198,6 +198,23 @@ const paymentStatusValidation = [
   validateResults
 ];
 
+// Availability validation
+const availabilityValidation = [
+  query('fieldId')
+    .isInt({ min: 1 })
+    .withMessage('Field ID is required and must be a positive integer'),
+  query('date')
+    .isISO8601()
+    .withMessage('Date is required and must be a valid ISO8601 date'),
+  query('startTime')
+    .matches(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)
+    .withMessage('Start time is required and must be in format HH:MM:SS'),
+  query('endTime')
+    .matches(/^([01]\d|2[0-3]):([0-5]\d):([0-5]\d)$/)
+    .withMessage('End time is required and must be in format HH:MM:SS'),
+  validateResults
+];
+
 module.exports = {
   registerValidation,
   loginValidation,
@@ -209,5 +226,6 @@ module.exports = {
   opponentMatchValidation,
   idValidation,
   paginationValidation,
-  paymentStatusValidation
+  paymentStatusValidation,
+  availabilityValidation
 }; 

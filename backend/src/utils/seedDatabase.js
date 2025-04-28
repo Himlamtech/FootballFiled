@@ -55,33 +55,27 @@ async function seedDatabase() {
       const fields = [
         {
           name: 'Field A',
-          description: 'Professional 5-a-side football field with artificial grass',
           location: '123 Main Street, District 1, City',
-          field_type: '5v5',
-          price_per_hour: 150000,
+          size: '5v5',
+          hourlyRate: 150000,
           status: 'available',
-          image_url: 'https://example.com/fields/field_a.jpg',
-          facilities: JSON.stringify(['Lighting', 'Changing Rooms', 'Parking', 'Refreshments'])
+          imageUrl: 'https://example.com/fields/field_a.jpg'
         },
         {
           name: 'Field B',
-          description: 'Premium 7-a-side football field with natural grass',
           location: '456 Park Avenue, District 2, City',
-          field_type: '7v7',
-          price_per_hour: 200000,
+          size: '7v7',
+          hourlyRate: 200000,
           status: 'available',
-          image_url: 'https://example.com/fields/field_b.jpg',
-          facilities: JSON.stringify(['Lighting', 'Changing Rooms', 'Parking', 'Refreshments', 'Showers'])
+          imageUrl: 'https://example.com/fields/field_b.jpg'
         },
         {
           name: 'Field C',
-          description: 'Standard 11-a-side football field with hybrid grass',
           location: '789 Sports Complex, District 3, City',
-          field_type: '11v11',
-          price_per_hour: 300000,
+          size: '11v11',
+          hourlyRate: 300000,
           status: 'available',
-          image_url: 'https://example.com/fields/field_c.jpg',
-          facilities: JSON.stringify(['Lighting', 'Changing Rooms', 'Parking', 'Refreshments', 'Showers', 'Spectator Seating'])
+          imageUrl: 'https://example.com/fields/field_c.jpg'
         }
       ];
 

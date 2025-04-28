@@ -27,3 +27,43 @@
 2025-04-28 15:31:04 info: Running npm script: setup-sqlite
 2025-04-28 15:31:06 info: Successfully completed: setup-sqlite
 2025-04-28 15:31:21 error: Invalid choice. Please run the script again and select 1 or 2.
+2025-04-28 16:07:20 info: Server running on port 5000 in development mode
+2025-04-28 16:07:20 info: Database connection established successfully
+2025-04-28 16:07:20 error: Unable to connect to the database: SQLITE_ERROR: Cannot add a NOT NULL column with default value NULL
+2025-04-28 16:09:02 info: Starting database setup...
+2025-04-28 16:09:02 info: Initializing database...
+2025-04-28 16:09:02 info: SQLite database file will be created at: /media/Project/PTITProject/FootballField/backend/data/football_field_db.sqlite
+2025-04-28 16:09:02 info: Database initialization completed
+2025-04-28 16:09:02 info: Starting comprehensive data generation...
+2025-04-28 16:09:02 info: Database connection established
+2025-04-28 16:09:02 info: Database synchronized
+2025-04-28 16:09:02 info: Generating 50 users...
+2025-04-28 16:09:02 info: Admin user created
+2025-04-28 16:09:05 info: 50 users created
+2025-04-28 16:09:05 info: Generating 15 fields...
+2025-04-28 16:09:05 error: Error generating data: Validation error
+2025-04-28 16:09:26 info: Server running on port 5000 in development mode
+2025-04-28 16:09:26 info: Database connection established successfully
+2025-04-28 16:09:28 info: Database synced successfully
+2025-04-28 16:11:28 info: Server running on port 5000 in development mode
+2025-04-28 16:11:28 info: Database connection established successfully
+2025-04-28 16:11:30 info: Database synced successfully
+2025-04-28 16:12:02 info: Starting database seeding...
+2025-04-28 16:12:03 info: Database connection established
+2025-04-28 16:12:03 info: Database synchronized
+2025-04-28 16:12:03 info: Admin user created
+2025-04-28 16:12:03 info: Sample user created
+2025-04-28 16:12:03 error: Error seeding database: Validation error
+2025-04-28 16:12:58 info: Server running on port 5000 in development mode
+2025-04-28 16:12:58 info: Database connection established successfully
+2025-04-28 16:12:58 info: Database synced successfully
+2025-04-28 16:13:22 info: Starting database seeding...
+2025-04-28 16:13:22 info: Database connection established
+2025-04-28 16:13:24 info: Database synchronized
+2025-04-28 16:13:24 info: Admin user created
+2025-04-28 16:13:24 info: Sample user created
+2025-04-28 16:13:24 info: Sample fields created
+2025-04-28 16:13:24 info: Sample products created
+2025-04-28 16:15:57 info: Server running on port 5000 in development mode
+2025-04-28 16:15:57 info: Database connection established successfully
+2025-04-28 16:15:59 info: Database synced successfully

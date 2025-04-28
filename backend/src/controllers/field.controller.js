@@ -148,5 +148,5 @@ module.exports = {
   createField,
   updateField,
   deleteField,
-  checkAvailability
+  checkFieldAvailability: checkAvailability
 }; 

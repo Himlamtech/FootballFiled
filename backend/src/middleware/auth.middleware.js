@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { ApiError } = require('../utils/errorHandler');
 const db = require('../models');
 const authConfig = require('../config/auth.config');
-const logger = require('../config/logger');
+const logger = require('../utils/logger');
 
 const User = db.User;
 

@@ -3,9 +3,9 @@ const bookingController = require('../controllers/booking.controller');
 const { verifyToken, isAdmin, isOwnerOrAdmin } = require('../middleware/auth.middleware');
 const { 
   bookingValidation, 
-  idParamValidation,
+  idValidation,
   paginationValidation,
-  paymentValidation
+  paymentStatusValidation
 } = require('../middleware/validation.middleware');
 
 const router = express.Router();
@@ -15,16 +15,16 @@ router.use(verifyToken);
 
 // Booking routes
 router.get('/', paginationValidation, bookingController.getAllBookings);
-router.get('/:id', idParamValidation, bookingController.getBookingById);
+router.get('/:id', idValidation, bookingController.getBookingById);
 router.post('/', bookingValidation, bookingController.createBooking);
-router.put('/:id', idParamValidation, bookingValidation, bookingController.updateBooking);
-router.delete('/:id', idParamValidation, bookingController.deleteBooking);
+router.put('/:id', idValidation, bookingValidation, bookingController.updateBooking);
+router.delete('/:id', idValidation, bookingController.deleteBooking);
 
 // User & field specific bookings
-router.get('/user/:userId', idParamValidation, paginationValidation, isOwnerOrAdmin, bookingController.getBookingsByUser);
-router.get('/field/:fieldId', idParamValidation, paginationValidation, bookingController.getBookingsByField);
+router.get('/user/:userId', idValidation, paginationValidation, isOwnerOrAdmin, bookingController.getBookingsByUser);
+router.get('/field/:fieldId', idValidation, paginationValidation, bookingController.getBookingsByField);
 
 // Payment update
-router.patch('/:id/payment', idParamValidation, paymentValidation, bookingController.updatePaymentStatus);
+router.patch('/:id/payment', idValidation, paymentStatusValidation, bookingController.updatePaymentStatus);
 
 module.exports = router; 
