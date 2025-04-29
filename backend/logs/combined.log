@@ -1591,3 +1591,124 @@ notNull Violation: Field.price_per_hour_weekend cannot be null
 2025-04-29 14:02:04 info: [0mGET /api/timeslots?field_id=1&date=2025-04-29 [32m200[0m 7.268 ms - -[0m
 2025-04-29 14:02:04 info: [0mGET /api/opponents/available [32m200[0m 13.919 ms - -[0m
 2025-04-29 14:02:05 info: [0mGET /api/products [32m200[0m 3.764 ms - -[0m
+2025-04-29 14:19:49 info: Server running on port 9002 in development mode
+2025-04-29 14:19:49 info: Database connection established successfully
+2025-04-29 14:19:55 info: [0mGET /api/fields [32m200[0m 18.241 ms - -[0m
+2025-04-29 14:20:02 info: [0mGET /api/timeslots?field_id=1&date=2025-04-29 [36m304[0m 8.881 ms - -[0m
+2025-04-29 14:20:03 info: [0mGET /api/timeslots?field_id=2&date=2025-04-29 [32m200[0m 3.988 ms - -[0m
+2025-04-29 14:20:04 info: [0mGET /api/timeslots?field_id=3&date=2025-04-29 [32m200[0m 3.880 ms - -[0m
+2025-04-29 14:20:05 info: [0mGET /api/timeslots?field_id=4&date=2025-04-29 [32m200[0m 2.323 ms - -[0m
+2025-04-29 14:21:18 info: [0mGET /api/fields [32m200[0m 8.244 ms - -[0m
+2025-04-29 14:21:41 info: [0mGET /api/fields [32m200[0m 9.529 ms - -[0m
+2025-04-29 14:21:53 info: [0mGET /api/opponents/available [32m200[0m 18.987 ms - -[0m
+2025-04-29 14:21:53 info: [0mGET /api/products [36m304[0m 8.376 ms - -[0m
+2025-04-29 14:22:02 info: [0mPOST /api/auth/admin/login [32m200[0m 127.729 ms - 310[0m
+2025-04-29 14:22:03 info: [0mGET /api/bookings?date=2025-04-29 [36m304[0m 31.467 ms - -[0m
+2025-04-29 14:22:03 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 65.453 ms - -[0m
+2025-04-29 14:22:03 info: [0mGET /api/dashboard/stats [36m304[0m 76.935 ms - -[0m
+2025-04-29 14:22:05 info: [0mOPTIONS /api/products [32m200[0m 1.060 ms - 0[0m
+2025-04-29 14:22:05 info: [0mGET /api/products [36m304[0m 3.206 ms - -[0m
+2025-04-29 14:22:05 info: [0mGET /api/feedbacks [32m200[0m 10.192 ms - -[0m
+2025-04-29 14:23:31 info: [0mOPTIONS /api/bookings [32m200[0m 0.118 ms - 0[0m
+2025-04-29 14:23:31 info: [0mPOST /api/bookings [32m201[0m 34.924 ms - -[0m
+2025-04-29 14:24:22 info: [0mPOST /api/auth/admin/login [32m200[0m 75.453 ms - 310[0m
+2025-04-29 14:24:24 info: [0mGET /api/bookings/field/1?date=2025-04-29 [32m200[0m 9.716 ms - -[0m
+2025-04-29 14:24:24 info: [0mOPTIONS /api/products [32m200[0m 1.526 ms - 0[0m
+2025-04-29 14:24:28 info: [0mGET /api/bookings/field/2?date=2025-04-29 [36m304[0m 6.534 ms - -[0m
+2025-04-29 14:24:31 info: [0mGET /api/bookings/field/3?date=2025-04-29 [32m200[0m 3.645 ms - 94[0m
+2025-04-29 14:24:32 info: [0mOPTIONS /api/products [32m200[0m 0.142 ms - 0[0m
+2025-04-29 14:25:03 info: [0mOPTIONS /api/bookings [32m200[0m 0.122 ms - 0[0m
+2025-04-29 14:25:03 error: Error creating booking: This time slot is already booked for this field on this date
+2025-04-29 14:25:03 error: 400 - This time slot is already booked for this field on this date - /api/bookings - POST - ::1
+2025-04-29 14:25:03 error: Error: This time slot is already booked for this field on this date
+2025-04-29 14:25:03 info: [0mPOST /api/bookings [33m400[0m 8.464 ms - 369[0m
+2025-04-29 14:26:24 info: [0mOPTIONS /api/orders [32m200[0m 0.138 ms - 0[0m
+2025-04-29 14:26:24 info: [0mPOST /api/orders [32m201[0m 2.669 ms - 347[0m
+2025-04-29 14:27:07 info: [0mPOST /api/auth/admin/login [32m200[0m 68.866 ms - 310[0m
+2025-04-29 14:27:07 info: [0mGET /api/bookings?date=2025-04-29 [32m200[0m 41.859 ms - -[0m
+2025-04-29 14:27:07 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 87.694 ms - -[0m
+2025-04-29 14:27:07 info: [0mGET /api/dashboard/stats [32m200[0m 98.916 ms - 216[0m
+2025-04-29 14:27:12 info: [0mGET /api/fields [36m304[0m 3.215 ms - -[0m
+2025-04-29 14:27:12 info: [0mOPTIONS /api/products [32m200[0m 0.523 ms - 0[0m
+2025-04-29 14:27:12 info: [0mGET /api/products [36m304[0m 6.268 ms - -[0m
+2025-04-29 14:28:14 info: Server running on port 9002 in development mode
+2025-04-29 14:28:14 info: Database connection established successfully
+2025-04-29 14:28:55 info: Server running on port 9002 in development mode
+2025-04-29 14:28:55 info: Database connection established successfully
+2025-04-29 14:29:09 info: Server running on port 9002 in development mode
+2025-04-29 14:29:09 info: Database connection established successfully
+2025-04-29 14:29:11 info: Server running on port 9002 in development mode
+2025-04-29 14:29:11 info: Database connection established successfully
+2025-04-29 14:29:16 info: Server running on port 9002 in development mode
+2025-04-29 14:29:16 info: Database connection established successfully
+2025-04-29 14:30:31 info: [0mGET /api/bookings/field/1?date=2025-04-29 [36m304[0m 38.847 ms - -[0m
+2025-04-29 14:30:31 info: [0mOPTIONS /api/products [32m200[0m 0.926 ms - 0[0m
+2025-04-29 14:30:36 info: [0mGET /api/timeslots?field_id=1&date=2025-04-29 [36m304[0m 8.845 ms - -[0m
+2025-04-29 14:30:37 info: [0mGET /api/opponents/available [36m304[0m 10.424 ms - -[0m
+2025-04-29 14:30:48 info: [0mOPTIONS /api/bookings [32m200[0m 0.212 ms - 0[0m
+2025-04-29 14:30:48 error: Error creating booking: This time slot is already booked for this field on this date
+2025-04-29 14:30:48 error: 400 - This time slot is already booked for this field on this date - /api/bookings - POST - ::1
+2025-04-29 14:30:48 error: Error: This time slot is already booked for this field on this date
+2025-04-29 14:30:48 info: [0mPOST /api/bookings [33m400[0m 37.126 ms - -[0m
+2025-04-29 14:33:16 info: [0mPOST /api/auth/admin/login [32m200[0m 151.044 ms - 310[0m
+2025-04-29 14:33:16 info: [0mGET /api/bookings?date=2025-04-29 [36m304[0m 34.663 ms - -[0m
+2025-04-29 14:33:16 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 89.167 ms - -[0m
+2025-04-29 14:33:16 info: [0mGET /api/dashboard/stats [36m304[0m 97.828 ms - -[0m
+2025-04-29 14:33:19 info: [0mGET /api/fields [36m304[0m 3.206 ms - -[0m
+2025-04-29 14:33:19 info: [0mOPTIONS /api/products [32m200[0m 0.141 ms - 0[0m
+2025-04-29 14:33:19 info: [0mGET /api/products [36m304[0m 4.824 ms - -[0m
+2025-04-29 14:33:19 info: [0mGET /api/feedbacks [36m304[0m 12.876 ms - -[0m
+2025-04-29 14:34:07 info: Server running on port 9002 in development mode
+2025-04-29 14:34:07 info: Database connection established successfully
+2025-04-29 14:34:09 info: Server running on port 9002 in development mode
+2025-04-29 14:34:09 info: Database connection established successfully
+2025-04-29 14:34:28 info: Server running on port 9002 in development mode
+2025-04-29 14:34:28 info: Database connection established successfully
+2025-04-29 14:35:10 info: Server running on port 9002 in development mode
+2025-04-29 14:35:10 info: Database connection established successfully
+2025-04-29 14:36:59 error: 401 - No token provided - /api/finances - GET - ::1
+2025-04-29 14:36:59 error: Error: No token provided
+2025-04-29 14:36:59 info: [0mGET /api/finances [33m401[0m 12.332 ms - -[0m
+2025-04-29 14:37:01 info: [0mOPTIONS /api/products [32m200[0m 0.844 ms - 0[0m
+2025-04-29 14:37:02 info: [0mGET /api/bookings/field/1?date=2025-04-29 [36m304[0m 37.729 ms - -[0m
+2025-04-29 14:37:03 error: 401 - No token provided - /api/finances - GET - ::1
+2025-04-29 14:37:03 error: Error: No token provided
+2025-04-29 14:37:03 info: [0mGET /api/finances [33m401[0m 3.023 ms - -[0m
+2025-04-29 14:40:12 info: Server running on port 9002 in development mode
+2025-04-29 14:40:12 info: Database connection established successfully
+2025-04-29 14:40:50 info: Server running on port 9002 in development mode
+2025-04-29 14:40:50 info: Database connection established successfully
+2025-04-29 14:41:15 info: [0mGET /api/feedbacks [36m304[0m 38.731 ms - -[0m
+2025-04-29 14:41:15 info: [0mOPTIONS /api/products [32m200[0m 2.551 ms - 0[0m
+2025-04-29 14:41:15 info: [0mGET /api/products [36m304[0m 14.552 ms - -[0m
+2025-04-29 14:41:16 info: [0mGET /api/fields [36m304[0m 9.261 ms - -[0m
+2025-04-29 14:41:16 info: [0mGET /api/bookings?date=2025-04-29 [36m304[0m 61.822 ms - -[0m
+2025-04-29 14:41:16 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 126.987 ms - -[0m
+2025-04-29 14:41:16 info: [0mGET /api/dashboard/stats [36m304[0m 152.583 ms - -[0m
+2025-04-29 14:41:33 info: [0mGET /api/bookings?date=2025-04-30 [32m200[0m 27.119 ms - -[0m
+2025-04-29 14:41:34 info: [0mGET /api/bookings?date=2025-04-27 [32m200[0m 11.662 ms - 94[0m
+2025-04-29 14:41:38 info: [0mOPTIONS /api/products [32m200[0m 0.317 ms - 0[0m
+2025-04-29 14:55:19 info: Server running on port 9002 in development mode
+2025-04-29 14:55:19 info: Database connection established successfully
+2025-04-29 14:57:43 info: [0mGET /api/feedbacks [36m304[0m 36.933 ms - -[0m
+2025-04-29 14:57:43 info: [0mOPTIONS /api/products [32m200[0m 1.058 ms - 0[0m
+2025-04-29 14:57:43 info: [0mGET /api/products [36m304[0m 7.421 ms - -[0m
+2025-04-29 14:57:43 info: [0mGET /api/fields [36m304[0m 25.337 ms - -[0m
+2025-04-29 14:57:44 info: [0mGET /api/bookings/field/1?date=2025-04-29 [36m304[0m 24.460 ms - -[0m
+2025-04-29 14:57:44 info: [0mGET /api/bookings?date=2025-04-29 [36m304[0m 22.986 ms - -[0m
+2025-04-29 14:57:44 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 41.578 ms - -[0m
+2025-04-29 14:57:44 info: [0mGET /api/dashboard/stats [36m304[0m 55.077 ms - -[0m
+2025-04-29 14:57:49 info: [0mOPTIONS /api/products [32m200[0m 0.426 ms - 0[0m
+2025-04-29 14:58:07 info: [0mGET /api/products [36m304[0m 9.197 ms - -[0m
+2025-04-29 14:58:09 info: [0mPOST /api/auth/admin/login [32m200[0m 131.408 ms - 310[0m
+2025-04-29 14:59:19 info: [0mOPTIONS /api/products [32m200[0m 0.168 ms - 0[0m
+2025-04-29 14:59:27 info: [0mGET /api/bookings/field/2?date=2025-04-29 [36m304[0m 11.177 ms - -[0m
+2025-04-29 14:59:27 info: [0mGET /api/bookings/field/3?date=2025-04-29 [36m304[0m 5.989 ms - -[0m
+2025-04-29 14:59:28 info: [0mGET /api/bookings/field/4?date=2025-04-29 [32m200[0m 5.660 ms - 94[0m
+2025-04-29 15:01:03 info: [0mOPTIONS /api/products [32m200[0m 0.208 ms - 0[0m
+2025-04-29 15:01:08 info: [0mOPTIONS /api/products/8 [32m200[0m 0.111 ms - 0[0m
+2025-04-29 15:01:08 error: Error deleting product ID 8: Cannot delete product that is used in bookings
+2025-04-29 15:01:08 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
+2025-04-29 15:01:08 error: Error: Cannot delete product that is used in bookings
+2025-04-29 15:01:08 info: [0mDELETE /api/products/8 [33m400[0m 9.791 ms - 464[0m
+2025-04-29 15:12:12 info: [0mGET /api/feedbacks [36m304[0m 23.934 ms - -[0m

@@ -446,3 +446,16 @@ notNull Violation: Field.price_per_hour_weekend cannot be null
 2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
 2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
 2025-04-29 13:39:26 error: Error: Product not found
+2025-04-29 14:25:03 error: Error creating booking: This time slot is already booked for this field on this date
+2025-04-29 14:25:03 error: 400 - This time slot is already booked for this field on this date - /api/bookings - POST - ::1
+2025-04-29 14:25:03 error: Error: This time slot is already booked for this field on this date
+2025-04-29 14:30:48 error: Error creating booking: This time slot is already booked for this field on this date
+2025-04-29 14:30:48 error: 400 - This time slot is already booked for this field on this date - /api/bookings - POST - ::1
+2025-04-29 14:30:48 error: Error: This time slot is already booked for this field on this date
+2025-04-29 14:36:59 error: 401 - No token provided - /api/finances - GET - ::1
+2025-04-29 14:36:59 error: Error: No token provided
+2025-04-29 14:37:03 error: 401 - No token provided - /api/finances - GET - ::1
+2025-04-29 14:37:03 error: Error: No token provided
+2025-04-29 15:01:08 error: Error deleting product ID 8: Cannot delete product that is used in bookings
+2025-04-29 15:01:08 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
+2025-04-29 15:01:08 error: Error: Cannot delete product that is used in bookings

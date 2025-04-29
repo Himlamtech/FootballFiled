@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { feedbackAPI } from "@/lib/api";
 
 interface Feedback {
   id: number;
@@ -31,8 +32,8 @@ const Feedback = () => {
     const fetchFeedbacks = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/feedbacks');
-        const data = await response.json();
+        const response = await feedbackAPI.getAllFeedbacks();
+        const data = response.data;
 
         if (data && data.feedbacks) {
           console.log("Feedbacks data:", data.feedbacks);

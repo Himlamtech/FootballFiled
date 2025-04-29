@@ -94,7 +94,7 @@ const getBookingById = async (req, res, next) => {
     });
 
     if (!booking) {
-      throw new ApiError(404, 'Booking not found');
+      throw new ApiError(404, 'Booking not found', null, true);
     }
 
     res.status(200).json(booking);
@@ -127,13 +127,13 @@ const createBooking = async (req, res, next) => {
     // Check if field exists
     const field = await Field.findByPk(field_id);
     if (!field) {
-      throw new ApiError(404, 'Field not found');
+      throw new ApiError(404, 'Field not found', null, true);
     }
 
     // Check if time slot exists
     const timeSlot = await TimeSlot.findByPk(time_slot_id);
     if (!timeSlot) {
-      throw new ApiError(404, 'Time slot not found');
+      throw new ApiError(404, 'Time slot not found', null, true);
     }
 
     // Check if the time slot is already booked for this field on this date
@@ -149,7 +149,35 @@ const createBooking = async (req, res, next) => {
     });
 
     if (existingBooking) {
-      throw new ApiError(400, 'This time slot is already booked for this field on this date');
+      // Find alternative time slots for the same field on the same date
+      const availableTimeSlots = await TimeSlot.findAll({
+        where: {
+          id: {
+            [Op.ne]: time_slot_id
+          }
+        },
+        raw: true
+      });
+      
+      // Check which slots are not booked
+      const bookedSlots = await Booking.findAll({
+        where: {
+          field_id,
+          booking_date,
+          status: {
+            [Op.notIn]: ['cancelled']
+          }
+        },
+        attributes: ['time_slot_id'],
+        raw: true
+      });
+      
+      const bookedSlotIds = bookedSlots.map(slot => slot.time_slot_id);
+      const alternativeSlots = availableTimeSlots.filter(slot => !bookedSlotIds.includes(slot.id));
+      
+      throw new ApiError(400, 'This time slot is already booked for this field on this date', {
+        availableAlternatives: alternativeSlots
+      }, true);
     }
 
     // Calculate total price
@@ -169,15 +197,15 @@ const createBooking = async (req, res, next) => {
       for (const item of products) {
         const product = await Product.findByPk(item.product_id);
         if (!product) {
-          throw new ApiError(404, `Product with ID ${item.product_id} not found`);
+          throw new ApiError(404, `Product with ID ${item.product_id} not found`, null, true);
         }
 
         if (item.quantity <= 0) {
-          throw new ApiError(400, 'Product quantity must be greater than 0');
+          throw new ApiError(400, 'Product quantity must be greater than 0', null, true);
         }
 
         if (product.stock_quantity < item.quantity) {
-          throw new ApiError(400, `Not enough stock for product ${product.name}`);
+          throw new ApiError(400, `Not enough stock for product ${product.name}`, null, true);
         }
 
         totalPrice += product.price * item.quantity;
@@ -272,7 +300,7 @@ const updateBooking = async (req, res, next) => {
     });
 
     if (!booking) {
-      throw new ApiError(404, 'Booking not found');
+      throw new ApiError(404, 'Booking not found', null, true);
     }
 
     // If changing time slot or date, check if new slot is available
@@ -294,7 +322,7 @@ const updateBooking = async (req, res, next) => {
       });
 
       if (existingBooking) {
-        throw new ApiError(400, 'This time slot is already booked for this field on this date');
+        throw new ApiError(400, 'This time slot is already booked for this field on this date', null, true);
       }
     }
 
@@ -349,7 +377,7 @@ const deleteBooking = async (req, res, next) => {
     });
 
     if (!booking) {
-      throw new ApiError(404, 'Booking not found');
+      throw new ApiError(404, 'Booking not found', null, true);
     }
 
     // Return products to stock
@@ -369,8 +397,6 @@ const deleteBooking = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 /**
  * Get bookings by field ID
@@ -439,13 +465,13 @@ const updateBookingStatus = async (req, res, next) => {
     const { status } = req.body;
 
     if (!status) {
-      throw new ApiError(400, 'Status is required');
+      throw new ApiError(400, 'Status is required', null, true);
     }
 
     // Check if booking exists
     const booking = await Booking.findByPk(id);
     if (!booking) {
-      throw new ApiError(404, 'Booking not found');
+      throw new ApiError(404, 'Booking not found', null, true);
     }
 
     // Update booking status
@@ -489,13 +515,13 @@ const updatePaymentStatus = async (req, res, next) => {
     const { payment_status, payment_method } = req.body;
 
     if (!payment_status) {
-      throw new ApiError(400, 'Payment status is required');
+      throw new ApiError(400, 'Payment status is required', null, true);
     }
 
     // Check if booking exists
     const booking = await Booking.findByPk(id);
     if (!booking) {
-      throw new ApiError(404, 'Booking not found');
+      throw new ApiError(404, 'Booking not found', null, true);
     }
 
     // Update booking payment status

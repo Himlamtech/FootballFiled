@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { BarChart, Calendar, ShoppingCart, FileText, LogOut } from "lucide-react";
+import { BarChart, Calendar, ShoppingCart, FileText, LogOut, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
@@ -92,6 +92,22 @@ const AdminLayout = () => {
                 >
                   <FileText className="w-5 h-5" />
                   <span>Customer Feedback</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/admin/finance"
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 px-4 py-3 text-sm rounded-md transition-colors",
+                      isActive
+                        ? "bg-field-700 text-white"
+                        : "text-field-100 hover:bg-field-700"
+                    )
+                  }
+                >
+                  <DollarSign className="w-5 h-5" />
+                  <span>Finance</span>
                 </NavLink>
               </li>
             </ul>

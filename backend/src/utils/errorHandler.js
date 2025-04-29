@@ -5,10 +5,11 @@ const serverConfig = require('../config/server.config');
  * Custom Error class for API errors
  */
 class ApiError extends Error {
-  constructor(statusCode, message, isOperational = true, stack = '') {
+  constructor(statusCode, message, additionalData = null, isOperational = true, stack = '') {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
+    this.additionalData = additionalData;
     
     if (stack) {
       this.stack = stack;
@@ -26,7 +27,7 @@ class ApiError extends Error {
  * @returns {Object} Formatted error response
  */
 const formatErrorResponse = (err, req, res) => {
-  const { statusCode, message } = err;
+  const { statusCode, message, additionalData } = err;
   
   // Log error
   logger.error(
@@ -39,6 +40,7 @@ const formatErrorResponse = (err, req, res) => {
     message: statusCode === 500 && serverConfig.NODE_ENV === 'production' 
       ? 'Internal server error' 
       : message,
+    ...(additionalData && { data: additionalData }),
     ...(serverConfig.NODE_ENV === 'development' && { stack: err.stack })
   };
 

@@ -18,6 +18,7 @@ import Dashboard from "@/pages/admin/Dashboard";
 import FieldManagement from "@/pages/admin/FieldManagement";
 import ProductManagement from "@/pages/admin/ProductManagement";
 import Feedback from "@/pages/admin/Feedback";
+import Finance from "@/pages/admin/Finance";
 
 // Other Pages
 import NotFound from "@/pages/NotFound";
@@ -51,6 +52,7 @@ const App = () => {
               <Route path="fields" element={<FieldManagement />} />
               <Route path="products" element={<ProductManagement />} />
               <Route path="feedback" element={<Feedback />} />
+              <Route path="finance" element={<Finance />} />
             </Route>
 
             {/* Test Route */}

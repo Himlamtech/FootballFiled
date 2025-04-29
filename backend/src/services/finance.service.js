@@ -5,6 +5,9 @@ const { Op } = require('sequelize');
 
 const Finance = db.Finance;
 const Booking = db.Booking;
+const Field = db.Field;
+const TimeSlot = db.TimeSlot;
+const Product = db.Product;
 
 /**
  * Get all finance records with pagination and filters
@@ -264,31 +267,85 @@ const getFinanceSummary = async (options = {}) => {
 };
 
 /**
- * Create a finance record from a booking
- * @param {Object} booking - Booking object
- * @returns {Object} Created finance record
+ * Create a finance record from a completed booking
+ * @param {Object} booking - Booking object with relations
+ * @returns {Promise<Object>} Created finance record
  */
 const createFinanceFromBooking = async (booking) => {
   try {
-    // Only create finance record if payment status is 'paid'
-    if (booking.payment_status !== 'paid') {
-      return null;
+    if (!booking) {
+      throw new Error('Booking is required');
     }
 
-    const financeData = {
-      booking_id: booking.id,
-      transaction_type: 'income',
-      amount: booking.total_price,
-      payment_method: booking.payment_method,
-      category: 'booking',
-      description: `Booking #${booking.id} - ${booking.customer_name}`,
-      transaction_date: new Date(),
-      status: 'completed'
-    };
+    // Get booking details
+    const bookingWithDetails = booking.dataValues ? booking : await Booking.findByPk(booking.id, {
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
 
-    return await createFinance(financeData);
+    if (!bookingWithDetails) {
+      throw new Error(`Booking with ID ${booking.id} not found`);
+    }
+
+    // Create finance record
+    const finance = await Finance.create({
+      transaction_type: 'booking',
+      amount: bookingWithDetails.total_price,
+      description: `Đặt sân ${bookingWithDetails.field ? bookingWithDetails.field.name : 'ID:' + bookingWithDetails.field_id}`,
+      reference_id: `BOOK-${bookingWithDetails.id}`,
+      reference_name: bookingWithDetails.customer_name,
+      status: 'completed'
+    });
+
+    return finance;
   } catch (error) {
-    logger.error(`Error creating finance from booking ID ${booking.id}:`, error);
+    logger.error('Error creating finance record from booking:', error);
+    throw error;
+  }
+};
+
+/**
+ * Create a finance record for an expense
+ * @param {Object} expenseData - Expense data
+ * @returns {Promise<Object>} Created finance record
+ */
+const createExpense = async (expenseData) => {
+  try {
+    const { amount, description, reference_id, reference_name } = expenseData;
+
+    if (!amount || !description) {
+      throw new Error('Amount and description are required for expense');
+    }
+
+    // Convert amount to negative for expenses
+    const expenseAmount = amount > 0 ? -amount : amount;
+
+    // Create finance record
+    const finance = await Finance.create({
+      transaction_type: 'expense',
+      amount: expenseAmount,
+      description,
+      reference_id: reference_id || `EXP-${Date.now()}`,
+      reference_name: reference_name || 'Admin',
+      status: 'completed'
+    });
+
+    return finance;
+  } catch (error) {
+    logger.error('Error creating expense record:', error);
     throw error;
   }
 };
@@ -300,5 +357,6 @@ module.exports = {
   updateFinance,
   deleteFinance,
   getFinanceSummary,
-  createFinanceFromBooking
+  createFinanceFromBooking,
+  createExpense
 };

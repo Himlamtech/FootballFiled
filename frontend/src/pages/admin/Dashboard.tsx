@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { dashboardAPI, bookingAPI } from "@/lib/api";
 import { format, addDays, subDays, startOfWeek, endOfWeek, isWithinInterval, isSameDay } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -57,8 +58,8 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:9002/api/dashboard/stats');
-        const data = await response.json();
+        const response = await dashboardAPI.getStats();
+        const data = response.data;
 
         if (data) {
           console.log("Dashboard stats:", data);
@@ -108,8 +109,11 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const formattedDate = format(currentDate, "yyyy-MM-dd");
-        const response = await fetch(`http://localhost:9002/api/dashboard/chart?period=${periodType}&date=${formattedDate}`);
-        const data = await response.json();
+        const response = await dashboardAPI.getChartData({
+          period: periodType,
+          date: formattedDate
+        });
+        const data = response.data;
 
         if (data && data.chartData) {
           console.log(`Chart data for ${periodType}:`, data.chartData);
@@ -139,8 +143,8 @@ const Dashboard = () => {
     const fetchBookings = async () => {
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        const response = await fetch(`http://localhost:9002/api/bookings?date=${formattedDate}`);
-        const data = await response.json();
+        const response = await bookingAPI.getAllBookings({ date: formattedDate });
+        const data = response.data;
 
         if (data && data.bookings) {
           console.log("Bookings for selected date:", data.bookings);

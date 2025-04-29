@@ -1,57 +1,135 @@
+const { Finance } = require('../models');
 const financeService = require('../services/finance.service');
-const { ApiError } = require('../utils/errorHandler');
+const Sequelize = require('sequelize');
 const logger = require('../utils/logger');
+const { Op } = Sequelize;
 
 /**
- * Get all finance records with pagination and filters
+ * Get finance summary (income, expenses, total)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const getAllFinances = async (req, res, next) => {
+exports.getFinanceSummary = async (req, res) => {
   try {
-    const {
-      transaction_type,
-      category,
-      status,
-      startDate,
-      endDate,
-      page,
-      limit
-    } = req.query;
+    const { startDate, endDate } = req.query;
 
-    const options = {
-      transaction_type,
-      category,
-      status,
-      startDate,
-      endDate,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10
-    };
+    // Build date filter
+    const dateFilter = {};
+    if (startDate) {
+      dateFilter.createdAt = { ...dateFilter.createdAt, [Op.gte]: new Date(startDate) };
+    }
+    if (endDate) {
+      dateFilter.createdAt = { ...dateFilter.createdAt, [Op.lte]: new Date(endDate) };
+    }
 
-    const result = await financeService.getAllFinances(options);
+    // Get all finance records within date range
+    const financeRecords = await Finance.findAll({
+      where: dateFilter,
+      attributes: [
+        'transaction_type',
+        [Sequelize.fn('SUM', Sequelize.col('amount')), 'total_amount']
+      ],
+      group: ['transaction_type']
+    });
 
-    res.status(200).json(result);
+    // Calculate income, expenses and total
+    let income = 0;
+    let expenses = 0;
+
+    financeRecords.forEach(record => {
+      const amount = parseFloat(record.dataValues.total_amount);
+      if (amount > 0) {
+        income += amount;
+      } else {
+        expenses += Math.abs(amount);
+      }
+    });
+
+    const total = income - expenses;
+
+    res.status(200).json({
+      income,
+      expenses,
+      total
+    });
   } catch (error) {
-    next(error);
+    logger.error('Error getting finance summary:', error);
+    res.status(500).json({ message: 'Error getting finance summary', error: error.message });
   }
 };
 
 /**
- * Get finance record by ID
+ * Get all finance records with pagination and filtering
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const getFinanceById = async (req, res, next) => {
+exports.getAllFinances = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, startDate, endDate, type, search } = req.query;
+    const offset = (page - 1) * limit;
+
+    // Build filter
+    const filter = {};
+
+    // Date range filter
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt[Op.gte] = new Date(startDate);
+      if (endDate) filter.createdAt[Op.lte] = new Date(endDate);
+    }
+
+    // Transaction type filter
+    if (type) {
+      filter.transaction_type = type;
+    }
+
+    // Search by description or reference
+    if (search) {
+      filter[Op.or] = [
+        { description: { [Op.like]: `%${search}%` } },
+        { reference_name: { [Op.like]: `%${search}%` } },
+        { reference_id: { [Op.like]: `%${search}%` } }
+      ];
+    }
+
+    // Get finance records with pagination
+    const { count, rows } = await Finance.findAndCountAll({
+      where: filter,
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset
+    });
+
+    res.status(200).json({
+      data: rows,
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: parseInt(page)
+    });
+  } catch (error) {
+    logger.error('Error getting all finances:', error);
+    res.status(500).json({ message: 'Error getting finances', error: error.message });
+  }
+};
+
+/**
+ * Get a finance record by ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getFinanceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const finance = await financeService.getFinanceById(id);
+    const finance = await Finance.findByPk(id);
+
+    if (!finance) {
+      return res.status(404).json({ message: 'Finance record not found' });
+    }
 
     res.status(200).json(finance);
   } catch (error) {
-    next(error);
+    logger.error(`Error getting finance with ID ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Error getting finance record', error: error.message });
   }
 };
 
@@ -59,16 +137,31 @@ const getFinanceById = async (req, res, next) => {
  * Create a new finance record
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const createFinance = async (req, res, next) => {
+exports.createFinance = async (req, res) => {
   try {
-    const financeData = req.body;
-    const finance = await financeService.createFinance(financeData);
+    const { transaction_type, amount, description, reference_id, reference_name, status } = req.body;
+
+    if (!transaction_type || !amount || !description) {
+      return res.status(400).json({ message: 'Transaction type, amount, and description are required' });
+    }
+
+    // Handle expense or income based on transaction type
+    let financeData = {
+      transaction_type,
+      amount: transaction_type === 'expense' ? (amount > 0 ? -amount : amount) : Math.abs(amount),
+      description,
+      reference_id: reference_id || `TXN-${Date.now()}`,
+      reference_name: reference_name || req.user?.name || 'Admin',
+      status: status || 'completed'
+    };
+
+    const finance = await Finance.create(financeData);
 
     res.status(201).json(finance);
   } catch (error) {
-    next(error);
+    logger.error('Error creating finance record:', error);
+    res.status(500).json({ message: 'Error creating finance record', error: error.message });
   }
 };
 
@@ -76,18 +169,36 @@ const createFinance = async (req, res, next) => {
  * Update a finance record
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const updateFinance = async (req, res, next) => {
+exports.updateFinance = async (req, res) => {
   try {
     const { id } = req.params;
-    const financeData = req.body;
+    const { transaction_type, amount, description, reference_id, reference_name, status } = req.body;
 
-    const updatedFinance = await financeService.updateFinance(id, financeData);
+    const finance = await Finance.findByPk(id);
 
-    res.status(200).json(updatedFinance);
+    if (!finance) {
+      return res.status(404).json({ message: 'Finance record not found' });
+    }
+
+    // Update finance record
+    const updatedData = {};
+    if (transaction_type) updatedData.transaction_type = transaction_type;
+    if (amount !== undefined) {
+      updatedData.amount = transaction_type === 'expense' || finance.transaction_type === 'expense' ?
+        (amount > 0 ? -amount : amount) : Math.abs(amount);
+    }
+    if (description) updatedData.description = description;
+    if (reference_id) updatedData.reference_id = reference_id;
+    if (reference_name) updatedData.reference_name = reference_name;
+    if (status) updatedData.status = status;
+
+    await finance.update(updatedData);
+
+    res.status(200).json(await Finance.findByPk(id));
   } catch (error) {
-    next(error);
+    logger.error(`Error updating finance with ID ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Error updating finance record', error: error.message });
   }
 };
 
@@ -95,49 +206,31 @@ const updateFinance = async (req, res, next) => {
  * Delete a finance record
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const deleteFinance = async (req, res, next) => {
+exports.deleteFinance = async (req, res) => {
   try {
     const { id } = req.params;
+    const finance = await Finance.findByPk(id);
 
-    await financeService.deleteFinance(id);
+    if (!finance) {
+      return res.status(404).json({ message: 'Finance record not found' });
+    }
 
-    res.status(204).end();
+    await finance.destroy();
+
+    res.status(200).json({ message: 'Finance record deleted successfully' });
   } catch (error) {
-    next(error);
+    logger.error(`Error deleting finance with ID ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Error deleting finance record', error: error.message });
   }
 };
 
-/**
- * Get finance summary
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const getFinanceSummary = async (req, res, next) => {
-  try {
-    const { startDate, endDate, period } = req.query;
-
-    const options = {
-      startDate,
-      endDate,
-      period
-    };
-
-    const summary = await financeService.getFinanceSummary(options);
-
-    res.status(200).json(summary);
-  } catch (error) {
-    next(error);
-  }
-};
-
+// Export all controller functions directly
 module.exports = {
-  getAllFinances,
-  getFinanceById,
-  createFinance,
-  updateFinance,
-  deleteFinance,
-  getFinanceSummary
+  getFinanceSummary: exports.getFinanceSummary,
+  getAllFinances: exports.getAllFinances,
+  getFinanceById: exports.getFinanceById,
+  createFinance: exports.createFinance,
+  updateFinance: exports.updateFinance,
+  deleteFinance: exports.deleteFinance
 };

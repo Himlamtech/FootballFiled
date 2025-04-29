@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, BarChart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import productAPI from "@/services/productAPI";
+import { productAPI } from "@/lib/api";
 
 interface Product {
   id: number;
@@ -302,11 +302,60 @@ const ProductManagement = () => {
         title: "Xóa sản phẩm thành công",
         description: `Sản phẩm "${productToDelete.name}" đã bị xóa.`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting product:", error);
+
+      // Get the specific error message from the API response if available
+      const errorMessage = error.response?.data?.message || "Không thể xóa sản phẩm";
+
       toast({
         title: "Lỗi",
-        description: "Không thể xóa sản phẩm",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      // If the error is that the product is used in bookings, show a more helpful message
+      if (errorMessage.includes("used in bookings")) {
+        toast({
+          title: "Sản phẩm đang được sử dụng",
+          description: "Không thể xóa sản phẩm này vì nó đang được sử dụng trong các đơn đặt sân. Hãy đánh dấu là không còn bán thay vì xóa.",
+          variant: "destructive",
+        });
+
+        // Ask if they want to mark it as unavailable instead
+        if (confirm("Sản phẩm này đang được sử dụng trong các đơn đặt sân. Bạn có muốn đánh dấu nó là không còn bán thay vì xóa không?")) {
+          handleMarkAsUnavailable(id);
+        }
+      }
+    }
+  };
+
+  const handleMarkAsUnavailable = async (id: number) => {
+    const productToUpdate = products.find(p => p.id === id);
+    if (!productToUpdate) return;
+
+    try {
+      await productAPI.updateProduct(id, {
+        ...productToUpdate,
+        is_available: false
+      });
+
+      // Update the product in the state
+      const updatedProducts = products.map(p =>
+        p.id === id ? { ...p, is_available: false } : p
+      );
+
+      setProducts(updatedProducts);
+
+      toast({
+        title: "Cập nhật thành công",
+        description: `Sản phẩm "${productToUpdate.name}" đã được đánh dấu là không còn bán.`,
+      });
+    } catch (error) {
+      console.error("Error updating product availability:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái sản phẩm",
         variant: "destructive",
       });
     }
@@ -683,6 +732,7 @@ const ProductManagement = () => {
                   <th className="text-left p-4">Giá</th>
                   <th className="text-left p-4">Tồn kho</th>
                   <th className="text-left p-4">Đã bán/Cho thuê</th>
+                  <th className="text-left p-4">Trạng thái</th>
                   <th className="text-right p-4">Thao tác</th>
                 </tr>
               </thead>
@@ -738,6 +788,13 @@ const ProductManagement = () => {
                         <span className="text-green-700">{product.salesCount} sản phẩm</span> :
                         <span className="text-blue-700">{Math.floor(Math.random() * 30)} lượt</span>
                       }
+                    </td>
+                    <td className="p-4">
+                      <Badge className={product.is_available !== false ?
+                        "bg-green-100 text-green-800" :
+                        "bg-red-100 text-red-800"}>
+                        {product.is_available !== false ? "Đang bán" : "Ngừng bán"}
+                      </Badge>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex justify-end gap-2">

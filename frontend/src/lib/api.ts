@@ -67,4 +67,29 @@ export const productAPI = {
   deleteProduct: (id: number) => api.delete(`/products/${id}`),
 };
 
+// Finance API
+export const financeAPI = {
+  getAllFinances: (params?: any) => api.get('/finances', { params }),
+  getFinanceSummary: (params?: any) => api.get('/finances/summary', { params }),
+  getFinanceById: (id: number) => api.get(`/finances/${id}`),
+  createFinance: (data: any) => api.post('/finances', data),
+  updateFinance: (id: number, data: any) => api.put(`/finances/${id}`, data),
+  deleteFinance: (id: number) => api.delete(`/finances/${id}`),
+};
+
+// Dashboard API
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getChartData: (params?: any) => api.get('/dashboard/chart', { params }),
+};
+
+// Feedback API
+export const feedbackAPI = {
+  getAllFeedbacks: (params?: any) => api.get('/feedbacks', { params }),
+  getFeedbackById: (id: number) => api.get(`/feedbacks/${id}`),
+  createFeedback: (data: any) => api.post('/feedbacks', data),
+  updateFeedback: (id: number, data: any) => api.put(`/feedbacks/${id}`, data),
+  deleteFeedback: (id: number) => api.delete(`/feedbacks/${id}`),
+};
+
 export default api;
