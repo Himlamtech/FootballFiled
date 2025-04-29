@@ -1712,3 +1712,89 @@ notNull Violation: Field.price_per_hour_weekend cannot be null
 2025-04-29 15:01:08 error: Error: Cannot delete product that is used in bookings
 2025-04-29 15:01:08 info: [0mDELETE /api/products/8 [33m400[0m 9.791 ms - 464[0m
 2025-04-29 15:12:12 info: [0mGET /api/feedbacks [36m304[0m 23.934 ms - -[0m
+2025-04-29 15:16:33 info: [0mGET /api/fields [36m304[0m 9.140 ms - -[0m
+2025-04-29 15:16:54 info: [0mPOST /api/feedbacks [32m201[0m 30.698 ms - 211[0m
+2025-04-29 15:16:56 info: [0mPOST /api/feedbacks [32m201[0m 6.977 ms - 211[0m
+2025-04-29 15:16:56 info: [0mPOST /api/feedbacks [32m201[0m 8.769 ms - 211[0m
+2025-04-29 15:16:56 info: [0mPOST /api/feedbacks [32m201[0m 8.476 ms - 211[0m
+2025-04-29 15:16:56 info: [0mPOST /api/feedbacks [32m201[0m 5.800 ms - 211[0m
+2025-04-29 15:16:56 info: [0mPOST /api/feedbacks [32m201[0m 19.883 ms - 211[0m
+2025-04-29 15:20:30 info: [0mGET /api/bookings?date=2025-04-29 [32m200[0m 13.822 ms - -[0m
+2025-04-29 15:20:30 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [32m200[0m 31.280 ms - 255[0m
+2025-04-29 15:20:30 info: [0mGET /api/dashboard/stats [32m200[0m 37.341 ms - 216[0m
+2025-04-29 15:20:46 info: [0mGET /api/dashboard/stats [32m200[0m 14.965 ms - 216[0m
+2025-04-29 15:21:03 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [32m200[0m 9.860 ms - 255[0m
+2025-04-29 15:21:20 info: [0mGET /api/bookings?date=2025-04-29 [32m200[0m 17.134 ms - 1216[0m
+2025-04-29 15:21:37 info: [0mGET /api/fields [32m200[0m 6.074 ms - 2126[0m
+2025-04-29 15:21:54 info: [0mGET /api/timeslots [32m200[0m 6.899 ms - 1531[0m
+2025-04-29 15:22:11 info: [0mGET /api/bookings/field/1?date=2025-04-29 [32m200[0m 11.802 ms - 1202[0m
+2025-04-29 15:22:28 info: [0mGET /api/products [32m200[0m 5.936 ms - 2633[0m
+2025-04-29 15:22:38 error: 401 - No token provided - /api/products/1 - PUT - ::1
+2025-04-29 15:22:38 error: Error: No token provided
+2025-04-29 15:22:38 info: [0mPUT /api/products/1 [33m401[0m 2.278 ms - 1275[0m
+2025-04-29 15:22:46 info: [0mPOST /api/auth/admin/login [32m200[0m 68.504 ms - 310[0m
+2025-04-29 15:22:56 info: [0mPUT /api/products/1 [32m200[0m 20.752 ms - 314[0m
+2025-04-29 15:23:07 info: [0mPUT /api/products/7 [32m200[0m 11.373 ms - 332[0m
+2025-04-29 15:23:16 error: Error deleting product ID 8: Cannot delete product that is used in bookings
+2025-04-29 15:23:16 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
+2025-04-29 15:23:16 error: Error: Cannot delete product that is used in bookings
+2025-04-29 15:23:16 info: [0mDELETE /api/products/8 [33m400[0m 5.021 ms - 464[0m
+2025-04-29 15:23:27 info: [0mGET /api/feedbacks [32m200[0m 7.534 ms - 4934[0m
+2025-04-29 15:23:40 info: [0mPUT /api/feedbacks/3 [32m200[0m 22.540 ms - 278[0m
+2025-04-29 15:23:50 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:23:50 info: [0mGET /api/finances [31m500[0m 6.105 ms - 92[0m
+2025-04-29 15:23:59 info: [0mGET /api/finances/summary [32m200[0m 3.883 ms - 47[0m
+2025-04-29 15:25:31 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:25:31 info: [0mGET /api/finances [31m500[0m 7.846 ms - 92[0m
+2025-04-29 15:26:35 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:26:35 info: [0mGET /api/finances [31m500[0m 9.629 ms - 92[0m
+2025-04-29 15:27:16 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:27:16 info: [0mGET /api/finances [31m500[0m 7.151 ms - 92[0m
+2025-04-29 15:28:20 info: Server running on port 9002 in development mode
+2025-04-29 15:28:20 info: Database connection established successfully
+2025-04-29 15:28:56 info: [0mGET /api/finances [32m200[0m 22.662 ms - 3317[0m
+2025-04-29 15:30:32 info: [0mGET /api/bookings?date=2025-04-29 [36m304[0m 33.529 ms - -[0m
+2025-04-29 15:30:32 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 57.419 ms - -[0m
+2025-04-29 15:30:32 info: [0mGET /api/dashboard/stats [36m304[0m 67.970 ms - -[0m
+2025-04-29 15:58:48 info: [0mGET /api/bookings?date=2025-04-29 [36m304[0m 19.767 ms - -[0m
+2025-04-29 15:58:48 info: [0mGET /api/dashboard/chart?period=week&date=2025-04-29 [36m304[0m 41.301 ms - -[0m
+2025-04-29 15:58:48 info: [0mGET /api/dashboard/stats [36m304[0m 45.590 ms - -[0m
+2025-04-29 15:59:01 info: [0mPOST /api/auth/admin/login [32m200[0m 82.950 ms - 310[0m
+2025-04-29 15:59:05 info: [0mPOST /api/auth/admin/login [32m200[0m 66.476 ms - 310[0m
+2025-04-29 15:59:08 info: [0mGET /api/fields [36m304[0m 13.133 ms - -[0m
+2025-04-29 15:59:08 info: [0mGET /api/bookings/field/1?date=2025-04-29 [36m304[0m 14.991 ms - -[0m
+2025-04-29 15:59:08 info: [0mGET /api/products [32m200[0m 6.918 ms - -[0m
+2025-04-29 15:59:08 info: [0mGET /api/feedbacks [32m200[0m 8.138 ms - -[0m
+2025-04-29 15:59:09 info: [0mGET /api/finances [32m200[0m 4.695 ms - -[0m
+2025-04-29 15:59:09 info: [0mGET /api/finances/summary [32m200[0m 5.186 ms - 47[0m
+2025-04-29 16:06:08 info: [0mPUT /api/fields/1 [32m200[0m 26.226 ms - 543[0m
+2025-04-29 16:06:22 info: [0mGET /api/fields/1 [32m200[0m 6.870 ms - 583[0m
+2025-04-29 16:06:40 info: [0mPOST /api/fields [32m201[0m 26.417 ms - 340[0m
+2025-04-29 16:06:54 info: [0mDELETE /api/fields/5 [32m204[0m 29.226 ms - -[0m
+2025-04-29 16:07:09 info: [0mGET /api/fields [32m200[0m 8.668 ms - 2136[0m
+2025-04-29 16:07:33 info: [0mPOST /api/products [32m201[0m 26.912 ms - 296[0m
+2025-04-29 16:07:50 info: [0mPUT /api/products/9 [32m200[0m 18.713 ms - 330[0m
+2025-04-29 16:08:05 info: [0mDELETE /api/products/9 [32m204[0m 17.478 ms - -[0m
+2025-04-29 16:08:17 info: [0mGET /api/products [32m200[0m 6.370 ms - 2634[0m
+2025-04-29 16:08:36 error: Error deleting product ID 8: Cannot delete product that is used in bookings
+2025-04-29 16:08:36 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
+2025-04-29 16:08:36 error: Error: Cannot delete product that is used in bookings
+2025-04-29 16:08:36 info: [0mDELETE /api/products/8 [33m400[0m 11.628 ms - 464[0m
+2025-04-29 20:18:44 error: jwt expired
+2025-04-29 20:18:44 error: 401 - Invalid token - /api/products/8 - PUT - ::1
+2025-04-29 20:18:44 error: Error: Invalid token
+2025-04-29 20:18:44 info: [0mPUT /api/products/8 [33m401[0m 3.738 ms - 1267[0m
+2025-04-29 20:18:58 info: [0mPOST /api/auth/admin/login [32m200[0m 66.980 ms - 310[0m
+2025-04-29 20:19:16 info: [0mPUT /api/products/8 [32m200[0m 8.815 ms - 338[0m
+2025-04-29 20:19:30 info: [0mPOST /api/feedbacks [32m201[0m 18.373 ms - 235[0m
+2025-04-29 20:19:52 info: [0mPUT /api/feedbacks/17 [32m200[0m 17.648 ms - 254[0m
+2025-04-29 20:20:15 info: [0mDELETE /api/feedbacks/17 [32m204[0m 17.899 ms - -[0m
+2025-04-29 20:20:32 info: [0mGET /api/feedbacks [32m200[0m 7.831 ms - 4945[0m
+2025-04-29 20:20:52 info: [0mPOST /api/finances [32m201[0m 16.324 ms - 281[0m
+2025-04-29 20:21:08 info: [0mPUT /api/finances/19 [32m200[0m 18.277 ms - 330[0m
+2025-04-29 20:21:32 info: [0mDELETE /api/finances/19 [32m200[0m 9.616 ms - 49[0m
+2025-04-29 20:21:50 info: [0mGET /api/finances [32m200[0m 9.645 ms - 3317[0m
+2025-04-29 20:22:07 info: [0mPOST /api/bookings [32m201[0m 25.430 ms - 1140[0m
+2025-04-29 20:22:26 info: [0mPUT /api/bookings/12 [32m200[0m 23.108 ms - 1155[0m
+2025-04-29 20:22:44 info: [0mDELETE /api/bookings/12 [32m204[0m 29.809 ms - -[0m
+2025-04-29 20:23:05 info: [0mGET /api/bookings [32m200[0m 12.855 ms - 19525[0m

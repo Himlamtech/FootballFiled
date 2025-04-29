@@ -459,3 +459,18 @@ notNull Violation: Field.price_per_hour_weekend cannot be null
 2025-04-29 15:01:08 error: Error deleting product ID 8: Cannot delete product that is used in bookings
 2025-04-29 15:01:08 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
 2025-04-29 15:01:08 error: Error: Cannot delete product that is used in bookings
+2025-04-29 15:22:38 error: 401 - No token provided - /api/products/1 - PUT - ::1
+2025-04-29 15:22:38 error: Error: No token provided
+2025-04-29 15:23:16 error: Error deleting product ID 8: Cannot delete product that is used in bookings
+2025-04-29 15:23:16 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
+2025-04-29 15:23:16 error: Error: Cannot delete product that is used in bookings
+2025-04-29 15:23:50 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:25:31 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:26:35 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 15:27:16 error: Error getting all finances: Unknown column 'reference_id' in 'field list'
+2025-04-29 16:08:36 error: Error deleting product ID 8: Cannot delete product that is used in bookings
+2025-04-29 16:08:36 error: 400 - Cannot delete product that is used in bookings - /api/products/8 - DELETE - ::1
+2025-04-29 16:08:36 error: Error: Cannot delete product that is used in bookings
+2025-04-29 20:18:44 error: jwt expired
+2025-04-29 20:18:44 error: 401 - Invalid token - /api/products/8 - PUT - ::1
+2025-04-29 20:18:44 error: Error: Invalid token

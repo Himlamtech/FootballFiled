@@ -8,34 +8,44 @@ module.exports = (sequelize) => {
       autoIncrement: true,
       allowNull: false
     },
+    booking_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'bookings',
+        key: 'id'
+      }
+    },
     transaction_type: {
-      type: DataTypes.ENUM('booking', 'product_sale', 'expense', 'other'),
-      allowNull: false,
-      defaultValue: 'other'
+      type: DataTypes.ENUM('income', 'expense'),
+      allowNull: false
     },
     amount: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
       defaultValue: 0
     },
+    payment_method: {
+      type: DataTypes.ENUM('cash', 'bank_transfer', 'momo', 'zalopay', 'vietqr'),
+      allowNull: false
+    },
+    category: {
+      type: DataTypes.STRING(50),
+      allowNull: false
+    },
     description: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT,
       allowNull: true
     },
-    reference_id: {
-      type: DataTypes.STRING(50),
-      allowNull: true,
-      comment: 'Reference ID (e.g., booking ID, order ID)'
-    },
-    reference_name: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      comment: 'Reference name (e.g., customer name)'
+    transaction_date: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
     },
     status: {
-      type: DataTypes.ENUM('completed', 'pending', 'cancelled'),
-      allowNull: false,
-      defaultValue: 'pending'
+      type: DataTypes.ENUM('pending', 'completed', 'cancelled', 'refunded'),
+      allowNull: true,
+      defaultValue: 'completed'
     },
     created_at: {
       type: DataTypes.DATE,
@@ -44,13 +54,27 @@ module.exports = (sequelize) => {
     updated_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW
+    },
+    deleted_at: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   }, {
     tableName: 'finances',
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    updatedAt: 'updated_at',
+    deletedAt: 'deleted_at',
+    paranoid: true
   });
+
+  // Define associations
+  Finance.associate = (models) => {
+    Finance.belongsTo(models.Booking, {
+      foreignKey: 'booking_id',
+      as: 'booking'
+    });
+  };
 
   return Finance;
 };

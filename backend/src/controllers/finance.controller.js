@@ -83,19 +83,17 @@ exports.getAllFinances = async (req, res) => {
       filter.transaction_type = type;
     }
 
-    // Search by description or reference
+    // Search by description only
     if (search) {
       filter[Op.or] = [
-        { description: { [Op.like]: `%${search}%` } },
-        { reference_name: { [Op.like]: `%${search}%` } },
-        { reference_id: { [Op.like]: `%${search}%` } }
+        { description: { [Op.like]: `%${search}%` } }
       ];
     }
 
     // Get finance records with pagination
     const { count, rows } = await Finance.findAndCountAll({
       where: filter,
-      order: [['createdAt', 'DESC']],
+      order: [['transaction_date', 'DESC']],
       limit: parseInt(limit),
       offset
     });
@@ -140,10 +138,10 @@ exports.getFinanceById = async (req, res) => {
  */
 exports.createFinance = async (req, res) => {
   try {
-    const { transaction_type, amount, description, reference_id, reference_name, status } = req.body;
+    const { transaction_type, amount, description, payment_method, category, status } = req.body;
 
-    if (!transaction_type || !amount || !description) {
-      return res.status(400).json({ message: 'Transaction type, amount, and description are required' });
+    if (!transaction_type || !amount || !description || !payment_method || !category) {
+      return res.status(400).json({ message: 'Transaction type, amount, description, payment method, and category are required' });
     }
 
     // Handle expense or income based on transaction type
@@ -151,8 +149,8 @@ exports.createFinance = async (req, res) => {
       transaction_type,
       amount: transaction_type === 'expense' ? (amount > 0 ? -amount : amount) : Math.abs(amount),
       description,
-      reference_id: reference_id || `TXN-${Date.now()}`,
-      reference_name: reference_name || req.user?.name || 'Admin',
+      payment_method,
+      category,
       status: status || 'completed'
     };
 
@@ -173,7 +171,7 @@ exports.createFinance = async (req, res) => {
 exports.updateFinance = async (req, res) => {
   try {
     const { id } = req.params;
-    const { transaction_type, amount, description, reference_id, reference_name, status } = req.body;
+    const { transaction_type, amount, description, payment_method, category, status } = req.body;
 
     const finance = await Finance.findByPk(id);
 
@@ -189,8 +187,8 @@ exports.updateFinance = async (req, res) => {
         (amount > 0 ? -amount : amount) : Math.abs(amount);
     }
     if (description) updatedData.description = description;
-    if (reference_id) updatedData.reference_id = reference_id;
-    if (reference_name) updatedData.reference_name = reference_name;
+    if (payment_method) updatedData.payment_method = payment_method;
+    if (category) updatedData.category = category;
     if (status) updatedData.status = status;
 
     await finance.update(updatedData);

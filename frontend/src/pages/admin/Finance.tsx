@@ -103,31 +103,28 @@ const Finance = () => {
       try {
         setLoading(true);
 
-        // For development, we'll temporarily disable authentication
-        // In a real app, we would handle authentication properly
-        // For now, let's use the mock data to demonstrate the UI
+        // Get admin token from localStorage
+        const token = localStorage.getItem('admin_token');
 
-        // Uncomment this when authentication is properly set up
-        /*
-        const response = await financeAPI.getAllFinances();
-        const data = response.data;
+        if (token) {
+          const response = await financeAPI.getAllFinances();
+          const data = response.data;
 
-        if (data && data.data) {
-          console.log("Finances data:", data.data);
-          setTransactions(data.data);
-          // Also fetch the summary
-          fetchSummary();
+          if (data && data.data) {
+            console.log("Finances data:", data.data);
+            setTransactions(data.data);
+            // Also fetch the summary
+            fetchSummary();
+          } else {
+            console.error("API returned no finances");
+            setTransactions([]);
+            // Generate mock data as fallback
+            generateMockData();
+          }
         } else {
-          console.error("API returned no finances");
-          setTransactions([]);
-          // Generate mock data for development
+          console.log("No admin token found, using mock data");
           generateMockData();
         }
-        */
-
-        // For now, use mock data
-        console.log("Using mock data for development");
-        generateMockData();
       } catch (error) {
         console.error("Error fetching finances:", error);
         toast({
@@ -135,7 +132,7 @@ const Finance = () => {
           title: "Lỗi",
           description: "Không thể tải dữ liệu tài chính",
         });
-        // Generate mock data for development
+        // Generate mock data as fallback
         generateMockData();
       } finally {
         setLoading(false);
@@ -144,42 +141,61 @@ const Finance = () => {
 
     const fetchSummary = async () => {
       try {
-        // For development, we'll temporarily disable API calls
-        // Uncomment this when authentication is properly set up
-        /*
-        const response = await financeAPI.getFinanceSummary();
-        const data = response.data;
+        // Get admin token from localStorage
+        const token = localStorage.getItem('admin_token');
 
-        if (data) {
-          console.log("Finance summary:", data);
+        if (token) {
+          const response = await financeAPI.getFinanceSummary();
+          const data = response.data;
 
-          // Map the backend response to our frontend summary structure
-          const summaryData = {
-            totalIncome: data.income || 0,
-            totalExpense: data.expenses || 0,
-            netIncome: data.total || 0,
-            bookingRevenue: 0, // We'll calculate these from transactions
-            productRevenue: 0,
-            otherRevenue: 0
-          };
+          if (data) {
+            console.log("Finance summary:", data);
 
-          setSummary(summaryData);
+            // Map the backend response to our frontend summary structure
+            const summaryData = {
+              totalIncome: data.income || 0,
+              totalExpense: data.expenses || 0,
+              netIncome: data.total || 0,
+              bookingRevenue: 0, // We'll calculate these from transactions
+              productRevenue: 0,
+              otherRevenue: 0
+            };
+
+            // Calculate revenue by category from transactions
+            if (transactions.length > 0) {
+              const bookingRevenue = transactions
+                .filter(t => t.transaction_type === 'income' && t.category === 'booking')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+              const productRevenue = transactions
+                .filter(t => t.transaction_type === 'income' && t.category === 'product')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+              const otherRevenue = transactions
+                .filter(t => t.transaction_type === 'income' && t.category !== 'booking' && t.category !== 'product')
+                .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+              summaryData.bookingRevenue = bookingRevenue;
+              summaryData.productRevenue = productRevenue;
+              summaryData.otherRevenue = otherRevenue;
+            }
+
+            setSummary(summaryData);
+          } else {
+            console.error("API returned no summary");
+            // Set default summary
+            setSummary({
+              totalIncome: 0,
+              totalExpense: 0,
+              netIncome: 0,
+              bookingRevenue: 0,
+              productRevenue: 0,
+              otherRevenue: 0
+            });
+          }
         } else {
-          console.error("API returned no summary");
-          // Set default summary
-          setSummary({
-            totalIncome: 0,
-            totalExpense: 0,
-            netIncome: 0,
-            bookingRevenue: 0,
-            productRevenue: 0,
-            otherRevenue: 0
-          });
+          console.log("No admin token found, using calculated summary from mock data");
         }
-        */
-
-        // For now, we'll use the summary calculated from mock data
-        console.log("Using calculated summary from mock data");
       } catch (error) {
         console.error("Error fetching finance summary:", error);
         // Set default summary
