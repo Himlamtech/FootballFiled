@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Product = sequelize.define(
-    "Product", 
+    "Product",
     {
       id: {
         type: DataTypes.INTEGER,
@@ -27,6 +27,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.ENUM('equipment', 'drinks', 'food', 'service'),
         allowNull: false
       },
+      type: {
+        type: DataTypes.ENUM('rent', 'buy'),
+        allowNull: false,
+        defaultValue: 'buy'
+      },
       stock_quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -37,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: true
       }
-    }, 
+    },
     {
       tableName: 'products',
       underscored: true,
@@ -57,4 +62,4 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   return Product;
-}; 
+};

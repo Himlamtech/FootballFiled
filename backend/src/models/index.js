@@ -7,9 +7,11 @@ const logger = require('../utils/logger');
 const basename = path.basename(__filename);
 const db = {};
 
-// Create options object based on database dialect
+// Create options object for MySQL
 const sequelizeOptions = {
   dialect: config.db.dialect,
+  host: config.db.host,
+  port: config.db.port,
   logging: config.db.logging ? msg => logger.debug(msg) : false,
   define: {
     timestamps: true,
@@ -19,22 +21,17 @@ const sequelizeOptions = {
     deletedAt: 'deleted_at',
     paranoid: true
   },
+  timezone: '+07:00',
   pool: config.db.pool
 };
 
-// Add dialect-specific options
-if (config.db.dialect === 'sqlite') {
-  sequelizeOptions.storage = config.db.storage;
-} else {
-  sequelizeOptions.host = config.db.host;
-  sequelizeOptions.port = config.db.port;
-  sequelizeOptions.timezone = '+07:00';
-}
-
 // Create Sequelize instance
-const sequelize = config.db.dialect === 'sqlite' 
-  ? new Sequelize({ ...sequelizeOptions })
-  : new Sequelize(config.db.database, config.db.username, config.db.password, sequelizeOptions);
+const sequelize = new Sequelize(
+  config.db.database,
+  config.db.username,
+  config.db.password,
+  sequelizeOptions
+);
 
 // Import models
 fs.readdirSync(__dirname)
@@ -59,41 +56,25 @@ Object.keys(db).forEach(modelName => {
 
 // Define associations explicitly if needed
 const defineAssociations = () => {
-  if (!db.User || !db.Booking || !db.Field || !db.Feedback || !db.Opponent || !db.Product || !db.BookingProduct) {
+  if (!db.Admin || !db.Booking || !db.Field || !db.Feedback || !db.Product || !db.BookingProduct || !db.TimeSlot) {
     logger.warn('Some models are missing, skipping association definitions');
     return;
   }
-
-  // User <-> Booking
-  db.User.hasMany(db.Booking, { foreignKey: 'user_id', as: 'bookings' });
-  db.Booking.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
 
   // Field <-> Booking
   db.Field.hasMany(db.Booking, { foreignKey: 'field_id', as: 'bookings' });
   db.Booking.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 
-  // Booking <-> Feedback
-  db.Booking.hasOne(db.Feedback, { foreignKey: 'booking_id', as: 'feedback' });
-  db.Feedback.belongsTo(db.Booking, { foreignKey: 'booking_id', as: 'booking' });
-
-  // User <-> Feedback
-  db.User.hasMany(db.Feedback, { foreignKey: 'user_id', as: 'feedback' });
-  db.Feedback.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
+  // TimeSlot <-> Booking
+  db.TimeSlot.hasMany(db.Booking, { foreignKey: 'time_slot_id', as: 'bookings' });
+  db.Booking.belongsTo(db.TimeSlot, { foreignKey: 'time_slot_id', as: 'time_slot' });
 
   // Field <-> Feedback
-  db.Field.hasMany(db.Feedback, { foreignKey: 'field_id', as: 'feedback' });
+  db.Field.hasMany(db.Feedback, { foreignKey: 'field_id', as: 'feedbacks' });
   db.Feedback.belongsTo(db.Field, { foreignKey: 'field_id', as: 'field' });
 
-  // Booking <-> Opponent
-  db.Booking.hasOne(db.Opponent, { foreignKey: 'booking_id', as: 'opponent' });
-  db.Opponent.belongsTo(db.Booking, { foreignKey: 'booking_id', as: 'booking' });
-
-  // User <-> Opponent
-  db.User.hasMany(db.Opponent, { foreignKey: 'user_id', as: 'opponent_requests' });
-  db.Opponent.belongsTo(db.User, { foreignKey: 'user_id', as: 'user' });
-
   // Booking <-> Product (Many-to-Many)
-  db.Booking.belongsToMany(db.Product, { 
+  db.Booking.belongsToMany(db.Product, {
     through: db.BookingProduct,
     foreignKey: 'booking_id',
     otherKey: 'product_id',
@@ -114,4 +95,4 @@ defineAssociations();
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db; 
+module.exports = db;

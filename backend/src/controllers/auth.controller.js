@@ -1,57 +1,9 @@
-const authService = require('../services/auth.service');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { Admin } = require('../models');
+const config = require('../config/config');
 const { ApiError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
-
-/**
- * Register a new user
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const register = async (req, res, next) => {
-  try {
-    const userData = req.body;
-    const result = await authService.register(userData);
-    
-    res.status(201).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Login user
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const login = async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const result = await authService.login(email, password);
-    
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Refresh access token
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const refreshToken = async (req, res, next) => {
-  try {
-    const { refreshToken } = req.body;
-    const result = await authService.refreshToken(refreshToken);
-    
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * Admin login
@@ -62,9 +14,38 @@ const refreshToken = async (req, res, next) => {
 const adminLogin = async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const result = await authService.adminLogin(username, password);
-    
-    res.status(200).json(result);
+
+    // Find admin by username
+    const admin = await Admin.findOne({ where: { username } });
+    if (!admin) {
+      throw new ApiError(401, 'Invalid credentials');
+    }
+
+    // Check password
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+    if (!isPasswordValid) {
+      throw new ApiError(401, 'Invalid credentials');
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: admin.id, username: admin.username, role: 'admin' },
+      config.jwtSecret,
+      { expiresIn: config.jwtAccessExpiration }
+    );
+
+    // Return admin info and token
+    res.status(200).json({
+      success: true,
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        name: admin.name,
+        email: admin.email,
+        role: 'admin'
+      },
+      token
+    });
   } catch (error) {
     next(error);
   }
@@ -76,46 +57,44 @@ const adminLogin = async (req, res, next) => {
  * @param {Object} res - Express response object
  */
 const adminLogout = (req, res) => {
-  if (req.session) {
-    req.session.destroy(() => {
-      res.status(200).json({
-        success: true,
-        message: 'Admin logout successful'
-      });
-    });
-  } else {
-    res.status(200).json({
-      success: true,
-      message: 'Admin logout successful'
-    });
-  }
+  res.status(200).json({
+    success: true,
+    message: 'Admin logout successful'
+  });
 };
 
 /**
- * Get current user profile
+ * Get current admin profile
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
  */
-const getCurrentUser = (req, res) => {
-  // User is already attached to req by the auth middleware
-  const user = req.user;
-  
-  // Don't send password in response
-  const userResponse = {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    role: user.role
-  };
-  
-  res.status(200).json(userResponse);
+const getCurrentAdmin = async (req, res, next) => {
+  try {
+    // Admin is already attached to req by the auth middleware
+    const adminId = req.user.id;
+
+    // Find admin by id
+    const admin = await Admin.findByPk(adminId);
+    if (!admin) {
+      throw new ApiError(404, 'Admin not found');
+    }
+
+    // Return admin info
+    res.status(200).json({
+      id: admin.id,
+      username: admin.username,
+      name: admin.name,
+      email: admin.email,
+      role: 'admin'
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {
-  register,
-  login,
-  refreshToken,
   adminLogin,
   adminLogout,
-  getCurrentUser
-}; 
+  getCurrentAdmin
+};

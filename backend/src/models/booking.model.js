@@ -1,19 +1,11 @@
 module.exports = (sequelize, DataTypes) => {
   const Booking = sequelize.define(
-    "Booking", 
+    "Booking",
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
-      },
-      user_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        references: {
-          model: 'users',
-          key: 'id'
-        }
       },
       field_id: {
         type: DataTypes.INTEGER,
@@ -23,17 +15,29 @@ module.exports = (sequelize, DataTypes) => {
           key: 'id'
         }
       },
+      time_slot_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'time_slots',
+          key: 'id'
+        }
+      },
       booking_date: {
         type: DataTypes.DATEONLY,
         allowNull: false
       },
-      start_time: {
-        type: DataTypes.TIME,
+      customer_name: {
+        type: DataTypes.STRING,
         allowNull: false
       },
-      end_time: {
-        type: DataTypes.TIME,
+      customer_phone: {
+        type: DataTypes.STRING,
         allowNull: false
+      },
+      customer_email: {
+        type: DataTypes.STRING,
+        allowNull: true
       },
       status: {
         type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
@@ -48,14 +52,14 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'pending'
       },
       payment_method: {
-        type: DataTypes.ENUM('cash', 'credit_card', 'bank_transfer', 'e_wallet'),
-        allowNull: true
+        type: DataTypes.ENUM('cash', 'bank_transfer', 'momo', 'zalopay'),
+        defaultValue: 'cash'
       },
       notes: {
         type: DataTypes.TEXT,
         allowNull: true
       }
-    }, 
+    },
     {
       tableName: 'bookings',
       underscored: true,
@@ -63,12 +67,12 @@ module.exports = (sequelize, DataTypes) => {
       paranoid: true,
       indexes: [
         {
-          name: 'idx_booking_user',
-          fields: ['user_id']
-        },
-        {
           name: 'idx_booking_field',
           fields: ['field_id']
+        },
+        {
+          name: 'idx_booking_time_slot',
+          fields: ['time_slot_id']
         },
         {
           name: 'idx_booking_date',
@@ -83,4 +87,4 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   return Booking;
-}; 
+};

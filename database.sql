@@ -1,268 +1,294 @@
--- Football Field Management System Database Schema
--- This script creates the database and tables for the Football Field Management System
+-- Create database if not exists
+CREATE DATABASE IF NOT EXISTS FootballField;
+USE FootballField;
 
--- Drop tables if they exist to avoid foreign key constraint errors
-SET FOREIGN_KEY_CHECKS=0;
-DROP TABLE IF EXISTS opponents;
-DROP TABLE IF EXISTS feedback;
+-- Drop tables if they exist (in reverse order of dependencies)
+DROP TABLE IF EXISTS finances;
 DROP TABLE IF EXISTS booking_products;
+DROP TABLE IF EXISTS opponents;
 DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS feedbacks;
 DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS time_slots;
 DROP TABLE IF EXISTS fields;
-DROP TABLE IF EXISTS users;
-SET FOREIGN_KEY_CHECKS=1;
+DROP TABLE IF EXISTS admin;
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
+-- Create admin table
+CREATE TABLE admin (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
+  username VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) NOT NULL,
   phone VARCHAR(20),
-  role ENUM('user', 'admin') DEFAULT 'user' NOT NULL,
-  status ENUM('active', 'inactive', 'banned') DEFAULT 'active' NOT NULL,
-  avatar_url VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP NULL,
-  INDEX idx_user_email (email),
-  INDEX idx_user_status (status),
-  INDEX idx_user_role (role)
+  deleted_at TIMESTAMP NULL
 );
 
--- Fields table
-CREATE TABLE IF NOT EXISTS fields (
+-- Create fields table
+CREATE TABLE fields (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(100) NOT NULL,
   description TEXT,
   location VARCHAR(255) NOT NULL,
-  field_type VARCHAR(50) NOT NULL COMMENT 'Field size, e.g. "5-a-side", "11-a-side"',
+  capacity INT NOT NULL DEFAULT 10,
+  size VARCHAR(50) NOT NULL,
   price_per_hour DECIMAL(10, 2) NOT NULL,
-  status ENUM('available', 'maintenance', 'booked') DEFAULT 'available' NOT NULL,
+  price_per_hour_weekend DECIMAL(10, 2) NOT NULL,
+  status ENUM('available', 'maintenance') DEFAULT 'available',
   image_url VARCHAR(255),
-  facilities TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP NULL,
-  INDEX idx_field_status (status),
-  INDEX idx_field_type (field_type)
+  deleted_at TIMESTAMP NULL
 );
 
--- Products table
-CREATE TABLE IF NOT EXISTS products (
+-- Create time_slots table
+CREATE TABLE time_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  price DECIMAL(10, 2) NOT NULL,
-  category ENUM('equipment', 'drinks', 'food', 'service') NOT NULL,
-  image_url VARCHAR(255),
-  stock_quantity INT NOT NULL DEFAULT 0,
-  is_available BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP NULL,
-  INDEX idx_product_category (category),
-  INDEX idx_product_availability (is_available)
-);
-
--- Bookings table
-CREATE TABLE IF NOT EXISTS bookings (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  field_id INT NOT NULL,
-  booking_date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
-  status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending' NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
+);
+
+-- Create products table
+CREATE TABLE products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  description TEXT,
+  price DECIMAL(10, 2) NOT NULL,
+  image_url VARCHAR(255),
+  category ENUM('equipment', 'food', 'drinks', 'service') DEFAULT 'equipment',
+  type ENUM('buy', 'rent') DEFAULT 'buy',
+  stock_quantity INT DEFAULT 0,
+  is_available BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL
+);
+
+-- Create feedbacks table
+CREATE TABLE feedbacks (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  field_id INT,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100),
+  phone VARCHAR(20),
+  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE SET NULL
+);
+
+-- Create bookings table
+CREATE TABLE bookings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  field_id INT NOT NULL,
+  time_slot_id INT NOT NULL,
+  customer_name VARCHAR(100) NOT NULL,
+  customer_phone VARCHAR(20) NOT NULL,
+  customer_email VARCHAR(100),
+  booking_date DATE NOT NULL,
+  status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
   total_price DECIMAL(10, 2) NOT NULL,
-  payment_status ENUM('pending', 'paid', 'refunded') DEFAULT 'pending' NOT NULL,
-  payment_method ENUM('cash', 'credit_card', 'bank_transfer', 'e_wallet'),
+  payment_status ENUM('pending', 'paid', 'refunded') DEFAULT 'pending',
+  payment_method ENUM('cash', 'bank_transfer', 'momo', 'zalopay', 'vietqr') DEFAULT 'cash',
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (field_id) REFERENCES fields(id),
-  INDEX idx_booking_user (user_id),
-  INDEX idx_booking_field (field_id),
-  INDEX idx_booking_date (booking_date),
-  INDEX idx_booking_status (status)
+  FOREIGN KEY (field_id) REFERENCES fields(id) ON DELETE CASCADE,
+  FOREIGN KEY (time_slot_id) REFERENCES time_slots(id) ON DELETE CASCADE
 );
 
--- Booking Products (junction table for many-to-many relationship)
-CREATE TABLE IF NOT EXISTS booking_products (
+-- Create booking_products table (junction table for bookings and products)
+CREATE TABLE booking_products (
   id INT AUTO_INCREMENT PRIMARY KEY,
   booking_id INT NOT NULL,
   product_id INT NOT NULL,
   quantity INT NOT NULL DEFAULT 1,
-  price DECIMAL(10, 2) NOT NULL COMMENT 'Price at the time of booking',
+  price DECIMAL(10, 2) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (booking_id) REFERENCES bookings(id),
-  FOREIGN KEY (product_id) REFERENCES products(id),
-  INDEX idx_booking_product_booking (booking_id),
-  INDEX idx_booking_product_product (product_id)
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 );
 
--- Feedback table
-CREATE TABLE IF NOT EXISTS feedback (
+-- Create opponents table for team matching
+CREATE TABLE opponents (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
   booking_id INT NOT NULL,
-  field_id INT NOT NULL,
-  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-  comment TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id),
-  FOREIGN KEY (booking_id) REFERENCES bookings(id),
-  FOREIGN KEY (field_id) REFERENCES fields(id),
-  INDEX idx_feedback_user (user_id),
-  INDEX idx_feedback_booking (booking_id),
-  INDEX idx_feedback_field (field_id)
-);
-
--- Opponents table (for finding match opponents)
-CREATE TABLE IF NOT EXISTS opponents (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  booking_id INT,
-  team_name VARCHAR(255) NOT NULL,
-  player_count INT NOT NULL,
+  team_name VARCHAR(100) NOT NULL,
+  contact_email VARCHAR(100),
   contact_phone VARCHAR(20) NOT NULL,
-  preferred_date DATE NOT NULL,
-  preferred_time TIME NOT NULL,
-  status ENUM('open', 'matched', 'completed', 'cancelled') DEFAULT 'open' NOT NULL,
-  matched_opponent_id INT,
-  notes TEXT,
+  description TEXT,
+  status ENUM('searching', 'matched', 'cancelled') DEFAULT 'searching',
+  matched_with_id INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE,
-  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL ON UPDATE CASCADE,
-  FOREIGN KEY (matched_opponent_id) REFERENCES opponents(id) ON DELETE SET NULL ON UPDATE CASCADE,
-  INDEX idx_opponent_user (user_id),
-  INDEX idx_opponent_status (status),
-  INDEX idx_opponent_date (preferred_date)
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+  FOREIGN KEY (matched_with_id) REFERENCES opponents(id) ON DELETE SET NULL
 );
 
--- Insert sample data
-
--- Insert admin user (password: admin123)
-INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES
-('Admin User', 'admin@example.com', '$2a$10$rrCvDmUyF0WtqDwsAyD6UOJOy4/AxA2nxBsEn2XBTpzJeJQAyMS4K', '0909123456', 'admin', 'active', 'https://randomuser.me/api/portraits/men/1.jpg');
-
--- Insert regular users (password: password123)
-INSERT INTO users (name, email, password, phone, role, status, avatar_url) VALUES
-('User 1', 'user1@example.com', '$2a$10$rrCvDmUyF0WtqDwsAyD6UOJOy4/AxA2nxBsEn2XBTpzJeJQAyMS4K', '0909123457', 'user', 'active', 'https://randomuser.me/api/portraits/men/2.jpg'),
-('User 2', 'user2@example.com', '$2a$10$rrCvDmUyF0WtqDwsAyD6UOJOy4/AxA2nxBsEn2XBTpzJeJQAyMS4K', '0909123458', 'user', 'active', 'https://randomuser.me/api/portraits/women/2.jpg'),
-('User 3', 'user3@example.com', '$2a$10$rrCvDmUyF0WtqDwsAyD6UOJOy4/AxA2nxBsEn2XBTpzJeJQAyMS4K', '0909123459', 'user', 'active', 'https://randomuser.me/api/portraits/men/3.jpg'),
-('User 4', 'user4@example.com', '$2a$10$rrCvDmUyF0WtqDwsAyD6UOJOy4/AxA2nxBsEn2XBTpzJeJQAyMS4K', '0909123460', 'user', 'active', 'https://randomuser.me/api/portraits/women/3.jpg'),
-('User 5', 'user5@example.com', '$2a$10$rrCvDmUyF0WtqDwsAyD6UOJOy4/AxA2nxBsEn2XBTpzJeJQAyMS4K', '0909123461', 'user', 'active', 'https://randomuser.me/api/portraits/men/4.jpg');
+-- Insert admin account
+INSERT INTO admin (username, password, name, email, phone) VALUES
+('admin', '$2a$10$x9xD8jHouOzfyCKpU9YtrOQv/1V0y//4Z6p0gJ.dG65OA8wX0uCqe', 'Admin', 'admin@footballfield.com', '0123456789');
 
 -- Insert fields
-INSERT INTO fields (name, description, location, field_type, price_per_hour, status, image_url, facilities) VALUES
-('Football Field 1', 'A quality 5-a-side football field with excellent facilities.', 'Hanoi', '5-a-side', 250000, 'available', 'https://source.unsplash.com/random/800x600?football,field,1', 'Parking, Lighting, Changing Rooms, Shower'),
-('Football Field 2', 'A quality 7-a-side football field with excellent facilities.', 'Ho Chi Minh City', '7-a-side', 350000, 'available', 'https://source.unsplash.com/random/800x600?football,field,2', 'Parking, Lighting, Shower, Cafeteria'),
-('Football Field 3', 'A quality 11-a-side football field with excellent facilities.', 'Da Nang', '11-a-side', 500000, 'available', 'https://source.unsplash.com/random/800x600?football,field,3', 'Lighting, Changing Rooms, Restaurant'),
-('Football Field 4', 'A quality 5-a-side football field with excellent facilities.', 'Hue', '5-a-side', 200000, 'available', 'https://source.unsplash.com/random/800x600?football,field,4', 'Parking, Shower, Restaurant, Free Wifi'),
-('Football Field 5', 'A quality 7-a-side football field with excellent facilities.', 'Can Tho', '7-a-side', 300000, 'available', 'https://source.unsplash.com/random/800x600?football,field,5', 'Changing Rooms, Shower, Cafeteria, Free Wifi');
+INSERT INTO fields (name, description, location, capacity, size, price_per_hour, price_per_hour_weekend, status, image_url) VALUES
+('Sân A', 'Sân bóng đá 5 người với cỏ nhân tạo chất lượng cao', 'Khu vực A, Quận 1, TP.HCM', 10, '5-a-side', 200000, 250000, 'available', 'https://placehold.co/600x400?text=Football+Field+A'),
+('Sân B', 'Sân bóng đá 7 người với cỏ nhân tạo và hệ thống chiếu sáng hiện đại', 'Khu vực B, Quận 2, TP.HCM', 14, '7-a-side', 300000, 350000, 'available', 'https://placehold.co/600x400?text=Football+Field+B'),
+('Sân C', 'Sân bóng đá 11 người tiêu chuẩn FIFA', 'Khu vực C, Quận 3, TP.HCM', 22, '11-a-side', 500000, 600000, 'available', 'https://placehold.co/600x400?text=Football+Field+C'),
+('Sân D', 'Sân bóng đá 5 người trong nhà với điều hòa', 'Khu vực D, Quận 4, TP.HCM', 10, '5-a-side', 250000, 300000, 'available', 'https://placehold.co/600x400?text=Football+Field+D');
+
+-- Insert time slots
+INSERT INTO time_slots (start_time, end_time, is_active) VALUES
+('06:00:00', '07:30:00', TRUE),
+('07:30:00', '09:00:00', TRUE),
+('09:00:00', '10:30:00', TRUE),
+('10:30:00', '12:00:00', TRUE),
+('14:00:00', '15:30:00', TRUE),
+('15:30:00', '17:00:00', TRUE),
+('17:00:00', '18:30:00', TRUE),
+('18:30:00', '20:00:00', TRUE),
+('20:00:00', '21:30:00', TRUE);
 
 -- Insert products
--- Equipment
-INSERT INTO products (name, description, price, category, image_url, stock_quantity, is_available) VALUES
-('Football', 'Quality football for players.', 250000, 'equipment', 'https://source.unsplash.com/random/200x200?football', 50, TRUE),
-('Goalkeeper Gloves', 'Quality goalkeeper gloves for players.', 150000, 'equipment', 'https://source.unsplash.com/random/200x200?goalkeeper,gloves', 30, TRUE),
-('Shin Guards', 'Quality shin guards for players.', 100000, 'equipment', 'https://source.unsplash.com/random/200x200?shin,guards', 40, TRUE),
-('Football Socks', 'Quality football socks for players.', 50000, 'equipment', 'https://source.unsplash.com/random/200x200?football,socks', 100, TRUE),
-('Jersey (Set)', 'Quality jersey set for teams.', 300000, 'equipment', 'https://source.unsplash.com/random/200x200?football,jersey', 25, TRUE);
+INSERT INTO products (name, description, price, category, type, stock_quantity, image_url) VALUES
+('Nước suối', 'Chai nước suối 500ml', 10000, 'drinks', 'buy', 100, 'https://placehold.co/300x300?text=Water'),
+('Nước ngọt', 'Lon nước ngọt 330ml', 15000, 'drinks', 'buy', 100, 'https://placehold.co/300x300?text=Soda'),
+('Bánh mì', 'Bánh mì thịt nguội', 20000, 'food', 'buy', 50, 'https://placehold.co/300x300?text=Sandwich'),
+('Thuê áo', 'Thuê áo đá bóng', 30000, 'equipment', 'rent', 20, 'https://placehold.co/300x300?text=Jersey'),
+('Thuê giày', 'Thuê giày đá bóng', 40000, 'equipment', 'rent', 20, 'https://placehold.co/300x300?text=Shoes'),
+('Thuê bóng', 'Thuê bóng đá', 50000, 'equipment', 'rent', 10, 'https://placehold.co/300x300?text=Ball'),
+('Dịch vụ quay phim', 'Dịch vụ quay phim trận đấu', 200000, 'service', 'buy', 5, 'https://placehold.co/300x300?text=Video'),
+('Dịch vụ chụp ảnh', 'Dịch vụ chụp ảnh trận đấu', 150000, 'service', 'buy', 5, 'https://placehold.co/300x300?text=Photo');
 
--- Drinks
-INSERT INTO products (name, description, price, category, image_url, stock_quantity, is_available) VALUES
-('Water Bottle', 'Refreshing water for players.', 15000, 'drinks', 'https://source.unsplash.com/random/200x200?water,bottle', 200, TRUE),
-('Sports Drink', 'Energizing sports drink for players.', 25000, 'drinks', 'https://source.unsplash.com/random/200x200?sports,drink', 150, TRUE),
-('Energy Drink', 'High-energy drink for players.', 30000, 'drinks', 'https://source.unsplash.com/random/200x200?energy,drink', 100, TRUE),
-('Coconut Water', 'Natural coconut water for hydration.', 20000, 'drinks', 'https://source.unsplash.com/random/200x200?coconut,water', 80, TRUE),
-('Iced Tea', 'Refreshing iced tea for players.', 18000, 'drinks', 'https://source.unsplash.com/random/200x200?iced,tea', 120, TRUE);
+-- Insert sample bookings
+INSERT INTO bookings (field_id, time_slot_id, customer_name, customer_phone, customer_email, booking_date, status, total_price, payment_status, payment_method, notes) VALUES
+(1, 7, 'Nguyễn Văn A', '0901234567', 'nguyenvana@example.com', DATE_ADD(CURDATE(), INTERVAL 1 DAY), 'confirmed', 200000, 'paid', 'bank_transfer', 'Đặt sân cho đội FC Thủ Đức'),
+(2, 6, 'Trần Văn B', '0907654321', 'tranvanb@example.com', DATE_ADD(CURDATE(), INTERVAL 2 DAY), 'confirmed', 300000, 'paid', 'momo', 'Đặt sân cho đội Bình Thạnh FC'),
+(3, 8, 'Lê Văn C', '0903456789', 'levanc@example.com', DATE_ADD(CURDATE(), INTERVAL 3 DAY), 'confirmed', 500000, 'paid', 'cash', 'Đặt sân cho đội FC Quận 1'),
+(4, 5, 'Phạm Văn D', '0904567890', 'phamvand@example.com', DATE_ADD(CURDATE(), INTERVAL 4 DAY), 'pending', 250000, 'pending', 'zalopay', 'Đặt sân cho đội FC Quận 4'),
+(1, 8, 'Hoàng Văn E', '0905678901', 'hoangvane@example.com', DATE_ADD(CURDATE(), INTERVAL 5 DAY), 'confirmed', 200000, 'paid', 'vietqr', 'Đặt sân cho đội FC Quận 5'),
+(2, 5, 'Võ Văn F', '0906789012', 'vovanf@example.com', DATE_ADD(CURDATE(), INTERVAL 6 DAY), 'confirmed', 300000, 'paid', 'bank_transfer', 'Đặt sân cho đội FC Quận 6'),
+(3, 6, 'Đặng Văn G', '0907890123', 'dangvang@example.com', DATE_ADD(CURDATE(), INTERVAL 7 DAY), 'pending', 500000, 'pending', 'momo', 'Đặt sân cho đội FC Quận 7'),
+(4, 7, 'Bùi Văn H', '0908901234', 'buivanh@example.com', DATE_ADD(CURDATE(), INTERVAL 8 DAY), 'confirmed', 250000, 'paid', 'cash', 'Đặt sân cho đội FC Quận 8'),
+(1, 5, 'Đỗ Văn I', '0909012345', 'dovani@example.com', DATE_ADD(CURDATE(), INTERVAL 9 DAY), 'cancelled', 200000, 'refunded', 'bank_transfer', 'Đặt sân cho đội FC Quận 9'),
+(2, 7, 'Hồ Văn K', '0900123456', 'hovank@example.com', DATE_ADD(CURDATE(), INTERVAL 10 DAY), 'confirmed', 300000, 'paid', 'zalopay', 'Đặt sân cho đội FC Quận 10');
 
--- Food
-INSERT INTO products (name, description, price, category, image_url, stock_quantity, is_available) VALUES
-('Energy Bar', 'Nutritious energy bar for players.', 30000, 'food', 'https://source.unsplash.com/random/200x200?energy,bar', 100, TRUE),
-('Sandwich', 'Fresh sandwich for players.', 35000, 'food', 'https://source.unsplash.com/random/200x200?sandwich', 40, TRUE),
-('Fruit Pack', 'Assorted fresh fruits for players.', 25000, 'food', 'https://source.unsplash.com/random/200x200?fruit,pack', 60, TRUE),
-('Protein Snack', 'High-protein snack for players.', 40000, 'food', 'https://source.unsplash.com/random/200x200?protein,snack', 50, TRUE),
-('Chips', 'Tasty chips for players.', 20000, 'food', 'https://source.unsplash.com/random/200x200?chips', 150, TRUE);
+-- Create finances table
+CREATE TABLE finances (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  booking_id INT,
+  transaction_type ENUM('income', 'expense') NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  payment_method ENUM('cash', 'bank_transfer', 'momo', 'zalopay', 'vietqr') NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  description TEXT,
+  transaction_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  status ENUM('pending', 'completed', 'cancelled', 'refunded') DEFAULT 'completed',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
+  FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL
+);
 
--- Services
-INSERT INTO products (name, description, price, category, image_url, stock_quantity, is_available) VALUES
-('Referee Service', 'Professional referee for your match.', 200000, 'service', 'https://source.unsplash.com/random/200x200?referee', 10, TRUE),
-('Photography Service', 'Professional photography for your match.', 300000, 'service', 'https://source.unsplash.com/random/200x200?sports,photography', 5, TRUE),
-('Equipment Rental', 'Full equipment set rental for teams.', 500000, 'service', 'https://source.unsplash.com/random/200x200?football,equipment', 8, TRUE),
-('Coaching Session', 'Professional coaching session for teams.', 400000, 'service', 'https://source.unsplash.com/random/200x200?football,coach', 3, TRUE),
-('Field Decoration', 'Special decoration for events and tournaments.', 350000, 'service', 'https://source.unsplash.com/random/200x200?field,decoration', 2, TRUE);
+-- Add indexes for better performance
+ALTER TABLE finances ADD INDEX idx_finances_booking_id (booking_id);
+ALTER TABLE finances ADD INDEX idx_finances_transaction_type (transaction_type);
+ALTER TABLE finances ADD INDEX idx_finances_transaction_date (transaction_date);
+ALTER TABLE finances ADD INDEX idx_finances_status (status);
 
--- Insert bookings (sample data for past and future bookings)
--- Current date bookings
-INSERT INTO bookings (user_id, field_id, booking_date, start_time, end_time, status, total_price, payment_status, payment_method, notes)
-VALUES
-(2, 1, CURDATE(), '08:00:00', '10:00:00', 'confirmed', 500000, 'paid', 'cash', 'Please prepare the field 15 minutes before the scheduled time.'),
-(3, 2, CURDATE(), '10:00:00', '12:00:00', 'confirmed', 700000, 'paid', 'bank_transfer', NULL),
-(4, 3, CURDATE(), '14:00:00', '16:00:00', 'confirmed', 1000000, 'paid', 'e_wallet', NULL),
-(5, 4, CURDATE(), '16:00:00', '18:00:00', 'confirmed', 400000, 'paid', 'credit_card', 'We need extra balls.');
+ALTER TABLE bookings ADD INDEX idx_bookings_field_id (field_id);
+ALTER TABLE bookings ADD INDEX idx_bookings_time_slot_id (time_slot_id);
+ALTER TABLE bookings ADD INDEX idx_bookings_booking_date (booking_date);
+ALTER TABLE bookings ADD INDEX idx_bookings_status (status);
+ALTER TABLE bookings ADD INDEX idx_bookings_payment_status (payment_status);
 
--- Past bookings (completed)
-INSERT INTO bookings (user_id, field_id, booking_date, start_time, end_time, status, total_price, payment_status, payment_method, notes)
-VALUES
-(2, 1, DATE_SUB(CURDATE(), INTERVAL 7 DAY), '08:00:00', '10:00:00', 'completed', 500000, 'paid', 'cash', NULL),
-(3, 2, DATE_SUB(CURDATE(), INTERVAL 6 DAY), '10:00:00', '12:00:00', 'completed', 700000, 'paid', 'bank_transfer', NULL),
-(4, 3, DATE_SUB(CURDATE(), INTERVAL 5 DAY), '14:00:00', '16:00:00', 'completed', 1000000, 'paid', 'e_wallet', NULL),
-(5, 4, DATE_SUB(CURDATE(), INTERVAL 4 DAY), '16:00:00', '18:00:00', 'completed', 400000, 'paid', 'credit_card', NULL);
+ALTER TABLE booking_products ADD INDEX idx_booking_products_booking_id (booking_id);
+ALTER TABLE booking_products ADD INDEX idx_booking_products_product_id (product_id);
 
--- Past bookings (cancelled)
-INSERT INTO bookings (user_id, field_id, booking_date, start_time, end_time, status, total_price, payment_status, payment_method, notes)
-VALUES
-(2, 5, DATE_SUB(CURDATE(), INTERVAL 10 DAY), '18:00:00', '20:00:00', 'cancelled', 600000, 'refunded', 'credit_card', 'Cancelled due to bad weather.');
+ALTER TABLE opponents ADD INDEX idx_opponents_booking_id (booking_id);
+ALTER TABLE opponents ADD INDEX idx_opponents_status (status);
 
--- Future bookings
-INSERT INTO bookings (user_id, field_id, booking_date, start_time, end_time, status, total_price, payment_status, payment_method, notes)
-VALUES
-(2, 1, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '08:00:00', '10:00:00', 'confirmed', 500000, 'paid', 'cash', NULL),
-(3, 2, DATE_ADD(CURDATE(), INTERVAL 2 DAY), '10:00:00', '12:00:00', 'confirmed', 700000, 'paid', 'bank_transfer', NULL),
-(4, 3, DATE_ADD(CURDATE(), INTERVAL 3 DAY), '14:00:00', '16:00:00', 'pending', 1000000, 'pending', NULL, NULL),
-(5, 4, DATE_ADD(CURDATE(), INTERVAL 4 DAY), '16:00:00', '18:00:00', 'pending', 400000, 'pending', NULL, 'First time booking.');
+ALTER TABLE feedbacks ADD INDEX idx_feedbacks_field_id (field_id);
+ALTER TABLE feedbacks ADD INDEX idx_feedbacks_status (status);
 
--- Insert booking products
-INSERT INTO booking_products (booking_id, product_id, quantity, price)
-VALUES
-(1, 1, 1, 250000),  -- Football for booking 1
-(1, 6, 5, 75000),   -- Water bottles for booking 1
-(2, 2, 2, 300000),  -- Goalkeeper gloves for booking 2
-(2, 7, 10, 250000), -- Sports drinks for booking 2
-(3, 16, 1, 200000), -- Referee service for booking 3
-(4, 11, 5, 150000), -- Energy bars for booking 4
-(5, 1, 1, 250000),  -- Football for booking 5
-(6, 3, 2, 200000),  -- Shin guards for booking 6
-(7, 17, 1, 300000), -- Photography service for booking 7
-(8, 8, 5, 150000);  -- Energy drinks for booking 8
+-- Insert sample booking products
+INSERT INTO booking_products (booking_id, product_id, quantity, price) VALUES
+(1, 1, 5, 10000),
+(1, 2, 3, 15000),
+(1, 3, 2, 20000),
+(2, 3, 2, 20000),
+(2, 4, 1, 30000),
+(2, 1, 4, 10000),
+(3, 5, 2, 40000),
+(3, 7, 4, 18000),
+(3, 1, 10, 10000),
+(4, 1, 5, 10000),
+(4, 6, 1, 50000),
+(5, 2, 6, 15000),
+(5, 3, 3, 20000),
+(6, 4, 2, 30000),
+(6, 5, 1, 40000),
+(7, 7, 1, 18000),
+(7, 8, 2, 5000),
+(8, 1, 8, 10000),
+(8, 2, 8, 15000),
+(9, 3, 4, 20000),
+(10, 6, 1, 50000),
+(10, 4, 3, 30000);
 
--- Insert feedback for completed bookings
-INSERT INTO feedback (user_id, booking_id, field_id, rating, comment)
-VALUES
-(2, 5, 1, 5, 'Great field, highly recommend!'),
-(3, 6, 2, 4, 'The facilities were clean and well-maintained.'),
-(4, 7, 3, 5, 'Excellent service and facilities!'),
-(5, 8, 4, 4, 'The field was in perfect condition.');
+-- Insert sample feedbacks
+INSERT INTO feedbacks (field_id, name, email, phone, rating, comment, status) VALUES
+(1, 'Nguyễn Văn A', 'nguyenvana@example.com', '0901234567', 5, 'Great field with excellent facilities', 'approved'),
+(2, 'Trần Văn B', 'tranvanb@example.com', '0907654321', 4, 'Good field but changing rooms are a bit small', 'approved'),
+(3, 'Lê Văn C', 'levanc@example.com', '0903456789', 3, 'Field is spacious but grass needs maintenance', 'pending'),
+(4, 'Phạm Văn D', 'phamvand@example.com', '0904567890', 5, 'Indoor field is very comfortable with good air conditioning', 'approved'),
+(1, 'Hoàng Văn E', 'hoangvane@example.com', '0905678901', 4, 'Good location and friendly staff', 'approved'),
+(2, 'Võ Văn F', 'vovanf@example.com', '0906789012', 5, 'Excellent lighting for evening games', 'approved'),
+(3, 'Đặng Văn G', 'dangvang@example.com', '0907890123', 2, 'Field is too far from the city center', 'rejected'),
+(4, 'Bùi Văn H', 'buivanh@example.com', '0908901234', 4, 'Good value for money', 'pending'),
+(1, 'Đỗ Văn I', 'dovani@example.com', '0909012345', 5, 'Perfect for small team practice', 'approved'),
+(2, 'Hồ Văn K', 'hovank@example.com', '0900123456', 3, 'Field quality is average but price is reasonable', 'pending');
 
--- Insert opponent requests
-INSERT INTO opponents (user_id, booking_id, team_name, player_count, contact_phone, preferred_date, preferred_time, status, matched_opponent_id, notes)
-VALUES
-(2, NULL, 'Red Dragons', 5, '0909123457', DATE_ADD(CURDATE(), INTERVAL 7 DAY), '18:00:00', 'open', NULL, 'Looking for a friendly match.'),
-(3, NULL, 'Blue Lions', 5, '0909123458', DATE_ADD(CURDATE(), INTERVAL 7 DAY), '18:00:00', 'open', NULL, 'Competitive team looking for a challenge.'),
-(4, NULL, 'Green Eagles', 7, '0909123459', DATE_ADD(CURDATE(), INTERVAL 10 DAY), '19:00:00', 'open', NULL, 'Casual team looking for fun match.'),
-(5, NULL, 'Yellow Tigers', 7, '0909123460', DATE_ADD(CURDATE(), INTERVAL 10 DAY), '19:00:00', 'open', NULL, 'Intermediate level team.');
+-- Insert sample opponents
+INSERT INTO opponents (booking_id, team_name, contact_email, contact_phone, description, status) VALUES
+(1, 'FC Thủ Đức', 'fcthuduc@example.com', '0901234567', 'Looking for medium level opponents for friendly match', 'searching'),
+(2, 'Bình Thạnh FC', 'binhthanh@example.com', '0907654321', 'High level team looking for similar level opponents', 'searching'),
+(3, 'FC Quận 1', 'fcquan1@example.com', '0903456789', 'New team looking for friendly matches to learn and improve', 'searching'),
+(4, 'FC Quận 4', 'fcquan4@example.com', '0904567890', 'Intermediate team looking for weekend matches', 'searching'),
+(5, 'FC Quận 5', 'fcquan5@example.com', '0905678901', 'Experienced team looking for competitive matches', 'searching'),
+(6, 'FC Quận 6', 'fcquan6@example.com', '0906789012', 'Amateur team looking for friendly matches', 'matched'),
+(7, 'FC Quận 7', 'fcquan7@example.com', '0907890123', 'Semi-professional team looking for challenging opponents', 'searching'),
+(8, 'FC Quận 8', 'fcquan8@example.com', '0908901234', 'Corporate team looking for weekend matches', 'matched');
 
--- Match some opponents
-UPDATE opponents SET status = 'matched', matched_opponent_id = 2 WHERE id = 1;
-UPDATE opponents SET status = 'matched', matched_opponent_id = 1 WHERE id = 2;
+-- Insert sample finances
+INSERT INTO finances (booking_id, transaction_type, amount, payment_method, category, description, transaction_date, status) VALUES
+(1, 'income', 200000, 'bank_transfer', 'booking', 'Payment for booking #1 - Nguyễn Văn A', NOW(), 'completed'),
+(2, 'income', 300000, 'momo', 'booking', 'Payment for booking #2 - Trần Văn B', NOW(), 'completed'),
+(3, 'income', 500000, 'cash', 'booking', 'Payment for booking #3 - Lê Văn C', NOW(), 'completed'),
+(5, 'income', 200000, 'vietqr', 'booking', 'Payment for booking #5 - Hoàng Văn E', NOW(), 'completed'),
+(6, 'income', 300000, 'bank_transfer', 'booking', 'Payment for booking #6 - Võ Văn F', NOW(), 'completed'),
+(8, 'income', 250000, 'cash', 'booking', 'Payment for booking #8 - Bùi Văn H', NOW(), 'completed'),
+(10, 'income', 300000, 'zalopay', 'booking', 'Payment for booking #10 - Hồ Văn K', NOW(), 'completed'),
+(NULL, 'expense', 100000, 'cash', 'maintenance', 'Weekly field maintenance', NOW(), 'completed'),
+(NULL, 'expense', 50000, 'cash', 'utilities', 'Electricity and water bills', NOW(), 'completed'),
+(NULL, 'expense', 200000, 'bank_transfer', 'salary', 'Staff salary payment', NOW(), 'completed'),
+(NULL, 'expense', 150000, 'cash', 'supplies', 'Office supplies purchase', NOW(), 'completed'),
+(NULL, 'expense', 80000, 'cash', 'maintenance', 'Equipment repair', NOW(), 'completed'),
+(NULL, 'income', 45000, 'cash', 'product', 'Food and drinks sales', NOW(), 'completed'),
+(NULL, 'income', 30000, 'momo', 'product', 'Equipment rental', NOW(), 'completed'),
+(NULL, 'income', 60000, 'cash', 'product', 'Jersey sales', NOW(), 'completed'),
+(NULL, 'income', 25000, 'zalopay', 'product', 'Water bottle sales', NOW(), 'completed'),
+(NULL, 'income', 350000, 'bank_transfer', 'service', 'Video recording service', NOW(), 'completed'),
+(NULL, 'income', 200000, 'momo', 'service', 'Photography service', NOW(), 'completed');

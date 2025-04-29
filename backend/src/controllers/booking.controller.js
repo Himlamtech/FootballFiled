@@ -1,6 +1,8 @@
-const bookingService = require('../services/booking.service');
+const { Booking, Field, TimeSlot, Product, BookingProduct } = require('../models');
 const { ApiError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const { Op } = require('sequelize');
+const financeService = require('../services/finance.service');
 
 /**
  * Get all bookings with filters and pagination
@@ -10,23 +12,54 @@ const logger = require('../utils/logger');
  */
 const getAllBookings = async (req, res, next) => {
   try {
-    const { userId, fieldId, status, date, page, limit } = req.query;
+    const { fieldId, status, date, page = 1, limit = 10 } = req.query;
 
-    const options = {
-      userId,
-      fieldId,
-      status,
-      date,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-      userRole: req.user.role,
-      currentUserId: req.user.id
-    };
+    // Build filter conditions
+    const where = {};
+    if (fieldId) where.field_id = fieldId;
+    if (status) where.status = status;
+    if (date) where.booking_date = date;
 
-    const result = await bookingService.getAllBookings(options);
+    // Pagination options
+    const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    res.status(200).json(result);
+    // Get bookings with pagination
+    const { count, rows } = await Booking.findAndCountAll({
+      where,
+      limit: parseInt(limit),
+      offset,
+      order: [['booking_date', 'DESC'], ['created_at', 'DESC']],
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(count / parseInt(limit));
+
+    res.status(200).json({
+      bookings: rows,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: parseInt(page),
+        itemsPerPage: parseInt(limit)
+      }
+    });
   } catch (error) {
+    logger.error('Error getting bookings:', error);
     next(error);
   }
 };
@@ -40,10 +73,33 @@ const getAllBookings = async (req, res, next) => {
 const getBookingById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const booking = await bookingService.getBookingById(id, req.user.role, req.user.id);
+
+    // Get booking by ID
+    const booking = await Booking.findByPk(id, {
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    if (!booking) {
+      throw new ApiError(404, 'Booking not found');
+    }
 
     res.status(200).json(booking);
   } catch (error) {
+    logger.error('Error getting booking by ID:', error);
     next(error);
   }
 };
@@ -56,13 +112,139 @@ const getBookingById = async (req, res, next) => {
  */
 const createBooking = async (req, res, next) => {
   try {
-    const bookingData = req.body;
-    const userId = req.user.id;
+    const {
+      field_id,
+      time_slot_id,
+      booking_date,
+      customer_name,
+      customer_phone,
+      customer_email,
+      products,
+      payment_method,
+      notes
+    } = req.body;
 
-    const booking = await bookingService.createBooking(bookingData, userId);
+    // Check if field exists
+    const field = await Field.findByPk(field_id);
+    if (!field) {
+      throw new ApiError(404, 'Field not found');
+    }
 
-    res.status(201).json(booking);
+    // Check if time slot exists
+    const timeSlot = await TimeSlot.findByPk(time_slot_id);
+    if (!timeSlot) {
+      throw new ApiError(404, 'Time slot not found');
+    }
+
+    // Check if the time slot is already booked for this field on this date
+    const existingBooking = await Booking.findOne({
+      where: {
+        field_id,
+        time_slot_id,
+        booking_date,
+        status: {
+          [Op.notIn]: ['cancelled']
+        }
+      }
+    });
+
+    if (existingBooking) {
+      throw new ApiError(400, 'This time slot is already booked for this field on this date');
+    }
+
+    // Calculate total price
+    let totalPrice = field.price_per_hour;
+
+    // Check if booking is on weekend
+    const bookingDate = new Date(booking_date);
+    const dayOfWeek = bookingDate.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) { // 0 is Sunday, 6 is Saturday
+      totalPrice = field.price_per_hour_weekend;
+    }
+
+    // Add product prices if any
+    let productItems = [];
+    if (products && products.length > 0) {
+      // Validate products
+      for (const item of products) {
+        const product = await Product.findByPk(item.product_id);
+        if (!product) {
+          throw new ApiError(404, `Product with ID ${item.product_id} not found`);
+        }
+
+        if (item.quantity <= 0) {
+          throw new ApiError(400, 'Product quantity must be greater than 0');
+        }
+
+        if (product.stock_quantity < item.quantity) {
+          throw new ApiError(400, `Not enough stock for product ${product.name}`);
+        }
+
+        totalPrice += product.price * item.quantity;
+
+        productItems.push({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: product.price
+        });
+      }
+    }
+
+    // Create booking
+    const booking = await Booking.create({
+      field_id,
+      time_slot_id,
+      booking_date,
+      customer_name,
+      customer_phone,
+      customer_email,
+      status: 'pending',
+      total_price: totalPrice,
+      payment_status: 'pending',
+      payment_method: payment_method || 'cash',
+      notes
+    });
+
+    // Add products to booking if any
+    if (productItems.length > 0) {
+      for (const item of productItems) {
+        await BookingProduct.create({
+          booking_id: booking.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: item.price
+        });
+
+        // Update product stock
+        const product = await Product.findByPk(item.product_id);
+        await product.update({
+          stock_quantity: product.stock_quantity - item.quantity
+        });
+      }
+    }
+
+    // Get booking with related data
+    const bookingWithRelations = await Booking.findByPk(booking.id, {
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    res.status(201).json(bookingWithRelations);
   } catch (error) {
+    logger.error('Error creating booking:', error);
     next(error);
   }
 };
@@ -78,15 +260,69 @@ const updateBooking = async (req, res, next) => {
     const { id } = req.params;
     const bookingData = req.body;
 
-    const updatedBooking = await bookingService.updateBooking(
-      id,
-      bookingData,
-      req.user.role,
-      req.user.id
-    );
+    // Check if booking exists
+    const booking = await Booking.findByPk(id, {
+      include: [
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    if (!booking) {
+      throw new ApiError(404, 'Booking not found');
+    }
+
+    // If changing time slot or date, check if new slot is available
+    if ((bookingData.time_slot_id && bookingData.time_slot_id !== booking.time_slot_id) ||
+        (bookingData.booking_date && bookingData.booking_date !== booking.booking_date)) {
+
+      const existingBooking = await Booking.findOne({
+        where: {
+          field_id: bookingData.field_id || booking.field_id,
+          time_slot_id: bookingData.time_slot_id || booking.time_slot_id,
+          booking_date: bookingData.booking_date || booking.booking_date,
+          status: {
+            [Op.notIn]: ['cancelled']
+          },
+          id: {
+            [Op.ne]: id
+          }
+        }
+      });
+
+      if (existingBooking) {
+        throw new ApiError(400, 'This time slot is already booked for this field on this date');
+      }
+    }
+
+    // Update booking
+    await booking.update(bookingData);
+
+    // Get updated booking with related data
+    const updatedBooking = await Booking.findByPk(id, {
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
 
     res.status(200).json(updatedBooking);
   } catch (error) {
+    logger.error('Error updating booking:', error);
     next(error);
   }
 };
@@ -101,46 +337,40 @@ const deleteBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    await bookingService.deleteBooking(id, req.user.role, req.user.id);
+    // Check if booking exists
+    const booking = await Booking.findByPk(id, {
+      include: [
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    if (!booking) {
+      throw new ApiError(404, 'Booking not found');
+    }
+
+    // Return products to stock
+    for (const product of booking.products) {
+      await Product.increment(
+        { stock_quantity: product.BookingProduct.quantity },
+        { where: { id: product.id } }
+      );
+    }
+
+    // Delete booking
+    await booking.destroy();
 
     res.status(204).end();
   } catch (error) {
+    logger.error('Error deleting booking:', error);
     next(error);
   }
 };
 
-/**
- * Get bookings by user ID
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
- */
-const getBookingsByUser = async (req, res, next) => {
-  try {
-    const { userId } = req.params;
-    const { page, limit, status } = req.query;
 
-    // Check if user has permission to view these bookings
-    if (req.user.role !== 'admin' && req.user.id !== parseInt(userId, 10)) {
-      throw new ApiError(403, 'You do not have permission to view these bookings');
-    }
-
-    const options = {
-      userId,
-      status,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-      userRole: req.user.role,
-      currentUserId: req.user.id
-    };
-
-    const result = await bookingService.getAllBookings(options);
-
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
  * Get bookings by field ID
@@ -151,29 +381,98 @@ const getBookingsByUser = async (req, res, next) => {
 const getBookingsByField = async (req, res, next) => {
   try {
     const { fieldId } = req.params;
-    const { page, limit, date, status } = req.query;
+    const { date, status, page = 1, limit = 10 } = req.query;
 
-    // For public access, we only show basic booking info
-    const options = {
-      fieldId,
-      status,
-      date,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10,
-      userRole: 'public', // Public role for unauthenticated requests
-      currentUserId: null
-    };
+    // Build filter conditions
+    const where = { field_id: fieldId };
+    if (date) where.booking_date = date;
+    if (status) where.status = status;
 
-    // If user is authenticated, use their role and ID
-    if (req.user) {
-      options.userRole = req.user.role;
-      options.currentUserId = req.user.id;
+    // Pagination options
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get bookings with pagination
+    const { count, rows } = await Booking.findAndCountAll({
+      where,
+      limit: parseInt(limit),
+      offset,
+      order: [['booking_date', 'DESC'], ['created_at', 'DESC']],
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        }
+      ]
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(count / parseInt(limit));
+
+    res.status(200).json({
+      bookings: rows,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: parseInt(page),
+        itemsPerPage: parseInt(limit)
+      }
+    });
+  } catch (error) {
+    logger.error('Error getting bookings by field:', error);
+    next(error);
+  }
+};
+
+/**
+ * Update booking status
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const updateBookingStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+      throw new ApiError(400, 'Status is required');
     }
 
-    const result = await bookingService.getAllBookings(options);
+    // Check if booking exists
+    const booking = await Booking.findByPk(id);
+    if (!booking) {
+      throw new ApiError(404, 'Booking not found');
+    }
 
-    res.status(200).json(result);
+    // Update booking status
+    await booking.update({ status });
+
+    // Get updated booking with related data
+    const updatedBooking = await Booking.findByPk(id, {
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    res.status(200).json(updatedBooking);
   } catch (error) {
+    logger.error('Error updating booking status:', error);
     next(error);
   }
 };
@@ -187,26 +486,59 @@ const getBookingsByField = async (req, res, next) => {
 const updatePaymentStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { paymentStatus, paymentMethod } = req.body;
+    const { payment_status, payment_method } = req.body;
 
-    if (!paymentStatus) {
+    if (!payment_status) {
       throw new ApiError(400, 'Payment status is required');
     }
 
-    const bookingData = {
-      paymentStatus,
-      paymentMethod
-    };
+    // Check if booking exists
+    const booking = await Booking.findByPk(id);
+    if (!booking) {
+      throw new ApiError(404, 'Booking not found');
+    }
 
-    const updatedBooking = await bookingService.updateBooking(
-      id,
-      bookingData,
-      req.user.role,
-      req.user.id
-    );
+    // Update booking payment status
+    const updateData = { payment_status };
+    if (payment_method) {
+      updateData.payment_method = payment_method;
+    }
+
+    await booking.update(updateData);
+
+    // Get updated booking with related data
+    const updatedBooking = await Booking.findByPk(id, {
+      include: [
+        {
+          model: Field,
+          as: 'field'
+        },
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        },
+        {
+          model: Product,
+          as: 'products',
+          through: { attributes: ['quantity', 'price'] }
+        }
+      ]
+    });
+
+    // Create finance record if payment status is 'paid'
+    if (payment_status === 'paid') {
+      try {
+        await financeService.createFinanceFromBooking(updatedBooking);
+        logger.info(`Created finance record for booking ID ${id}`);
+      } catch (financeError) {
+        logger.error(`Error creating finance record for booking ID ${id}:`, financeError);
+        // Don't fail the booking update if finance record creation fails
+      }
+    }
 
     res.status(200).json(updatedBooking);
   } catch (error) {
+    logger.error('Error updating booking payment status:', error);
     next(error);
   }
 };
@@ -217,7 +549,7 @@ module.exports = {
   createBooking,
   updateBooking,
   deleteBooking,
-  getBookingsByUser,
   getBookingsByField,
+  updateBookingStatus,
   updatePaymentStatus
 };

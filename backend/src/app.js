@@ -6,15 +6,11 @@ const morgan = require('morgan');
 const path = require('path');
 const config = require('./config/config');
 const errorHandler = require('./middleware/error.middleware');
+const { setHeaders, setSecureCookies } = require('./middleware/headers.middleware');
 const logger = require('./utils/logger');
 
 // Import routes
-const authRoutes = require('./routes/auth.routes');
-const fieldRoutes = require('./routes/field.routes');
-const bookingRoutes = require('./routes/booking.routes');
-const productRoutes = require('./routes/product.routes');
-const feedbackRoutes = require('./routes/feedback.routes');
-const opponentRoutes = require('./routes/opponent.routes');
+const routes = require('./routes');
 
 // Initialize express app
 const app = express();
@@ -42,6 +38,8 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
+app.use(setHeaders);
+app.use(setSecureCookies);
 
 // Serve static files if in production
 if (config.env === 'production') {
@@ -63,19 +61,14 @@ app.get('/api', (req, res) => {
       '/api/fields',
       '/api/bookings',
       '/api/products',
-      '/api/feedback',
-      '/api/opponents'
+      '/api/feedbacks',
+      '/api/timeslots'
     ]
   });
 });
 
 // Set up API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/fields', fieldRoutes);
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/feedback', feedbackRoutes);
-app.use('/api/opponents', opponentRoutes);
+app.use('/api', routes);
 
 // Serve frontend in production
 if (config.env === 'production') {

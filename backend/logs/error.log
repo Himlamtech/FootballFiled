@@ -67,3 +67,382 @@
 2025-04-28 19:11:03 error: Error fetching bookings: Unknown column 'user.username' in 'field list'
 2025-04-28 19:11:03 error: 500 - Database error occurred - /api/bookings/field/1 - GET - ::1
 2025-04-28 19:11:03 error: Error: Database error occurred
+2025-04-28 21:36:48 error: Error creating database schema: SQLITE_ERROR: no such table: main.bookings
+2025-04-28 21:41:01 error: Unable to connect to the database: Cannot add or update a child row: a foreign key constraint fails (`football_field_db`.`#sql-6be_123`, CONSTRAINT `bookings_ibfk_40` FOREIGN KEY (`field_id`) REFERENCES `fields` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)
+2025-04-28 21:43:10 error: Unable to connect to the database: Cannot add or update a child row: a foreign key constraint fails (`football_field_db`.`#sql-6be_126`, CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`field_id`) REFERENCES `fields` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)
+2025-04-28 21:44:19 error: Unable to connect to the database: Cannot add or update a child row: a foreign key constraint fails (`football_field_db`.`#sql-6be_129`, CONSTRAINT `bookings_ibfk_2` FOREIGN KEY (`field_id`) REFERENCES `fields` (`id`) ON DELETE CASCADE ON UPDATE CASCADE)
+2025-04-29 00:41:51 error: Unable to connect to the database: Unknown database 'football_field_db'
+2025-04-29 01:06:16 error: 401 - No token provided - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 01:06:16 error: Error: No token provided
+2025-04-29 01:06:21 error: 401 - No token provided - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 01:06:21 error: Error: No token provided
+2025-04-29 01:06:25 error: 401 - No token provided - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 01:06:25 error: Error: No token provided
+2025-04-29 01:33:07 error: 500 - fieldService is not defined - /api/fields - GET - ::ffff:127.0.0.1
+2025-04-29 01:33:07 error: Error: fieldService is not defined
+2025-04-29 01:57:10 error: Error getting bookings: SQLITE_ERROR: no such column: Booking.createdAt
+2025-04-29 01:57:10 error: 500 - Database error occurred - /api/bookings - GET - ::1
+2025-04-29 01:57:10 error: Error: Database error occurred
+2025-04-29 01:57:10 error: Error getting booking by ID: Booking not found
+2025-04-29 01:57:10 error: 404 - Booking not found - /api/bookings/1 - GET - ::1
+2025-04-29 01:57:10 error: Error: Booking not found
+2025-04-29 01:57:10 error: Error getting feedback: SQLITE_ERROR: no such column: Feedback.createdAt
+2025-04-29 01:57:10 error: 500 - Database error occurred - /api/feedbacks - GET - ::1
+2025-04-29 01:57:10 error: Error: Database error occurred
+2025-04-29 07:29:27 error: Error getting bookings: SQLITE_ERROR: no such column: Booking.createdAt
+2025-04-29 07:29:27 error: 500 - Database error occurred - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 07:29:27 error: Error: Database error occurred
+2025-04-29 07:29:37 error: Error getting bookings: SQLITE_ERROR: no such column: Booking.createdAt
+2025-04-29 07:29:37 error: 500 - Database error occurred - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 07:29:37 error: Error: Database error occurred
+2025-04-29 10:07:10 error: Error getting bookings: SQLITE_ERROR: no such column: Booking.createdAt
+2025-04-29 10:07:10 error: 500 - Database error occurred - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 10:07:10 error: Error: Database error occurred
+2025-04-29 10:07:21 error: Error getting bookings: SQLITE_ERROR: no such column: Booking.createdAt
+2025-04-29 10:07:21 error: 500 - Database error occurred - /api/bookings?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 10:07:21 error: Error: Database error occurred
+2025-04-29 10:07:39 error: Error getting bookings by field: SQLITE_ERROR: no such column: Booking.createdAt
+2025-04-29 10:07:39 error: 500 - Database error occurred - /api/bookings/field/1?date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 10:07:39 error: Error: Database error occurred
+2025-04-29 10:07:43 error: Error getting feedback: SQLITE_ERROR: no such column: Feedback.createdAt
+2025-04-29 10:07:43 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 10:07:43 error: Error: Database error occurred
+2025-04-29 10:38:54 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:38:54 error: Error: Invalid credentials
+2025-04-29 10:38:55 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:38:55 error: Error: Invalid credentials
+2025-04-29 10:38:55 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:38:55 error: Error: Invalid credentials
+2025-04-29 10:38:56 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:38:56 error: Error: Invalid credentials
+2025-04-29 10:38:56 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:38:56 error: Error: Invalid credentials
+2025-04-29 10:38:56 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:38:56 error: Error: Invalid credentials
+2025-04-29 10:44:00 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 10:44:00 error: Error: Invalid credentials
+2025-04-29 11:01:19 error: Unable to connect to the database: connect ECONNREFUSED 127.0.0.1:3036
+2025-04-29 11:02:30 error: Unable to connect to the database: connect ECONNREFUSED 127.0.0.1:3036
+2025-04-29 11:02:49 error: Unable to connect to the database: connect ECONNREFUSED 127.0.0.1:3036
+2025-04-29 11:03:02 error: Unable to connect to the database: connect ECONNREFUSED 127.0.0.1:3036
+2025-04-29 11:03:54 error: Unable to connect to the database: connect ECONNREFUSED 127.0.0.1:3036
+2025-04-29 11:05:15 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:05:15 error: Error: Invalid credentials
+2025-04-29 11:05:16 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:05:16 error: Error: Invalid credentials
+2025-04-29 11:05:16 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:05:16 error: Error: Invalid credentials
+2025-04-29 11:05:16 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:05:16 error: Error: Invalid credentials
+2025-04-29 11:05:17 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:05:17 error: Error: Invalid credentials
+2025-04-29 11:07:47 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:07:47 error: Error: Invalid credentials
+2025-04-29 11:07:48 error: 401 - Invalid credentials - /api/auth/admin/login - POST - ::ffff:127.0.0.1
+2025-04-29 11:07:48 error: Error: Invalid credentials
+2025-04-29 11:08:45 error: 401 - No token provided - /api/fields - POST - ::1
+2025-04-29 11:08:45 error: Error: No token provided
+2025-04-29 11:09:02 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:09:02 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:09:02 error: Error: Database error occurred
+2025-04-29 11:09:03 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:09:03 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:09:03 error: Error: Database error occurred
+2025-04-29 11:11:13 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:11:13 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:11:13 error: Error: Database error occurred
+2025-04-29 11:11:18 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:11:18 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:11:18 error: Error: Database error occurred
+2025-04-29 11:11:22 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:11:22 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:11:22 error: Error: Database error occurred
+2025-04-29 11:21:46 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 11:21:46 error: Error: No token provided
+2025-04-29 11:21:46 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 11:21:46 error: Error: No token provided
+2025-04-29 11:21:50 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:21:50 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:21:50 error: Error: Database error occurred
+2025-04-29 11:21:55 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 11:21:55 error: Error: No token provided
+2025-04-29 11:21:55 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 11:21:55 error: Error: No token provided
+2025-04-29 11:22:06 error: Error getting dashboard stats: Booking is not associated to BookingProduct!
+2025-04-29 11:22:06 error: 500 - Booking is not associated to BookingProduct! - /api/dashboard/stats - GET - ::1
+2025-04-29 11:22:06 error: Error: Booking is not associated to BookingProduct!
+2025-04-29 11:22:12 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:22:12 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:22:12 error: Error: Database error occurred
+2025-04-29 11:22:18 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 11:22:18 error: Error: No token provided
+2025-04-29 11:22:18 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 11:22:18 error: Error: No token provided
+2025-04-29 11:30:16 error: 401 - No token provided - /api/opponents/available - GET - ::1
+2025-04-29 11:30:16 error: Error: No token provided
+2025-04-29 11:31:25 error: Error finding available opponents: Include unexpected. Element has to be either a Model, an Association or an object.
+2025-04-29 11:31:25 error: 500 - Include unexpected. Element has to be either a Model, an Association or an object. - /api/opponents/available - GET - ::1
+2025-04-29 11:31:25 error: Error: Include unexpected. Element has to be either a Model, an Association or an object.
+2025-04-29 11:37:52 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 11:37:52 error: Error: No token provided
+2025-04-29 11:37:52 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 11:37:52 error: Error: No token provided
+2025-04-29 11:37:55 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:37:55 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:37:55 error: Error: Database error occurred
+2025-04-29 11:37:57 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 11:37:57 error: Error: No token provided
+2025-04-29 11:37:57 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 11:37:57 error: Error: No token provided
+2025-04-29 11:38:14 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:38:14 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:38:14 error: Error: Database error occurred
+2025-04-29 11:39:45 error: Error finding available opponents: TimeSlot is associated to Booking using an alias. You've included an alias (timeSlot), but it does not match the alias(es) defined in your association (time_slot).
+2025-04-29 11:39:45 error: 500 - TimeSlot is associated to Booking using an alias. You've included an alias (timeSlot), but it does not match the alias(es) defined in your association (time_slot). - /api/opponents/available - GET - ::1
+2025-04-29 11:39:45 error: Error: TimeSlot is associated to Booking using an alias. You've included an alias (timeSlot), but it does not match the alias(es) defined in your association (time_slot).
+2025-04-29 11:43:02 error: Error finding available opponents: Unknown column 'booking->time_slot.startTime' in 'field list'
+2025-04-29 11:43:02 error: 500 - Database error occurred - /api/opponents/available - GET - ::1
+2025-04-29 11:43:02 error: Error: Database error occurred
+2025-04-29 11:45:58 error: Error finding available opponents: Unknown column 'Opponent.createdAt' in 'order clause'
+2025-04-29 11:45:58 error: 500 - Database error occurred - /api/opponents/available - GET - ::1
+2025-04-29 11:45:58 error: Error: Database error occurred
+2025-04-29 11:48:59 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 11:48:59 error: Error: No token provided
+2025-04-29 11:48:59 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 11:48:59 error: Error: No token provided
+2025-04-29 11:49:04 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:49:04 error: 500 - Database error occurred - /api/feedbacks - GET - ::ffff:127.0.0.1
+2025-04-29 11:49:04 error: Error: Database error occurred
+2025-04-29 11:49:34 error: Error getting field by ID: Unknown column 'content' in 'field list'
+2025-04-29 11:49:34 error: 500 - Database error occurred - /api/fields/1 - GET - ::1
+2025-04-29 11:49:34 error: Error: Database error occurred
+2025-04-29 11:49:34 error: Error getting feedback: Unknown column 'Feedback.content' in 'field list'
+2025-04-29 11:49:34 error: 500 - Database error occurred - /api/feedbacks - GET - ::1
+2025-04-29 11:49:34 error: Error: Database error occurred
+2025-04-29 12:15:02 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 12:15:02 error: Error: No token provided
+2025-04-29 12:15:02 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:15:02 error: Error: No token provided
+2025-04-29 12:15:19 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 12:15:19 error: Error: No token provided
+2025-04-29 12:15:19 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:15:19 error: Error: No token provided
+2025-04-29 12:15:48 error: Error getting field by ID: Field not found
+2025-04-29 12:15:48 error: 404 - Field not found - /api/fields/timeslots?date=2025-04-29 - GET - ::1
+2025-04-29 12:15:48 error: Error: Field not found
+2025-04-29 12:16:01 error: Error getting field by ID: Field not found
+2025-04-29 12:16:01 error: 404 - Field not found - /api/fields/timeslots?field_id=1 - GET - ::1
+2025-04-29 12:16:01 error: Error: Field not found
+2025-04-29 12:22:01 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 12:22:01 error: Error: No token provided
+2025-04-29 12:22:01 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:22:01 error: Error: No token provided
+2025-04-29 12:22:31 error: Error creating product: Out of range value for column 'price' at row 1
+2025-04-29 12:22:31 error: 500 - Database error occurred - /api/products - POST - ::ffff:127.0.0.1
+2025-04-29 12:22:31 error: Error: Database error occurred
+2025-04-29 12:22:38 error: Error deleting product ID 3: Unknown column 'BookingProduct.productId' in 'where clause'
+2025-04-29 12:22:38 error: 500 - Database error occurred - /api/products/3 - DELETE - ::ffff:127.0.0.1
+2025-04-29 12:22:38 error: Error: Database error occurred
+2025-04-29 12:23:49 error: Error creating booking: Time slot not found
+2025-04-29 12:23:49 error: 404 - Time slot not found - /api/bookings - POST - ::ffff:127.0.0.1
+2025-04-29 12:23:49 error: Error: Time slot not found
+2025-04-29 12:24:05 error: 401 - No token provided - /api/opponents - POST - ::ffff:127.0.0.1
+2025-04-29 12:24:05 error: Error: No token provided
+2025-04-29 12:24:47 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 12:24:47 error: Error: No token provided
+2025-04-29 12:24:47 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:24:47 error: Error: No token provided
+2025-04-29 12:26:16 error: Error creating booking: Time slot not found
+2025-04-29 12:26:16 error: 404 - Time slot not found - /api/bookings - POST - ::ffff:127.0.0.1
+2025-04-29 12:26:16 error: Error: Time slot not found
+2025-04-29 12:26:24 error: 401 - No token provided - /api/opponents - POST - ::ffff:127.0.0.1
+2025-04-29 12:26:24 error: Error: No token provided
+2025-04-29 12:27:00 error: 401 - No token provided - /api/dashboard/stats - GET - ::ffff:127.0.0.1
+2025-04-29 12:27:00 error: Error: No token provided
+2025-04-29 12:27:00 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:27:00 error: Error: No token provided
+2025-04-29 12:27:09 error: 401 - No token provided - /api/dashboard/chart?period=day&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:27:09 error: Error: No token provided
+2025-04-29 12:27:10 error: 401 - No token provided - /api/dashboard/chart?period=month&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:27:10 error: Error: No token provided
+2025-04-29 12:27:11 error: 401 - No token provided - /api/dashboard/chart?period=year&date=2025-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:27:11 error: Error: No token provided
+2025-04-29 12:27:14 error: 401 - No token provided - /api/dashboard/chart?period=year&date=2026-04-29 - GET - ::ffff:127.0.0.1
+2025-04-29 12:27:14 error: Error: No token provided
+2025-04-29 12:27:34 error: Error creating product: Out of range value for column 'price' at row 1
+2025-04-29 12:27:34 error: 500 - Database error occurred - /api/products - POST - ::ffff:127.0.0.1
+2025-04-29 12:27:34 error: Error: Database error occurred
+2025-04-29 12:27:37 error: Error deleting product ID 4: Unknown column 'BookingProduct.productId' in 'where clause'
+2025-04-29 12:27:37 error: 500 - Database error occurred - /api/products/4 - DELETE - ::ffff:127.0.0.1
+2025-04-29 12:27:37 error: Error: Database error occurred
+2025-04-29 12:42:22 error: Error creating booking: Time slot not found
+2025-04-29 12:42:22 error: 404 - Time slot not found - /api/bookings - POST - ::1
+2025-04-29 12:42:22 error: Error: Time slot not found
+2025-04-29 12:43:23 error: 401 - No token provided - /api/opponents - POST - ::1
+2025-04-29 12:43:23 error: Error: No token provided
+2025-04-29 12:44:41 error: 401 - No token provided - /api/dashboard/stats - GET - ::1
+2025-04-29 12:44:41 error: Error: No token provided
+2025-04-29 12:44:41 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::1
+2025-04-29 12:44:41 error: Error: No token provided
+2025-04-29 12:44:53 error: 401 - No token provided - /api/dashboard/stats - GET - ::1
+2025-04-29 12:44:53 error: Error: No token provided
+2025-04-29 12:44:53 error: 401 - No token provided - /api/dashboard/chart?period=week&date=2025-04-29 - GET - ::1
+2025-04-29 12:44:53 error: Error: No token provided
+2025-04-29 12:59:25 error: Error deleting product ID 4: Unknown column 'BookingProduct.productId' in 'where clause'
+2025-04-29 12:59:25 error: 500 - Database error occurred - /api/products/4 - DELETE - ::1
+2025-04-29 12:59:25 error: Error: Database error occurred
+2025-04-29 13:00:59 error: Error deleting product ID 4: Unknown column 'BookingProduct.productId' in 'where clause'
+2025-04-29 13:00:59 error: 500 - Database error occurred - /api/products/4 - DELETE - ::1
+2025-04-29 13:00:59 error: Error: Database error occurred
+2025-04-29 13:22:42 error: Error getting field by ID: Field not found
+2025-04-29 13:22:42 error: 404 - Field not found - /api/fields/timeslots?date=2025-04-29 - GET - ::1
+2025-04-29 13:22:42 error: Error: Field not found
+2025-04-29 13:22:42 error: Error creating field: notNull Violation: Field.capacity cannot be null,
+notNull Violation: Field.price_per_hour cannot be null,
+notNull Violation: Field.price_per_hour_weekend cannot be null
+2025-04-29 13:22:42 error: 400 - Validation error: Field.capacity cannot be null, Field.price_per_hour cannot be null, Field.price_per_hour_weekend cannot be null - /api/fields - POST - ::1
+2025-04-29 13:22:42 error: Error: Validation error: Field.capacity cannot be null, Field.price_per_hour cannot be null, Field.price_per_hour_weekend cannot be null
+2025-04-29 13:22:42 error: Error creating booking: Field not found
+2025-04-29 13:22:42 error: 404 - Field not found - /api/bookings - POST - ::1
+2025-04-29 13:22:42 error: Error: Field not found
+2025-04-29 13:22:42 error: Error creating feedback: notNull Violation: Feedback.rating cannot be null
+2025-04-29 13:22:42 error: 400 - Validation error: Feedback.rating cannot be null - /api/feedbacks - POST - ::1
+2025-04-29 13:22:42 error: Error: Validation error: Feedback.rating cannot be null
+2025-04-29 13:22:42 error: 400 - Unexpected token , in JSON at position 13 - /api/opponents - POST - ::1
+2025-04-29 13:22:42 error: Error: Unexpected token , in JSON at position 13
+2025-04-29 13:22:42 error: 401 - No token provided - /api/opponents/ - PUT - ::1
+2025-04-29 13:22:42 error: Error: No token provided
+2025-04-29 13:22:42 error: 401 - No token provided - /api/opponents/ - DELETE - ::1
+2025-04-29 13:22:42 error: Error: No token provided
+2025-04-29 13:23:29 error: Error creating feedback: notNull Violation: Feedback.rating cannot be null
+2025-04-29 13:23:29 error: 400 - Validation error: Feedback.rating cannot be null - /api/feedbacks - POST - ::ffff:127.0.0.1
+2025-04-29 13:23:29 error: Error: Validation error: Feedback.rating cannot be null
+2025-04-29 13:24:29 error: Error creating booking: Data truncated for column 'payment_method' at row 1
+2025-04-29 13:24:29 error: 500 - Database error occurred - /api/bookings - POST - ::1
+2025-04-29 13:24:29 error: Error: Database error occurred
+2025-04-29 13:25:09 error: Error creating booking: This time slot is already booked for this field on this date
+2025-04-29 13:25:09 error: 400 - This time slot is already booked for this field on this date - /api/bookings - POST - ::1
+2025-04-29 13:25:09 error: Error: This time slot is already booked for this field on this date
+2025-04-29 13:26:51 error: Error getting chart data: Unknown column 'Booking.start_time' in 'where clause'
+2025-04-29 13:26:51 error: 500 - Database error occurred - /api/dashboard/chart?period=day&date=2025-04-29 - GET - ::1
+2025-04-29 13:26:51 error: Error: Database error occurred
+2025-04-29 13:28:02 error: Error deleting product ID 9: Unknown column 'BookingProduct.productId' in 'where clause'
+2025-04-29 13:28:02 error: 500 - Database error occurred - /api/products/9 - DELETE - ::1
+2025-04-29 13:28:02 error: Error: Database error occurred
+2025-04-29 13:28:19 error: Error deleting product ID 9: Unknown column 'BookingProduct.productId' in 'where clause'
+2025-04-29 13:28:19 error: 500 - Database error occurred - /api/products/9 - DELETE - ::1
+2025-04-29 13:28:19 error: Error: Database error occurred
+2025-04-29 13:28:37 error: Error updating product ID 9: Data truncated for column 'type' at row 1
+2025-04-29 13:28:37 error: 500 - Database error occurred - /api/products/9 - PUT - ::1
+2025-04-29 13:28:37 error: Error: Database error occurred
+2025-04-29 13:28:43 error: Error updating product ID 9: Data truncated for column 'type' at row 1
+2025-04-29 13:28:43 error: 500 - Database error occurred - /api/products/9 - PUT - ::1
+2025-04-29 13:28:43 error: Error: Database error occurred
+2025-04-29 13:29:07 error: Error creating product: Data truncated for column 'type' at row 1
+2025-04-29 13:29:07 error: 500 - Database error occurred - /api/products - POST - ::1
+2025-04-29 13:29:07 error: Error: Database error occurred
+2025-04-29 13:38:53 error: Error creating booking: Data truncated for column 'payment_method' at row 1
+2025-04-29 13:38:53 error: 500 - Database error occurred - /api/bookings - POST - ::1
+2025-04-29 13:38:53 error: Error: Database error occurred
+2025-04-29 13:39:19 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:19 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:19 error: Error: Product not found
+2025-04-29 13:39:21 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:21 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:21 error: Error: Product not found
+2025-04-29 13:39:21 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:21 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:21 error: Error: Product not found
+2025-04-29 13:39:21 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:21 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:21 error: Error: Product not found
+2025-04-29 13:39:21 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:21 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:21 error: Error: Product not found
+2025-04-29 13:39:22 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:22 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:22 error: Error: Product not found
+2025-04-29 13:39:22 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:22 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:22 error: Error: Product not found
+2025-04-29 13:39:23 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:23 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:23 error: Error: Product not found
+2025-04-29 13:39:23 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:23 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:23 error: Error: Product not found
+2025-04-29 13:39:23 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:23 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:23 error: Error: Product not found
+2025-04-29 13:39:23 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:23 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:23 error: Error: Product not found
+2025-04-29 13:39:23 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:23 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:23 error: Error: Product not found
+2025-04-29 13:39:23 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:23 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:23 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:24 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:24 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:24 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:25 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:25 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:25 error: Error: Product not found
+2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:26 error: Error: Product not found
+2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:26 error: Error: Product not found
+2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:26 error: Error: Product not found
+2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:26 error: Error: Product not found
+2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:26 error: Error: Product not found
+2025-04-29 13:39:26 error: Error deleting product ID 9: Product not found
+2025-04-29 13:39:26 error: 404 - Product not found - /api/products/9 - DELETE - ::1
+2025-04-29 13:39:26 error: Error: Product not found

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, BarChart } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import productAPI from "@/services/productAPI";
 
 interface Product {
   id: number;
@@ -25,7 +26,7 @@ interface Product {
   image_url?: string;
   image?: string; // Để tương thích với dữ liệu mẫu cũ
   category: string;
-  type?: "rent" | "sale";
+  type?: "rent" | "buy";
   description: string;
   stock_quantity?: number;
   inventory?: number; // Để tương thích với dữ liệu mẫu cũ
@@ -51,7 +52,7 @@ const ProductManagement = () => {
   const [productPrice, setProductPrice] = useState("");
   const [productImage, setProductImage] = useState("");
   const [productCategory, setProductCategory] = useState("clothes");
-  const [productType, setProductType] = useState<"rent" | "sale">("sale");
+  const [productType, setProductType] = useState<"rent" | "buy">("buy");
   const [productDescription, setProductDescription] = useState("");
   const [productInventory, setProductInventory] = useState("");
 
@@ -62,19 +63,19 @@ const ProductManagement = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/products');
-        const data = await response.json();
-        console.log("Products API response:", data);
+        const response = await productAPI.getAllProducts();
+        console.log("Products API response:", response.data);
 
-        if (data.products) {
+        if (response.data.products) {
           // Map API data to our Product interface
-          const mappedProducts = data.products.map((product: any) => ({
+          const mappedProducts = response.data.products.map((product: any) => ({
             id: product.id,
             name: product.name,
             price: product.price,
             image_url: product.image_url,
-            category: product.category || "equipment",
-            type: "sale", // Default to sale since API doesn't have this field
+            image: product.image_url, // For compatibility
+            category: mapCategoryFromAPI(product.category),
+            type: product.type === 'rent' ? 'rent' : 'buy',
             description: product.description,
             stock_quantity: product.stock_quantity,
             inventory: product.stock_quantity, // For compatibility
@@ -102,6 +103,17 @@ const ProductManagement = () => {
 
     fetchProducts();
   }, []);
+
+  // Map API category to frontend category
+  const mapCategoryFromAPI = (category: string): string => {
+    switch (category) {
+      case 'equipment': return 'equipment';
+      case 'drinks': return 'food';
+      case 'food': return 'food';
+      case 'service': return 'equipment';
+      default: return 'equipment';
+    }
+  };
 
   // Lọc sản phẩm theo danh mục và loại (bán/thuê)
   const filteredProducts = products.filter(product => {
@@ -157,67 +169,147 @@ const ProductManagement = () => {
     }
   }
 
-  const handleAddProduct = () => {
-    const newProduct: Product = {
-      id: products.length + 1,
-      name: productName,
-      price: parseInt(productPrice) || 0,
-      image: productImage || "https://placehold.co/300x300/E8F5E9/388E3C?text=S%E1%BA%A3n+ph%E1%BA%A9m+m%E1%BB%9Bi&font=roboto",
-      category: productCategory,
-      type: productType,
-      description: productDescription,
-      inventory: parseInt(productInventory) || 0,
-      salesCount: 0
-    };
+  const handleAddProduct = async () => {
+    try {
+      // Map frontend category to API category
+      const apiCategory = mapCategoryToAPI(productCategory);
 
-    setProducts([...products, newProduct]);
-    resetForm();
-    setIsAddingProduct(false);
+      const productData = {
+        name: productName,
+        price: parseInt(productPrice) || 0,
+        image_url: productImage || "https://placehold.co/300x300/E8F5E9/388E3C?text=S%E1%BA%A3n+ph%E1%BA%A9m+m%E1%BB%9Bi&font=roboto",
+        category: apiCategory,
+        type: productType,
+        description: productDescription,
+        stock_quantity: parseInt(productInventory) || 0,
+        is_available: true
+      };
 
-    toast({
-      title: "Thêm sản phẩm thành công",
-      description: `Sản phẩm "${productName}" đã được thêm vào.`,
-    });
+      const response = await productAPI.createProduct(productData);
+      console.log("Product created:", response.data);
+
+      // Add the new product to the state
+      const newProduct: Product = {
+        id: response.data.id || products.length + 1,
+        name: productName,
+        price: parseInt(productPrice) || 0,
+        image: productImage || "https://placehold.co/300x300/E8F5E9/388E3C?text=S%E1%BA%A3n+ph%E1%BA%A9m+m%E1%BB%9Bi&font=roboto",
+        image_url: productImage || "https://placehold.co/300x300/E8F5E9/388E3C?text=S%E1%BA%A3n+ph%E1%BA%A9m+m%E1%BB%9Bi&font=roboto",
+        category: productCategory,
+        type: productType,
+        description: productDescription,
+        inventory: parseInt(productInventory) || 0,
+        stock_quantity: parseInt(productInventory) || 0,
+        salesCount: 0,
+        is_available: true
+      };
+
+      setProducts([...products, newProduct]);
+      resetForm();
+      setIsAddingProduct(false);
+
+      toast({
+        title: "Thêm sản phẩm thành công",
+        description: `Sản phẩm "${productName}" đã được thêm vào.`,
+      });
+    } catch (error) {
+      console.error("Error adding product:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể thêm sản phẩm mới",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdateProduct = () => {
+  // Map frontend category to API category
+  const mapCategoryToAPI = (category: string): string => {
+    switch (category) {
+      case 'equipment': return 'equipment';
+      case 'food': return 'food';
+      case 'clothes': return 'equipment';
+      case 'shoes': return 'equipment';
+      default: return 'equipment';
+    }
+  };
+
+  const handleUpdateProduct = async () => {
     if (!editingProduct) return;
 
-    const updatedProducts = products.map(p =>
-      p.id === editingProduct.id
-        ? {
-            ...p,
-            name: productName || p.name,
-            price: parseInt(productPrice) || p.price,
-            image: productImage || p.image,
-            category: productCategory || p.category,
-            type: productType || p.type,
-            description: productDescription || p.description,
-            inventory: parseInt(productInventory) || p.inventory,
-          }
-        : p
-    );
+    try {
+      // Map frontend category to API category
+      const apiCategory = mapCategoryToAPI(productCategory);
 
-    setProducts(updatedProducts);
-    resetForm();
-    setEditingProduct(null);
+      const productData = {
+        name: productName || editingProduct.name,
+        price: parseInt(productPrice) || editingProduct.price,
+        image_url: productImage || editingProduct.image_url,
+        category: apiCategory,
+        type: productType || editingProduct.type,
+        description: productDescription || editingProduct.description,
+        stock_quantity: parseInt(productInventory) || editingProduct.stock_quantity || 0,
+        is_available: true
+      };
 
-    toast({
-      title: "Cập nhật sản phẩm thành công",
-      description: `Sản phẩm "${productName}" đã được cập nhật.`,
-    });
+      await productAPI.updateProduct(editingProduct.id, productData);
+
+      // Update the product in the state
+      const updatedProducts = products.map(p =>
+        p.id === editingProduct.id
+          ? {
+              ...p,
+              name: productName || p.name,
+              price: parseInt(productPrice) || p.price,
+              image: productImage || p.image,
+              image_url: productImage || p.image_url,
+              category: productCategory || p.category,
+              type: productType || p.type,
+              description: productDescription || p.description,
+              inventory: parseInt(productInventory) || p.inventory,
+              stock_quantity: parseInt(productInventory) || p.stock_quantity || 0,
+            }
+          : p
+      );
+
+      setProducts(updatedProducts);
+      resetForm();
+      setEditingProduct(null);
+
+      toast({
+        title: "Cập nhật sản phẩm thành công",
+        description: `Sản phẩm "${productName}" đã được cập nhật.`,
+      });
+    } catch (error) {
+      console.error("Error updating product:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật sản phẩm",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteProduct = (id: number) => {
+  const handleDeleteProduct = async (id: number) => {
     const productToDelete = products.find(p => p.id === id);
     if (!productToDelete) return;
 
-    setProducts(products.filter(p => p.id !== id));
+    try {
+      await productAPI.deleteProduct(id);
 
-    toast({
-      title: "Xóa sản phẩm thành công",
-      description: `Sản phẩm "${productToDelete.name}" đã bị xóa.`,
-    });
+      setProducts(products.filter(p => p.id !== id));
+
+      toast({
+        title: "Xóa sản phẩm thành công",
+        description: `Sản phẩm "${productToDelete.name}" đã bị xóa.`,
+      });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa sản phẩm",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditClick = (product: Product) => {
@@ -236,7 +328,7 @@ const ProductManagement = () => {
     setProductPrice("");
     setProductImage("");
     setProductCategory("clothes");
-    setProductType("sale");
+    setProductType("buy");
     setProductDescription("");
     setProductInventory("");
   };
@@ -421,9 +513,9 @@ const ProductManagement = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
                     value={productType}
-                    onChange={(e) => setProductType(e.target.value as "rent" | "sale")}
+                    onChange={(e) => setProductType(e.target.value as "rent" | "buy")}
                   >
-                    <option value="sale">Bán</option>
+                    <option value="buy">Bán</option>
                     <option value="rent">Cho thuê</option>
                   </select>
                 </div>
@@ -529,9 +621,9 @@ const ProductManagement = () => {
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
                     value={productType}
-                    onChange={(e) => setProductType(e.target.value as "rent" | "sale")}
+                    onChange={(e) => setProductType(e.target.value as "rent" | "buy")}
                   >
-                    <option value="sale">Bán</option>
+                    <option value="buy">Bán</option>
                     <option value="rent">Cho thuê</option>
                   </select>
                 </div>
@@ -624,11 +716,11 @@ const ProductManagement = () => {
                       </Badge>
                     </td>
                     <td className="p-4">
-                      <Badge className={product.type === 'sale' ?
+                      <Badge className={product.type === 'buy' ?
                         'bg-green-100 text-green-800' :
                         'bg-blue-100 text-blue-800'
                       }>
-                        {product.type === 'sale' ? 'Bán' : 'Cho thuê'}
+                        {product.type === 'buy' ? 'Bán' : 'Cho thuê'}
                       </Badge>
                     </td>
                     <td className="p-4">{product.price.toLocaleString()}đ</td>
@@ -642,7 +734,7 @@ const ProductManagement = () => {
                       </Badge>
                     </td>
                     <td className="p-4">
-                      {product.type === 'sale' ?
+                      {product.type === 'buy' ?
                         <span className="text-green-700">{product.salesCount} sản phẩm</span> :
                         <span className="text-blue-700">{Math.floor(Math.random() * 30)} lượt</span>
                       }

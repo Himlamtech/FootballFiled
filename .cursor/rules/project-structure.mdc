@@ -1,0 +1,35 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Project Structure Guide
+
+This project is a full-stack Football Field Management System with a Node.js/Express backend and a React/TypeScript frontend.
+
+## Backend ([backend/](mdc:backend/))
+- [src/app.js](mdc:backend/src/app.js): Main Express app setup, middleware, and route mounting.
+- [src/server.js](mdc:backend/src/server.js): Entry point for starting the backend server.
+- [src/routes/](mdc:backend/src/routes/): API route definitions for authentication, fields, bookings, products, feedback, timeslots, dashboard, opponents, orders, and finances.
+- [src/controllers/](mdc:backend/src/controllers/): Business logic for each API resource.
+- [src/models/](mdc:backend/src/models/): Sequelize models for all domain entities (fields, bookings, products, feedback, opponents, timeslots, admin, etc.).
+- [src/services/](mdc:backend/src/services/): Business logic and service layer (if used).
+- [src/middleware/](mdc:backend/src/middleware/): Express middleware for validation, authentication, error handling, etc.
+- [src/utils/](mdc:backend/src/utils/): Utility functions and helpers.
+- [config/](mdc:backend/src/config/): Configuration files (e.g., database, environment).
+
+## Frontend ([frontend/](mdc:frontend/))
+- [src/pages/](mdc:frontend/src/pages/): Main page components for user and admin (e.g., Home, BookingField, FindOpponents, Services, Dashboard, ProductManagement, FieldManagement, Feedback).
+- [src/components/](mdc:frontend/src/components/): Reusable UI components, admin/payment/validation subcomponents.
+- [src/services/](mdc:frontend/src/services/): API service wrappers (e.g., productAPI).
+- [src/hooks/](mdc:frontend/src/hooks/): Custom React hooks.
+- [src/layouts/](mdc:frontend/src/layouts/): Page layouts.
+- [src/lib/](mdc:frontend/src/lib/): Utility libraries.
+- [src/styles/](mdc:frontend/src/styles/): Styling (Tailwind, Shadcn UI, etc.).
+- [public/](mdc:frontend/public/): Static assets.
+
+## Scripts
+- [app.sh](mdc:app.sh): Script to start both backend and frontend servers.
+- [database.sql](mdc:database.sql): SQL script for initial database setup.
+
+See [README.md](mdc:README.md) for more details.

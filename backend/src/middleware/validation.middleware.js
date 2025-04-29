@@ -201,8 +201,8 @@ const paymentStatusValidation = [
     .withMessage('Payment status must be pending, paid, cancelled, or refunded'),
   body('payment_method')
     .optional()
-    .isIn(['cash', 'credit_card', 'bank_transfer', 'e_wallet'])
-    .withMessage('Payment method must be valid'),
+    .isIn(['cash', 'bank_transfer', 'momo', 'zalopay', 'vietqr'])
+    .withMessage('Payment method must be valid (cash, bank_transfer, momo, zalopay, vietqr)'),
   validateResults
 ];
 

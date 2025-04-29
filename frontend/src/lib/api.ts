@@ -14,7 +14,7 @@ const api = axios.create({
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('admin_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -47,8 +47,10 @@ export const bookingAPI = {
 // User API
 export const userAPI = {
   login: (data: any) => api.post('/auth/login', data),
+  adminLogin: (data: any) => api.post('/auth/admin/login', data),
   register: (data: any) => api.post('/auth/register', data),
   getCurrentUser: () => api.get('/users/me'),
+  getCurrentAdmin: () => api.get('/auth/admin/me'),
   updateProfile: (data: any) => api.put('/users/me', data),
   getAllUsers: (params?: any) => api.get('/users', { params }),
   getUserById: (id: number) => api.get(`/users/${id}`),

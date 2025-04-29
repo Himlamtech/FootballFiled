@@ -57,7 +57,7 @@ const Dashboard = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/dashboard/stats');
+        const response = await fetch('http://localhost:9002/api/dashboard/stats');
         const data = await response.json();
 
         if (data) {
@@ -108,7 +108,7 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const formattedDate = format(currentDate, "yyyy-MM-dd");
-        const response = await fetch(`/api/dashboard/chart?period=${periodType}&date=${formattedDate}`);
+        const response = await fetch(`http://localhost:9002/api/dashboard/chart?period=${periodType}&date=${formattedDate}`);
         const data = await response.json();
 
         if (data && data.chartData) {
@@ -139,7 +139,7 @@ const Dashboard = () => {
     const fetchBookings = async () => {
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        const response = await fetch(`/api/bookings?date=${formattedDate}`);
+        const response = await fetch(`http://localhost:9002/api/bookings?date=${formattedDate}`);
         const data = await response.json();
 
         if (data && data.bookings) {
@@ -160,6 +160,7 @@ const Dashboard = () => {
   // Get chart data based on period type
   const getChartData = () => {
     return chartData.length > 0 ? chartData : [];
+  };
 
   // Custom tooltip cho biểu đồ
   const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {

@@ -43,12 +43,12 @@ const AdminLayout = () => {
                   }
                 >
                   <BarChart className="w-5 h-5" />
-                  <span>Thống kê</span>
+                  <span>Dashboard</span>
                 </NavLink>
               </li>
               <li>
                 <NavLink
-                  to="/admin/quan-ly-san"
+                  to="/admin/fields"
                   className={({ isActive }) =>
                     cn(
                       "flex items-center gap-3 px-4 py-3 text-sm rounded-md transition-colors",
@@ -59,12 +59,12 @@ const AdminLayout = () => {
                   }
                 >
                   <Calendar className="w-5 h-5" />
-                  <span>Quản lý sân bóng</span>
+                  <span>Field Management</span>
                 </NavLink>
               </li>
               <li>
                 <NavLink
-                  to="/admin/quan-ly-san-pham"
+                  to="/admin/products"
                   className={({ isActive }) =>
                     cn(
                       "flex items-center gap-3 px-4 py-3 text-sm rounded-md transition-colors",
@@ -75,12 +75,12 @@ const AdminLayout = () => {
                   }
                 >
                   <ShoppingCart className="w-5 h-5" />
-                  <span>Quản lý sản phẩm</span>
+                  <span>Product Management</span>
                 </NavLink>
               </li>
               <li>
                 <NavLink
-                  to="/admin/phan-hoi"
+                  to="/admin/feedback"
                   className={({ isActive }) =>
                     cn(
                       "flex items-center gap-3 px-4 py-3 text-sm rounded-md transition-colors",
@@ -91,7 +91,7 @@ const AdminLayout = () => {
                   }
                 >
                   <FileText className="w-5 h-5" />
-                  <span>Phản hồi khách hàng</span>
+                  <span>Customer Feedback</span>
                 </NavLink>
               </li>
             </ul>
@@ -106,9 +106,9 @@ const AdminLayout = () => {
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-medium">Admin</span>
                 {isAuthenticated && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handleLogout}
                     className="text-gray-500 hover:text-red-500 flex items-center gap-1"
                   >

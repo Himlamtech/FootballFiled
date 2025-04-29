@@ -16,7 +16,8 @@ const Home = () => {
     defaultValues: {
       fullName: "",
       email: "",
-      message: ""
+      message: "",
+      rating: 5
     }
   });
 
@@ -34,8 +35,10 @@ const Home = () => {
           name: data.fullName,
           email: data.email,
           content: data.message,
+          comment: data.message,
+          rating: data.rating || 5,
           date: new Date().toISOString().split('T')[0],
-          status: "new"
+          status: "pending"
         }),
       });
 
@@ -136,12 +139,12 @@ const Home = () => {
             Đặt sân nhanh chóng, tiện lợi cùng nhiều dịch vụ đi kèm
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/dat-san">
+            <Link to="/booking">
               <Button className="bg-field-600 hover:bg-field-700 text-white px-6 py-6 text-lg">
                 <Calendar className="w-5 h-5 mr-2" /> Đặt sân ngay
               </Button>
             </Link>
-            <Link to="/giao-luu">
+            <Link to="/opponents">
               <Button variant="outline" className="border-field-500 text-field-700 hover:bg-field-50 px-6 py-6 text-lg">
                 <Users className="w-5 h-5 mr-2" /> Tìm đối thủ
               </Button>
@@ -180,7 +183,7 @@ const Home = () => {
                 <CardContent className="p-4 text-center">
                   <h3 className="font-bold text-xl mb-1">{field.name}</h3>
                   <p className="text-gray-600">Sân {field.size}</p>
-                  <Link to="/dat-san">
+                  <Link to="/booking">
                     <Button variant="outline" className="mt-4 w-full border-field-500 text-field-700 hover:bg-field-50">
                       Đặt sân này
                     </Button>

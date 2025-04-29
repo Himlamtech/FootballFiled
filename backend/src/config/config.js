@@ -11,8 +11,8 @@ const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:9001';
 
 const sqliteConfig = {
   dialect: 'sqlite',
-  storage: path.join(__dirname, '../../data/football_field_db.sqlite'),
-  logging: console.log,
+  storage: path.join(__dirname, '../../football_field.sqlite'),
+  logging: false,
   sync: true,
   syncAlter: true,
   pool: {
@@ -31,8 +31,8 @@ const mysqlConfig = {
   database: process.env.DB_DATABASE || 'football_field_db',
   dialect: 'mysql',
   logging: env === 'development',
-  sync: process.env.DB_SYNC === 'true' || true,
-  syncAlter: process.env.DB_SYNC_ALTER === 'true' || true,
+  sync: false,
+  syncAlter: false,
   pool: {
     max: 20,
     min: 0,
@@ -42,8 +42,7 @@ const mysqlConfig = {
 };
 
 // Use MySQL for both development and production
-// const dbConfig = env === 'development' ? sqliteConfig : mysqlConfig;
-const dbConfig = process.env.DB_DIALECT === 'sqlite' ? sqliteConfig : mysqlConfig;
+const dbConfig = mysqlConfig;
 
 const config = {
   env,

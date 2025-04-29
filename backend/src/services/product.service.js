@@ -13,21 +13,21 @@ const { Op } = db.Sequelize;
  */
 const getAllProducts = async (options = {}) => {
   try {
-    const { 
-      category, 
-      name, 
-      page = 1, 
-      limit = 10 
+    const {
+      category,
+      name,
+      page = 1,
+      limit = 10
     } = options;
-    
+
     // Build filter conditions
     const condition = {};
     if (category) condition.category = category;
     if (name) condition.name = { [Op.like]: `%${name}%` };
-    
+
     // Calculate pagination
     const offset = (page - 1) * limit;
-    
+
     // Query products with pagination
     const { count, rows } = await Product.findAndCountAll({
       where: condition,
@@ -35,10 +35,10 @@ const getAllProducts = async (options = {}) => {
       offset,
       order: [['category', 'ASC'], ['name', 'ASC']],
     });
-    
+
     // Calculate total pages
     const totalPages = Math.ceil(count / limit);
-    
+
     return {
       totalItems: count,
       totalPages,
@@ -59,11 +59,11 @@ const getAllProducts = async (options = {}) => {
 const getProductById = async (id) => {
   try {
     const product = await Product.findByPk(id);
-    
+
     if (!product) {
       throw new ApiError(404, 'Product not found');
     }
-    
+
     return product;
   } catch (error) {
     logger.error(`Error fetching product ID ${id}:`, error);
@@ -80,7 +80,7 @@ const createProduct = async (productData) => {
   try {
     // Create product
     const product = await Product.create(productData);
-    
+
     return product;
   } catch (error) {
     logger.error('Error creating product:', error);
@@ -98,14 +98,14 @@ const updateProduct = async (id, productData) => {
   try {
     // Find product
     const product = await Product.findByPk(id);
-    
+
     if (!product) {
       throw new ApiError(404, 'Product not found');
     }
-    
+
     // Update product
     await product.update(productData);
-    
+
     return product;
   } catch (error) {
     logger.error(`Error updating product ID ${id}:`, error);
@@ -122,23 +122,23 @@ const deleteProduct = async (id) => {
   try {
     // Check if product exists
     const product = await Product.findByPk(id);
-    
+
     if (!product) {
       throw new ApiError(404, 'Product not found');
     }
-    
+
     // Check if product is used in any bookings
     const bookingProducts = await BookingProduct.count({
-      where: { productId: id }
+      where: { product_id: id }
     });
-    
+
     if (bookingProducts > 0) {
       throw new ApiError(400, 'Cannot delete product that is used in bookings');
     }
-    
+
     // Delete product
     await product.destroy();
-    
+
     return true;
   } catch (error) {
     logger.error(`Error deleting product ID ${id}:`, error);
@@ -157,7 +157,7 @@ const getProductsByCategory = async (category) => {
       where: { category },
       order: [['name', 'ASC']]
     });
-    
+
     return products;
   } catch (error) {
     logger.error(`Error fetching products in category ${category}:`, error);
@@ -172,4 +172,4 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductsByCategory
-}; 
+};

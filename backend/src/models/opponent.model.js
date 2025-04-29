@@ -1,69 +1,70 @@
 module.exports = (sequelize, DataTypes) => {
-  const Opponent = sequelize.define("Opponent", {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true, // Changed to true to allow ON DELETE SET NULL
-      references: {
-        model: 'users',
-        key: 'id'
+  const Opponent = sequelize.define(
+    "Opponent", 
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
+      bookingId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: 'booking_id'
+      },
+      teamName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: 'team_name'
+      },
+      contactEmail: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        field: 'contact_email',
+        validate: {
+          isEmail: true
+        }
+      },
+      contactPhone: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: 'contact_phone'
+      },
+      description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+      },
+      status: {
+        type: DataTypes.ENUM('searching', 'matched', 'cancelled'),
+        defaultValue: 'searching'
+      },
+      matchedWithId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        field: 'matched_with_id'
       }
-    },
-    booking_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'bookings',
-        key: 'id'
-      }
-    },
-    team_name: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    player_count: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
-    contact_phone: {
-      type: DataTypes.STRING,
-      allowNull: false
-    },
-    preferred_date: {
-      type: DataTypes.DATE,
-      allowNull: false
-    },
-    preferred_time: {
-      type: DataTypes.TIME,
-      allowNull: false
-    },
-    status: {
-      type: DataTypes.ENUM('open', 'matched', 'completed', 'cancelled'),
-      defaultValue: 'open',
-      allowNull: false
-    },
-    matched_opponent_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'opponents',
-        key: 'id'
-      }
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: true
+    }, 
+    {
+      tableName: 'opponents',
+      timestamps: true,
+      underscored: true,
+      paranoid: true
     }
-  }, {
-    tableName: 'opponents',
-    underscored: true,
-    timestamps: true,
-    paranoid: true
-  });
+  );
+
+  Opponent.associate = (models) => {
+    // Opponent belongs to a Booking
+    Opponent.belongsTo(models.Booking, {
+      foreignKey: 'booking_id',
+      as: 'booking'
+    });
+    
+    // Self-referential relationship for matched opponents
+    Opponent.belongsTo(models.Opponent, {
+      foreignKey: 'matched_with_id',
+      as: 'matchedWith'
+    });
+  };
 
   return Opponent;
 };

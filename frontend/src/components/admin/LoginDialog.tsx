@@ -66,6 +66,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           description: "Chào mừng đến với trang quản trị",
         });
         onOpenChange(false);
+        // Redirect to admin dashboard
+        window.location.href = '/admin';
       } else {
         toast({
           variant: "destructive",
@@ -74,6 +76,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Đăng nhập thất bại",
@@ -118,18 +121,18 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
                 <FormItem>
                   <FormLabel>Mật khẩu</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder="•••••••" 
-                      {...field} 
+                    <Input
+                      type="password"
+                      placeholder="•••••••"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full bg-field-600 hover:bg-field-700"
               disabled={isLoading}
             >
@@ -152,4 +155,4 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       </DialogContent>
     </Dialog>
   );
-} 
+}

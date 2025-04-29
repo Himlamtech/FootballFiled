@@ -1,0 +1,73 @@
+/* CSS Compatibility Fixes */
+
+/* Fix text-size-adjust issues */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Fix backdrop-filter issues */
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Fix scrollbar-width issues */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* Fix display:flex issues */
+.flex {
+  display: -webkit-box;
+  display: flex;
+}
+
+/* Fix tab-size issues */
+pre, code {
+  -moz-tab-size: 4;
+  tab-size: 4;
+}
+
+/* Fix user-select issues */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Fix forced-color-adjust issues */
+@media (forced-colors: active) {
+  * {
+    forced-color-adjust: none;
+  }
+}
+
+/* Fix min-height: auto issues */
+.min-h-auto {
+  min-height: 0;
+}
+
+/* Fix zoom issues */
+.zoom-element {
+  transform: scale(1);
+}
+
+/* Fix performance issues with animations */
+@keyframes safe-animation {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(10px);
+  }
+}
+
+/* Use transform instead of left/width for animations */
+.animate-element {
+  animation: safe-animation 0.3s ease;
+}

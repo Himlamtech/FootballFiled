@@ -1,41 +1,55 @@
 module.exports = (sequelize, DataTypes) => {
-  const Feedback = sequelize.define("Feedback", {
-    id: {
-      type: DataTypes.INTEGER,
-      primaryKey: true,
-      autoIncrement: true
-    },
-    bookingId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Bookings',
-        key: 'id'
+  const Feedback = sequelize.define(
+    "Feedback",
+    {
+      id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+      },
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+          isEmail: true
+        }
+      },
+      phone: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      rating: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      comment: {
+        type: DataTypes.TEXT,
+        allowNull: true
+      },
+      status: {
+        type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+        defaultValue: 'pending'
+      },
+      field_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+          model: 'fields',
+          key: 'id'
+        }
       }
     },
-    rating: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      validate: {
-        min: 1,
-        max: 5
-      }
-    },
-    comment: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+    {
+      tableName: 'feedbacks',
+      underscored: true,
+      timestamps: true,
+      paranoid: true
     }
-  }, {
-    timestamps: true
-  });
+  );
 
   return Feedback;
-}; 
+};

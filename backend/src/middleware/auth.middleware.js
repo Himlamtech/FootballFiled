@@ -1,10 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { ApiError } = require('../utils/errorHandler');
-const db = require('../models');
-const authConfig = require('../config/auth.config');
+const config = require('../config/config');
 const logger = require('../utils/logger');
-
-const User = db.User;
 
 /**
  * Verify JWT token middleware
@@ -17,7 +14,7 @@ const verifyToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, authConfig.SECRET);
+    const decoded = jwt.verify(token, config.jwtSecret);
     req.user = decoded;
     next();
   } catch (error) {
@@ -82,4 +79,4 @@ module.exports = {
   verifyToken,
   isAdmin,
   isOwnerOrAdmin
-}; 
+};

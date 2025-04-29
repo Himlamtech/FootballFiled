@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -117,9 +116,17 @@ const BookingField = () => {
         const response = await fetch(`/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
         const data = await response.json();
 
-        if (data && data.timeSlots) {
-          console.log("Time slots data:", data.timeSlots);
-          setTimeSlots(data.timeSlots);
+        if (data && Array.isArray(data)) {
+          console.log("Time slots data:", data);
+          // Chuyển đổi dữ liệu từ API sang định dạng cần thiết cho frontend
+          const formattedTimeSlots = data.map(slot => ({
+            id: slot.id,
+            start: slot.start_time.substring(0, 5),
+            end: slot.end_time.substring(0, 5),
+            price: 200000, // Giá mặc định, có thể thay đổi tùy theo loại sân và thời gian
+            available: true // Mặc định là có sẵn
+          }));
+          setTimeSlots(formattedTimeSlots);
         } else {
           console.error("API returned no time slots");
           setTimeSlots([]);
@@ -200,20 +207,19 @@ const BookingField = () => {
       // Gửi thông tin thanh toán lên API
       const paymentData = {
         field_id: selectedField?.id,
-        date: format(selectedDate, "yyyy-MM-dd"),
-        start_time: selectedTimeSlot?.start,
-        end_time: selectedTimeSlot?.end,
+        time_slot_id: selectedTimeSlot?.id,
+        booking_date: format(selectedDate, "yyyy-MM-dd"),
         customer_name: customerName,
-        phone: phone,
-        email: email,
-        note: note,
-        price: selectedTimeSlot?.price,
-        status: "paid"
+        customer_phone: phone,
+        customer_email: email,
+        notes: note,
+        payment_method: "vietqr",
+        payment_status: "paid"
       };
 
       console.log("Sending payment confirmation:", paymentData);
 
-      const response = await fetch('/api/bookings', {
+      const response = await fetch('http://localhost:9002/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -311,7 +317,7 @@ const BookingField = () => {
                     </TabsContent>
                   ))}
                 </Tabs>
-              }
+              )}
             </CardContent>
           </Card>
 

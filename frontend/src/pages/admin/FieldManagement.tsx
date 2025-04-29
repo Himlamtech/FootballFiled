@@ -116,32 +116,28 @@ const FieldManagement = () => {
     const fetchFields = async () => {
       try {
         console.log("Fetching fields from API...");
-        // Gọi API trực tiếp bằng fetch để kiểm tra
-        const response = await fetch('/api/fields');
-        const data = await response.json();
-        console.log("Fields API response:", data);
-        console.log("Fields API response status:", response.status);
-        console.log("Fields API response headers:", response.headers);
+        const response = await fieldAPI.getAllFields();
+        console.log("Fields API response:", response.data);
 
         // Xử lý dữ liệu dựa trên cấu trúc thực tế
         let fieldsData = [];
 
-        if (data.fields && Array.isArray(data.fields)) {
+        if (response.data.fields && Array.isArray(response.data.fields)) {
           // Cấu trúc API trả về { fields: [...] }
-          fieldsData = data.fields.map((field: any) => ({
+          fieldsData = response.data.fields.map((field: any) => ({
             id: field.id,
             name: field.name,
             type: field.size || "Sân tiêu chuẩn"
           }));
-        } else if (Array.isArray(data)) {
+        } else if (Array.isArray(response.data)) {
           // Cấu trúc API trả về trực tiếp mảng
-          fieldsData = data.map((field: any) => ({
+          fieldsData = response.data.map((field: any) => ({
             id: field.id,
             name: field.name,
             type: field.size || "Sân tiêu chuẩn"
           }));
         } else {
-          console.error("Unexpected API response structure:", data);
+          console.error("Unexpected API response structure:", response.data);
         }
         console.log("Processed fields data:", fieldsData);
 
@@ -171,20 +167,16 @@ const FieldManagement = () => {
       setLoading(true);
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        const url = `/api/bookings/field/${activeTab}?date=${formattedDate}`;
+        console.log("Fetching bookings for field:", activeTab, "date:", formattedDate);
 
-        console.log("Fetching bookings from:", url);
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log("Bookings API response:", data);
-        console.log("Bookings API response type:", typeof data);
-        console.log("Bookings API response keys:", Object.keys(data));
+        const response = await bookingAPI.getBookingsByField(parseInt(activeTab), { date: formattedDate });
+        console.log("Bookings API response:", response.data);
 
-        if (data.bookings) {
-          console.log("Setting bookings:", data.bookings);
-          setBookings(data.bookings);
+        if (response.data.bookings) {
+          console.log("Setting bookings:", response.data.bookings);
+          setBookings(response.data.bookings);
           // Generate field statuses based on bookings
-          generateFieldStatus(data.bookings);
+          generateFieldStatus(response.data.bookings);
         } else {
           console.log("API returned no bookings - using empty field status");
           // Use empty field status if no bookings

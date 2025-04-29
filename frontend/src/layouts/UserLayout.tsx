@@ -39,12 +39,12 @@ const UserLayout = () => {
                     end
                   >
                     <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Trang chủ</span>
+                    <span className="hidden sm:inline-block">Home</span>
                   </NavLink>
                 </li>
                 <li>
                   <NavLink
-                    to="/dat-san"
+                    to="/booking"
                     className={({ isActive }) =>
                       cn(
                         "nav-link flex items-center gap-1",
@@ -53,12 +53,12 @@ const UserLayout = () => {
                     }
                   >
                     <Calendar className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Đặt sân</span>
+                    <span className="hidden sm:inline-block">Booking</span>
                   </NavLink>
                 </li>
                 <li>
                   <NavLink
-                    to="/giao-luu"
+                    to="/opponents"
                     className={({ isActive }) =>
                       cn(
                         "nav-link flex items-center gap-1",
@@ -67,12 +67,12 @@ const UserLayout = () => {
                     }
                   >
                     <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Giao lưu</span>
+                    <span className="hidden sm:inline-block">Opponents</span>
                   </NavLink>
                 </li>
                 <li>
                   <NavLink
-                    to="/dich-vu"
+                    to="/services"
                     className={({ isActive }) =>
                       cn(
                         "nav-link flex items-center gap-1",
@@ -81,7 +81,7 @@ const UserLayout = () => {
                     }
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Dịch vụ</span>
+                    <span className="hidden sm:inline-block">Services</span>
                   </NavLink>
                 </li>
               </ul>

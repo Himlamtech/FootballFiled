@@ -1,23 +1,17 @@
 const express = require('express');
 const feedbackController = require('../controllers/feedback.controller');
-const { verifyToken, isOwnerOrAdmin } = require('../middleware/auth.middleware');
-const { 
-  feedbackValidation, 
-  idValidation, 
-  paginationValidation
-} = require('../middleware/validation.middleware');
+const { verifyToken, isAdmin } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 // Public routes
-router.get('/', paginationValidation, feedbackController.getAllFeedback);
-router.get('/:id', idValidation, feedbackController.getFeedbackById);
-router.get('/booking/:bookingId', feedbackController.getFeedbackByBooking);
-router.get('/field/:fieldId/rating', idValidation, feedbackController.getFieldRating);
+router.get('/', feedbackController.getAllFeedback);
+router.get('/:id', feedbackController.getFeedbackById);
+router.get('/field/:fieldId', feedbackController.getFeedbackByField);
+router.post('/', feedbackController.createFeedback);
 
-// Protected routes (require authentication)
-router.post('/', verifyToken, feedbackValidation, feedbackController.createFeedback);
-router.put('/:id', verifyToken, idValidation, feedbackValidation, feedbackController.updateFeedback);
-router.delete('/:id', verifyToken, idValidation, feedbackController.deleteFeedback);
+// Admin routes
+router.put('/:id', verifyToken, isAdmin, feedbackController.updateFeedback);
+router.delete('/:id', verifyToken, isAdmin, feedbackController.deleteFeedback);
 
-module.exports = router; 
+module.exports = router;

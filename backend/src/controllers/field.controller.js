@@ -1,7 +1,7 @@
-const fieldService = require('../services/field.service');
-const feedbackService = require('../services/feedback.service');
+const { Field, Feedback, Booking, TimeSlot } = require('../models');
 const { ApiError } = require('../utils/errorHandler');
 const logger = require('../utils/logger');
+const { Op } = require('sequelize');
 
 /**
  * Get all fields with pagination and filters
@@ -11,19 +11,38 @@ const logger = require('../utils/logger');
  */
 const getAllFields = async (req, res, next) => {
   try {
-    const { status, size, page, limit } = req.query;
-    
-    const options = {
-      status,
-      size,
-      page: parseInt(page, 10) || 1,
-      limit: parseInt(limit, 10) || 10
-    };
-    
-    const result = await fieldService.getAllFields(options);
-    
-    res.status(200).json(result);
+    const { status, size, page = 1, limit = 10 } = req.query;
+
+    // Build filter conditions
+    const where = {};
+    if (status) where.status = status;
+    if (size) where.size = size;
+
+    // Pagination options
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get fields with pagination
+    const { count, rows } = await Field.findAndCountAll({
+      where,
+      limit: parseInt(limit),
+      offset,
+      order: [['id', 'ASC']]
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(count / parseInt(limit));
+
+    res.status(200).json({
+      fields: rows,
+      pagination: {
+        totalItems: count,
+        totalPages,
+        currentPage: parseInt(page),
+        itemsPerPage: parseInt(limit)
+      }
+    });
   } catch (error) {
+    logger.error('Error getting fields:', error);
     next(error);
   }
 };
@@ -37,20 +56,33 @@ const getAllFields = async (req, res, next) => {
 const getFieldById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const field = await fieldService.getFieldById(id);
-    
+
+    // Get field by ID
+    const field = await Field.findByPk(id);
+    if (!field) {
+      throw new ApiError(404, 'Field not found');
+    }
+
     // Get field rating
-    const ratingData = await feedbackService.getFieldRating(id);
-    
-    // Combine field and rating data
-    const fieldWithRating = {
+    const feedbacks = await Feedback.findAll({
+      where: { field_id: id }
+    });
+
+    // Calculate average rating if there are feedbacks
+    let rating = null;
+    let ratingCount = 0;
+
+    if (feedbacks.length > 0) {
+      ratingCount = feedbacks.length;
+    }
+
+    res.status(200).json({
       ...field.toJSON(),
-      rating: ratingData.averageRating,
-      ratingCount: ratingData.count
-    };
-    
-    res.status(200).json(fieldWithRating);
+      rating,
+      ratingCount
+    });
   } catch (error) {
+    logger.error('Error getting field by ID:', error);
     next(error);
   }
 };
@@ -64,10 +96,13 @@ const getFieldById = async (req, res, next) => {
 const createField = async (req, res, next) => {
   try {
     const fieldData = req.body;
-    const field = await fieldService.createField(fieldData);
-    
+
+    // Create field
+    const field = await Field.create(fieldData);
+
     res.status(201).json(field);
   } catch (error) {
+    logger.error('Error creating field:', error);
     next(error);
   }
 };
@@ -82,11 +117,19 @@ const updateField = async (req, res, next) => {
   try {
     const { id } = req.params;
     const fieldData = req.body;
-    
-    const updatedField = await fieldService.updateField(id, fieldData);
-    
-    res.status(200).json(updatedField);
+
+    // Check if field exists
+    const field = await Field.findByPk(id);
+    if (!field) {
+      throw new ApiError(404, 'Field not found');
+    }
+
+    // Update field
+    await field.update(fieldData);
+
+    res.status(200).json(field);
   } catch (error) {
+    logger.error('Error updating field:', error);
     next(error);
   }
 };
@@ -100,44 +143,85 @@ const updateField = async (req, res, next) => {
 const deleteField = async (req, res, next) => {
   try {
     const { id } = req.params;
-    
-    await fieldService.deleteField(id);
-    
+
+    // Check if field exists
+    const field = await Field.findByPk(id);
+    if (!field) {
+      throw new ApiError(404, 'Field not found');
+    }
+
+    // Delete field
+    await field.destroy();
+
     res.status(204).end();
   } catch (error) {
+    logger.error('Error deleting field:', error);
     next(error);
   }
 };
 
 /**
- * Check field availability
+ * Get time slots for a field on a specific date
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-const checkAvailability = async (req, res, next) => {
+const getFieldTimeSlots = async (req, res, next) => {
   try {
-    const { fieldId, date, startTime, endTime } = req.query;
-    
-    if (!fieldId || !date || !startTime || !endTime) {
-      throw new ApiError(400, 'Field ID, date, start time, and end time are required');
+    const { fieldId } = req.params;
+    const { date } = req.query;
+
+    if (!fieldId || !date) {
+      throw new ApiError(400, 'Field ID and date are required');
     }
-    
-    const isAvailable = await fieldService.checkFieldAvailability(
-      fieldId,
-      date,
-      startTime,
-      endTime
-    );
-    
+
+    // Check if field exists
+    const field = await Field.findByPk(fieldId);
+    if (!field) {
+      throw new ApiError(404, 'Field not found');
+    }
+
+    // Get all time slots
+    const timeSlots = await TimeSlot.findAll({
+      where: { is_active: true },
+      order: [['start_time', 'ASC']]
+    });
+
+    // Get bookings for the field on the specified date
+    const bookings = await Booking.findAll({
+      where: {
+        field_id: fieldId,
+        booking_date: date,
+        status: {
+          [Op.notIn]: ['cancelled']
+        }
+      },
+      include: [
+        {
+          model: TimeSlot,
+          as: 'time_slot'
+        }
+      ]
+    });
+
+    // Mark time slots as booked if they have bookings
+    const timeSlotsWithAvailability = timeSlots.map(slot => {
+      const isBooked = bookings.some(booking => booking.time_slot_id === slot.id);
+      return {
+        id: slot.id,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        is_booked: isBooked
+      };
+    });
+
     res.status(200).json({
-      fieldId: parseInt(fieldId, 10),
+      fieldId: parseInt(fieldId),
       date,
-      startTime,
-      endTime,
-      isAvailable
+      timeSlots: timeSlotsWithAvailability
     });
   } catch (error) {
+    logger.error('Error getting field time slots:', error);
     next(error);
   }
 };
@@ -148,5 +232,5 @@ module.exports = {
   createField,
   updateField,
   deleteField,
-  checkFieldAvailability: checkAvailability
-}; 
+  getFieldTimeSlots
+};

@@ -167,7 +167,7 @@ const Feedback = () => {
                           </div>
                         </div>
 
-                        <p className="text-sm my-3">{feedback.content}</p>
+                        <p className="text-sm my-3">{feedback.comment}</p>
 
                         <div className="flex justify-end gap-2 mt-2">
                           {feedback.status === "new" && (
@@ -212,7 +212,7 @@ const Feedback = () => {
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-3 rounded-md">
                     <h3 className="font-medium text-sm">Phản hồi của khách hàng:</h3>
-                    <p className="text-sm mt-1">{selectedFeedback.content}</p>
+                    <p className="text-sm mt-1">{selectedFeedback.comment}</p>
                     <div className="mt-2 text-xs text-gray-500">
                       {selectedFeedback.name} ({selectedFeedback.email})
                     </div>
