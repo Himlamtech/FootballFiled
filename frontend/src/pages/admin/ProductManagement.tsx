@@ -84,8 +84,44 @@ const ProductManagement = () => {
           }));
 
           setProducts(mappedProducts);
+        } else if (response.data.data && Array.isArray(response.data.data)) {
+          // Handle case where API returns {success, count, data} structure
+          const mappedProducts = response.data.data.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image_url: product.image_url,
+            image: product.image_url, // For compatibility
+            category: mapCategoryFromAPI(product.category),
+            type: product.type === 'rent' ? 'rent' : 'buy',
+            description: product.description,
+            stock_quantity: product.stock_quantity,
+            inventory: product.stock_quantity, // For compatibility
+            salesCount: 0, // Default value
+            is_available: product.is_available
+          }));
+
+          setProducts(mappedProducts);
+        } else if (Array.isArray(response.data)) {
+          // Handle case where API returns array directly
+          const mappedProducts = response.data.map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image_url: product.image_url,
+            image: product.image_url, // For compatibility
+            category: mapCategoryFromAPI(product.category),
+            type: product.type === 'rent' ? 'rent' : 'buy',
+            description: product.description,
+            stock_quantity: product.stock_quantity,
+            inventory: product.stock_quantity, // For compatibility
+            salesCount: 0, // Default value
+            is_available: product.is_available
+          }));
+
+          setProducts(mappedProducts);
         } else {
-          console.error("API returned no products");
+          console.error("API returned unexpected data structure:", response.data);
           setProducts([]);
         }
       } catch (error) {

@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   token: string | null;
 }
@@ -22,16 +21,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("admin_token")
   );
-  const navigate = useNavigate();
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // Use the correct admin login endpoint
       const response = await axios.post('/api/auth/admin/login', {
-        username,
+        email,
         password
       });
 
-      if (response.data.success && response.data.token) {
+      if (response.data.token) {
         localStorage.setItem("admin_token", response.data.token);
         setToken(response.data.token);
         setIsAuthenticated(true);
@@ -48,7 +47,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem("admin_token");
     setToken(null);
     setIsAuthenticated(false);
-    navigate("/");
+    // Redirect to home page
+    window.location.href = "/";
   };
 
   // Set axios default authorization header when token changes

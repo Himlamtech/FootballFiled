@@ -1,7 +1,10 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider
+} from "react-router-dom";
 
 // Layouts
 import UserLayout from "@/layouts/UserLayout";
@@ -11,14 +14,11 @@ import AdminLayout from "@/layouts/AdminLayout";
 import Home from "@/pages/user/Home";
 import BookingField from "@/pages/user/BookingField";
 import FindOpponents from "@/pages/user/FindOpponents";
-import Services from "@/pages/user/Services";
 
 // Admin Pages
 import Dashboard from "@/pages/admin/Dashboard";
 import FieldManagement from "@/pages/admin/FieldManagement";
-import ProductManagement from "@/pages/admin/ProductManagement";
 import Feedback from "@/pages/admin/Feedback";
-import Finance from "@/pages/admin/Finance";
 
 // Other Pages
 import NotFound from "@/pages/NotFound";
@@ -30,40 +30,43 @@ import { AuthProvider } from "@/hooks/useAuth";
 // Create queryClient outside of component to avoid recreation on re-render
 const queryClient = new QueryClient();
 
+// Define routes directly without using createRoutesFromElements
+const router = createBrowserRouter([
+  {
+    element: <UserLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/booking", element: <BookingField /> },
+      { path: "/opponents", element: <FindOpponents /> }
+    ]
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: "fields", element: <FieldManagement /> },
+      { path: "feedback", element: <Feedback /> }
+    ]
+  },
+  { path: "/api-test", element: <ApiTest /> },
+  { path: "*", element: <NotFound /> }
+], {
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true
+  }
+});
+
 const App = () => {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            {/* User Routes */}
-            <Route element={<UserLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/booking" element={<BookingField />} />
-              <Route path="/opponents" element={<FindOpponents />} />
-              <Route path="/services" element={<Services />} />
-            </Route>
-
-            {/* Admin Routes */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="fields" element={<FieldManagement />} />
-              <Route path="products" element={<ProductManagement />} />
-              <Route path="feedback" element={<Feedback />} />
-              <Route path="finance" element={<Finance />} />
-            </Route>
-
-            {/* Test Route */}
-            <Route path="/api-test" element={<ApiTest />} />
-
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </QueryClientProvider>
-      </AuthProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <Toaster />
+        <Sonner />
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </AuthProvider>
   );
 };
 

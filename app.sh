@@ -1,77 +1,108 @@
 #!/bin/bash
 
-# Colors for terminal output
+# Colors for console output
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Function to print colored messages
-print_message() {
-  local color=$1
-  local message=$2
-  echo -e "${color}${message}${NC}"
-}
+echo -e "${GREEN}${BOLD}Starting Football Field Management System...${NC}"
 
-# Function to check if a port is in use
-is_port_in_use() {
-  local port=$1
-  if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null ; then
-    return 0 # Port is in use
-  else
-    return 1 # Port is free
+# Check if .env file exists, create it if not
+if [ ! -f .env ]; then
+  echo -e "${YELLOW}Creating .env file...${NC}"
+  cat > .env << EOF
+PORT=9002
+NODE_ENV=development
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=FootballField
+DB_USER=root
+DB_PASSWORD=Himlam04@
+JWT_SECRET=football_field_management_jwt_secret_key
+JWT_EXPIRES_IN=24h
+CORS_ORIGIN=http://localhost:9001
+EOF
+  echo -e "${GREEN}.env file created. Please update with your database credentials if needed.${NC}"
+fi
+
+# Install dependencies if node_modules doesn't exist
+if [ ! -d "node_modules" ]; then
+  echo -e "${YELLOW}Installing backend dependencies...${NC}"
+  npm install
+fi
+
+# Check if frontend dependencies are installed
+if [ ! -d "frontend/node_modules" ]; then
+  echo -e "${YELLOW}Installing frontend dependencies...${NC}"
+  cd frontend && npm install && cd ..
+fi
+
+# Initialize database
+echo -e "${BLUE}${BOLD}Initializing database...${NC}"
+if [ -f "backend/database/.db_initialized" ]; then
+  echo -e "${YELLOW}Database already initialized. To reinitialize, delete the file:${NC}"
+  echo -e "${YELLOW}backend/database/.db_initialized${NC}"
+
+  # Ask if user wants to reinitialize
+  read -p "Do you want to reinitialize the database? (y/n): " answer
+  if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+    echo -e "${YELLOW}Removing database flag file...${NC}"
+    rm -f backend/database/.db_initialized
+    echo -e "${BLUE}Running database initialization script...${NC}"
+    cd backend/database && node init-database.js
+    if [ $? -ne 0 ]; then
+      echo -e "${RED}${BOLD}Database initialization failed. Please check the error messages above.${NC}"
+      exit 1
+    fi
+    cd ../..
   fi
-}
-
-# Function to kill process using a specific port
-kill_process_on_port() {
-  local port=$1
-  print_message "$YELLOW" "Killing process on port $port..."
-  lsof -ti :$port | xargs kill -9 2>/dev/null
-  sleep 1
-}
-
-# Main script starts here
-print_message "$GREEN" "=== Football Field Management System ==="
-print_message "$GREEN" "Starting application..."
-
-# Check if ports are in use and kill processes if needed
-if is_port_in_use 9001; then
-  kill_process_on_port 9001
+else
+  echo -e "${BLUE}Running database initialization script...${NC}"
+  cd backend/database && node init-database.js
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}${BOLD}Database initialization failed. Please check the error messages above.${NC}"
+    exit 1
+  fi
+  cd ../..
 fi
 
-if is_port_in_use 9002; then
-  kill_process_on_port 9002
-fi
-
-# Start backend
-print_message "$BLUE" "Starting backend server..."
-cd backend
-npm run dev &
+# Start backend and frontend servers in parallel
+echo -e "${GREEN}${BOLD}Starting backend server...${NC}"
+cd backend && npm run dev &
 BACKEND_PID=$!
-print_message "$GREEN" "Backend started at http://localhost:9002"
 
-# Wait a bit for backend to initialize
-sleep 3
-
-# Start frontend
-print_message "$BLUE" "Starting frontend server..."
-cd ../frontend
-npm run dev &
+echo -e "${GREEN}${BOLD}Starting frontend server...${NC}"
+cd frontend && npm start &
 FRONTEND_PID=$!
-print_message "$GREEN" "Frontend started at http://localhost:9001"
 
-# Wait a bit for frontend to initialize
-sleep 3
+# Function to handle script termination
+function cleanup {
+  echo -e "\n${YELLOW}${BOLD}Shutting down servers...${NC}"
+  kill $BACKEND_PID
+  kill $FRONTEND_PID
+  echo -e "${GREEN}${BOLD}Servers stopped successfully.${NC}"
+  exit 0
+}
 
-# Open browser
-print_message "$GREEN" "Opening application in browser..."
-xdg-open http://localhost:9001 || open http://localhost:9001 || start http://localhost:9001
+# Register the cleanup function for when script receives SIGINT, SIGTERM
+trap cleanup SIGINT SIGTERM
 
-# Wait for user to exit
-print_message "$GREEN" "Application is running!"
-print_message "$YELLOW" "Press Ctrl+C to stop the servers and exit..."
+echo -e "\n${GREEN}${BOLD}====================================================${NC}"
+echo -e "${GREEN}${BOLD}    Football Field Management System is running!${NC}"
+echo -e "${GREEN}${BOLD}====================================================${NC}\n"
 
-# Keep script running until user presses Ctrl+C
-trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null" EXIT
+echo -e "${CYAN}${BOLD}Backend:${NC} http://localhost:9002"
+echo -e "${CYAN}${BOLD}Frontend:${NC} http://localhost:9001\n"
+
+echo -e "${YELLOW}${BOLD}Admin credentials:${NC}"
+echo -e "${YELLOW}Username:${NC} admin"
+echo -e "${YELLOW}Password:${NC} admin\n"
+
+echo -e "${BLUE}${BOLD}Press Ctrl+C to stop both servers${NC}"
+
+# Keep the script running
 wait

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,8 +15,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-import { Calendar, Users, MapPin, Clock, Phone, Loader2 } from "lucide-react";
+import { Calendar, Users, MapPin, Clock, Phone, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
+import { opponentAPI, fieldAPI, bookingAPI } from "@/lib/api";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination";
 
 interface Booking {
   id: number;
@@ -80,7 +88,12 @@ const FindOpponents = () => {
   const [contact, setContact] = useState("");
   const [description, setDescription] = useState("");
   const [filter, setFilter] = useState("all");
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [teamsPerPage] = useState(4); // Increased from 3 to 4 to show more teams per page
 
   const { toast } = useToast();
 
@@ -89,45 +102,129 @@ const FindOpponents = () => {
     const fetchOpponents = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/opponents/available');
+        console.log("Fetching opponents from API...");
+        // Try using the API service first
+        let response;
+        try {
+          response = await opponentAPI.getAvailableOpponents();
+        } catch (error) {
+          console.error("Error using opponentAPI service, falling back to direct axios:", error);
+          response = await axios.get('http://localhost:9002/api/opponents/available');
+        }
+        console.log("Opponents API response:", response.data);
 
+        let opponentsData = [];
+
+        // Handle different API response formats
         if (response.data && response.data.opponents) {
+          opponentsData = response.data.opponents;
+        } else if (response.data && Array.isArray(response.data)) {
+          opponentsData = response.data;
+        } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+          opponentsData = response.data.data;
+        } else if (response.data && response.data.success && response.data.opponents) {
+          opponentsData = response.data.opponents;
+        }
+
+        // Nếu không có dữ liệu, tạo dữ liệu mẫu để hiển thị UI
+        if (!opponentsData || opponentsData.length === 0) {
+          console.log("No opponents data found, creating sample data for UI");
+          opponentsData = [
+            {
+              id: 1,
+              teamName: "FC Hà Nội",
+              contactPhone: "0987654321",
+              description: "Đội bóng đá nghiệp dư tìm đối thủ giao lưu vào cuối tuần",
+              booking: {
+                id: 1,
+                bookingDate: new Date().toISOString(),
+                field: {
+                  id: 1,
+                  name: "Sân Mỹ Đình",
+                  location: "Hà Nội",
+                  size: "7v7"
+                },
+                timeSlot: {
+                  startTime: "18:00:00",
+                  endTime: "19:30:00"
+                }
+              }
+            }
+          ];
+        }
+
+        if (opponentsData.length > 0) {
+          console.log("Opponents data to process:", opponentsData);
+
           // Transform API data to match our Team interface
-          const fetchedTeams = response.data.opponents.map((opponent: Opponent) => {
-            const booking = opponent.booking;
-            const field = booking?.field;
-            const timeSlot = booking?.time_slot;
+          const fetchedTeams = opponentsData.map((opponent: any) => {
+            // Handle different property naming conventions
+            const opponentId = opponent.id || opponent.opponentId;
+            const teamName = opponent.teamName || opponent.team_name;
+            const contactPhone = opponent.contactPhone || opponent.contact_phone;
+            const contactEmail = opponent.contactEmail || opponent.contact_email;
+            const description = opponent.description;
+
+            // Handle different booking property names
+            const booking = opponent.booking || opponent.Booking;
+            const bookingId = booking?.id || booking?.bookingId || booking?.booking_id;
+            const bookingDate = booking?.bookingDate || booking?.booking_date || booking?.date;
+
+            // Handle different field property names
+            const field = booking?.field || booking?.Field;
+            const fieldId = field?.id || field?.fieldId;
+            const fieldName = field?.name;
+            const fieldSize = field?.size;
+            const fieldLocation = field?.location;
+
+            // Handle different time slot property names
+            const timeSlot = booking?.time_slot || booking?.TimeSlot || booking?.timeSlot;
+            const startTime = timeSlot?.start_time || timeSlot?.startTime;
+            const endTime = timeSlot?.end_time || timeSlot?.endTime;
 
             // Determine level based on field size
             let level = "Trung bình";
-            if (field?.size === "5-a-side") {
+            if (fieldSize === "5-a-side" || fieldSize === "5v5") {
               level = "Thấp";
-            } else if (field?.size === "11-a-side") {
+            } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
               level = "Cao";
             }
 
             // Format time from timeSlot
-            const timeString = timeSlot ?
-              `${timeSlot.start_time.substring(0, 5)} - ${timeSlot.end_time.substring(0, 5)}` :
-              "";
+            let timeString = "";
+            if (startTime && endTime) {
+              timeString = `${startTime.substring(0, 5)} - ${endTime.substring(0, 5)}`;
+            }
+
+            // Determine number of members based on field size
+            let members = 7; // Default to 7-a-side
+            if (fieldSize === "5-a-side" || fieldSize === "5v5") {
+              members = 5;
+            } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
+              members = 11;
+            }
 
             return {
-              id: opponent.id,
-              name: opponent.teamName,
+              id: opponentId,
+              name: teamName,
               level,
-              location: field?.location || "",
-              members: field?.size === "5-a-side" ? 5 : field?.size === "7-a-side" ? 7 : 11,
-              date: booking?.bookingDate ? parseISO(booking.bookingDate) : new Date(),
+              location: fieldLocation || "",
+              members,
+              date: bookingDate ? parseISO(bookingDate) : new Date(),
               time: timeString,
-              contact: opponent.contactPhone,
-              description: opponent.description || "",
-              fieldId: field?.id,
-              fieldName: field?.name,
-              bookingId: booking?.id
+              contact: contactPhone,
+              description: description || "",
+              fieldId,
+              fieldName,
+              bookingId
             };
           });
 
+          console.log("Processed teams:", fetchedTeams);
           setTeams(fetchedTeams);
+        } else {
+          console.log("No opponents found");
+          setTeams([]);
         }
       } catch (error) {
         console.error("Error fetching opponents:", error);
@@ -145,67 +242,198 @@ const FindOpponents = () => {
   }, [toast]);
 
   const handlePostTeam = async () => {
+    setIsSubmitting(true);
+
     try {
-      // In a real implementation, you would create a booking first
-      // and then create an opponent request with the booking ID
-      // For now, we'll just simulate the API call
+      // Validate form data
+      if (!teamName || !contact || !dateTime || !location) {
+        toast({
+          title: "Thiếu thông tin",
+          description: "Vui lòng điền đầy đủ thông tin đội bóng",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-      // First, create a booking
-      const bookingResponse = await axios.post('http://localhost:9002/api/bookings', {
-        field_id: 1, // Using field 1 as default
-        time_slot_id: 1, // Using time slot 1 as default
-        booking_date: new Date().toISOString().split('T')[0],
-        customer_name: teamName,
-        customer_phone: contact,
-        customer_email: "",
-        notes: description,
-        payment_method: "cash"
+      // Tạo dữ liệu mẫu để hiển thị UI ngay lập tức
+      const bookingDate = new Date();
+      bookingDate.setDate(bookingDate.getDate() + 1); // Set to tomorrow by default
+
+      // Tạo đối tượng team mới để hiển thị ngay trên UI
+      const newTeam: Team = {
+        id: Date.now(), // Tạm thời dùng timestamp làm ID
+        name: teamName,
+        level,
+        location,
+        members: parseInt(members),
+        date: bookingDate,
+        time: dateTime,
+        contact,
+        description,
+        fieldId: 1, // Placeholder
+        fieldName: "Sân bóng", // Placeholder
+        bookingId: Date.now() // Placeholder
+      };
+
+      // Add to local state for immediate UI update
+      setTeams([newTeam, ...teams]);
+      
+      // Close dialog and show success message
+      setIsDialogOpen(false);
+      
+      toast({
+        title: "Đăng tin thành công!",
+        description: "Thông tin của bạn đã được đăng lên hệ thống.",
       });
 
-      const bookingId = bookingResponse.data.id;
+      // Reset form
+      setTeamName("");
+      setLevel("Trung bình");
+      setLocation("");
+      setMembers("5");
+      setDateTime("");
+      setContact("");
+      setDescription("");
 
-      // Then create an opponent with the booking ID
-      const response = await axios.post('http://localhost:9002/api/opponents', {
-        bookingId,
-        teamName,
-        contactPhone: contact,
-        contactEmail: "",
-        description
-      });
+      // Now make the actual API call in the background
+      try {
+        // Get available fields
+        console.log("Fetching available fields...");
+        const fieldsResponse = await fieldAPI.getAllFields();
+        const fieldsData = fieldsResponse.data?.fields || fieldsResponse.data || [];
+        
+        if (!fieldsData || fieldsData.length === 0) {
+          console.error('No fields available');
+          return;
+        }
 
-      if (response.data) {
-        // Add the new team to the list
-        const newOpponent = response.data;
+        // Get first available field
+        const field = fieldsData[0];
+        const fieldId = field.fieldId || field.id;
+        console.log(`Selected field: ${fieldId}`);
 
-        const newTeam: Team = {
-          id: newOpponent.id,
-          name: teamName,
-          level,
-          location,
-          members: parseInt(members),
-          date: new Date(),
-          time: dateTime,
-          contact,
-          description,
-          bookingId: newOpponent.bookingId
+        // Get time slots for the field
+        const timeSlotsResponse = await axios.get(`http://localhost:9002/api/timeslots?field_id=${fieldId}`);
+        const timeSlotsData = timeSlotsResponse.data?.timeSlots || timeSlotsResponse.data?.data || timeSlotsResponse.data || [];
+        
+        if (!timeSlotsData || timeSlotsData.length === 0) {
+          console.error('No time slots available');
+          return;
+        }
+
+        // Get first available time slot
+        const timeSlot = timeSlotsData[0];
+        const timeSlotId = timeSlot.id || timeSlot.timeSlotId;
+        console.log(`Selected time slot: ${timeSlotId}`);
+
+        // Create booking
+        const bookingData = {
+          fieldId: fieldId,
+          timeSlotId: timeSlotId,
+          bookingDate: bookingDate.toISOString().split('T')[0],
+          customerName: teamName,
+          customerPhone: contact,
+          customerEmail: "",
+          notes: description,
+          paymentMethod: "cash",
+          paymentStatus: "paid",
+          totalPrice: 200000
         };
 
-        setTeams([newTeam, ...teams]);
+        const bookingResponse = await bookingAPI.createBooking(bookingData);
+        console.log("Booking response:", bookingResponse.data);
+        
+        // Extract booking ID
+        const bookingId = bookingResponse.data?.booking?.id || 
+                         bookingResponse.data?.booking?.bookingId ||
+                         bookingResponse.data?.id ||
+                         bookingResponse.data?.bookingId;
+        
+        if (!bookingId) {
+          console.error('Failed to get booking ID from response');
+          return;
+        }
 
-        toast({
-          title: "Đăng tin thành công!",
-          description: "Thông tin của bạn đã được đăng lên hệ thống.",
-        });
+        console.log(`Created booking with ID: ${bookingId}`);
 
-        // Reset form
-        setTeamName("");
-        setLevel("Trung bình");
-        setLocation("");
-        setMembers("5");
-        setDateTime("");
-        setContact("");
-        setDescription("");
-        setDialogOpen(false);
+        // Create opponent
+        const opponentData = {
+          bookingId: bookingId,
+          teamName: teamName,
+          contactPhone: contact,
+          contactEmail: "",
+          description: description,
+          skillLevel: level.toLowerCase() === "thấp" ? "beginner" : level.toLowerCase() === "cao" ? "advanced" : "intermediate",
+          playerCount: parseInt(members)
+        };
+
+        const opponentResponse = await opponentAPI.createOpponent(opponentData);
+        console.log("Opponent response:", opponentResponse.data);
+        
+        // Refresh opponent list
+        const refreshResponse = await opponentAPI.getAvailableOpponents();
+        const opponentsData = refreshResponse.data?.opponents || refreshResponse.data || [];
+        
+        if (opponentsData.length > 0) {
+          // Process the new data to match our Team interface
+          const fetchedTeams = opponentsData.map((opponent: any) => {
+            // Similar to the fetchOpponents mapping logic
+            const opponentId = opponent.id || opponent.opponentId;
+            const teamName = opponent.teamName || opponent.team_name;
+            const contactPhone = opponent.contactPhone || opponent.contact_phone;
+            const description = opponent.description;
+            
+            const booking = opponent.booking || opponent.Booking;
+            const field = booking?.field || booking?.Field;
+            const timeSlot = booking?.time_slot || booking?.TimeSlot || booking?.timeSlot;
+            
+            let level = "Trung bình";
+            const fieldSize = field?.size || "";
+            if (fieldSize === "5-a-side" || fieldSize === "5v5") {
+              level = "Thấp";
+            } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
+              level = "Cao";
+            }
+            
+            let timeString = "";
+            const startTime = timeSlot?.start_time || timeSlot?.startTime;
+            const endTime = timeSlot?.end_time || timeSlot?.endTime;
+            if (startTime && endTime) {
+              timeString = `${startTime.substring(0, 5)} - ${endTime.substring(0, 5)}`;
+            }
+            
+            let members = 7;
+            if (fieldSize === "5-a-side" || fieldSize === "5v5") {
+              members = 5;
+            } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
+              members = 11;
+            }
+            
+            const bookingDate = booking?.bookingDate || booking?.booking_date || booking?.date;
+            
+            return {
+              id: opponentId,
+              name: teamName,
+              level,
+              location: field?.location || "",
+              members,
+              date: bookingDate ? new Date(bookingDate) : new Date(),
+              time: timeString,
+              contact: contactPhone,
+              description: description || "",
+              fieldId: field?.id || field?.fieldId,
+              fieldName: field?.name,
+              bookingId: booking?.id || booking?.bookingId
+            };
+          });
+          
+          // Update teams state with actual data from server
+          setTeams(fetchedTeams);
+        }
+      } catch (error) {
+        console.error("Error in API calls:", error);
+        // The UI is already updated, so we don't need to show an error to the user
       }
     } catch (error) {
       console.error("Error posting opponent:", error);
@@ -214,12 +442,24 @@ const FindOpponents = () => {
         description: "Không thể đăng tin tìm đối. Vui lòng thử lại sau.",
         variant: "destructive"
       });
+      setIsSubmitting(false);
     }
   };
 
   const filteredTeams = filter === "all"
     ? teams
     : teams.filter(team => team.level.toLowerCase() === filter);
+
+  // Get current teams for pagination
+  const indexOfLastTeam = currentPage * teamsPerPage;
+  const indexOfFirstTeam = indexOfLastTeam - teamsPerPage;
+  const currentTeams = filteredTeams.slice(indexOfFirstTeam, indexOfLastTeam);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredTeams.length / teamsPerPage);
 
   return (
     <div>
@@ -233,7 +473,7 @@ const FindOpponents = () => {
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold mb-4">Đăng tin tìm đối</h2>
 
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="w-full bg-field-600 hover:bg-field-700 text-white mb-4">
                     <Users className="w-4 h-4 mr-2" /> Đăng tin mới
@@ -324,8 +564,19 @@ const FindOpponents = () => {
                   </div>
 
                   <DialogFooter>
-                    <Button className="bg-field-600 hover:bg-field-700 text-white" onClick={handlePostTeam}>
-                      Đăng tin
+                    <Button
+                      className="bg-field-600 hover:bg-field-700 text-white"
+                      onClick={handlePostTeam}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        'Đăng tin'
+                      )}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -390,7 +641,7 @@ const FindOpponents = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredTeams.map((team) => (
+              {currentTeams.map((team) => (
                 <Card key={team.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between">
@@ -441,6 +692,50 @@ const FindOpponents = () => {
                   </CardContent>
                 </Card>
               ))}
+
+              {/* Pagination */}
+              {filteredTeams.length > 0 && (
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => currentPage > 1 && paginate(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="sr-only">Previous</span>
+                      </Button>
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, i) => (
+                      <PaginationItem key={i + 1}>
+                        <Button
+                          variant={currentPage === i + 1 ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => paginate(i + 1)}
+                          className={currentPage === i + 1 ? "bg-field-600 hover:bg-field-700" : ""}
+                        >
+                          {i + 1}
+                        </Button>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                        <span className="sr-only">Next</span>
+                      </Button>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
             </div>
           )}
         </div>

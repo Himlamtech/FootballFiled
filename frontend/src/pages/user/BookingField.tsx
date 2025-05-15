@@ -66,19 +66,36 @@ const BookingField = () => {
     const fetchFields = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/fields');
+        const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
+        console.log("Fields API response:", data);
 
-        if (data && data.fields) {
-          console.log("Fields data:", data.fields);
-          const mappedFields = data.fields.map((field: any) => ({
-            id: field.id,
+        if (data) {
+          let fieldsData = [];
+
+          // Handle different API response formats
+          if (Array.isArray(data)) {
+            // Direct array of fields
+            fieldsData = data;
+          } else if (data.fields && Array.isArray(data.fields)) {
+            // Fields in a 'fields' property
+            fieldsData = data.fields;
+          } else if (data.data && Array.isArray(data.data)) {
+            // Fields in a 'data' property
+            fieldsData = data.data;
+          }
+
+          console.log("Fields data to process:", fieldsData);
+
+          const mappedFields = fieldsData.map((field: any) => ({
+            id: field.fieldId || field.id,
             name: field.name,
-            size: field.capacity ? `${field.capacity} người` : "Không xác định",
-            image: field.image_url || "https://placehold.co/600x400?text=Football+Field",
+            size: field.size || field.capacity ? `${field.capacity || field.size}` : "Không xác định",
+            image: field.imageUrl || field.image_url || "https://placehold.co/600x400?text=Football+Field",
             description: field.description || "Sân bóng đá"
           }));
 
+          console.log("Mapped fields:", mappedFields);
           setFields(mappedFields);
 
           // Set default selected field
@@ -113,19 +130,55 @@ const BookingField = () => {
       try {
         setLoadingTimeSlots(true);
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        const response = await fetch(`/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
-        const data = await response.json();
+        console.log(`Fetching time slots for field ${selectedField.id} on ${formattedDate}`);
 
-        if (data && Array.isArray(data)) {
-          console.log("Time slots data:", data);
-          // Chuyển đổi dữ liệu từ API sang định dạng cần thiết cho frontend
-          const formattedTimeSlots = data.map(slot => ({
-            id: slot.id,
-            start: slot.start_time.substring(0, 5),
-            end: slot.end_time.substring(0, 5),
-            price: 200000, // Giá mặc định, có thể thay đổi tùy theo loại sân và thời gian
-            available: true // Mặc định là có sẵn
-          }));
+        const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
+        const data = await response.json();
+        console.log("Time slots API response:", data);
+
+        let timeSlotData = [];
+
+        // Handle different API response formats
+        if (Array.isArray(data)) {
+          // Direct array of time slots
+          timeSlotData = data;
+        } else if (data.data && Array.isArray(data.data)) {
+          // Time slots in a 'data' property
+          timeSlotData = data.data;
+        }
+
+        if (timeSlotData.length > 0) {
+          console.log("Time slots data to process:", timeSlotData);
+
+          // Convert API data to the format needed for frontend
+          const formattedTimeSlots = timeSlotData.map(slot => {
+            // Handle different property naming conventions
+            const startTime = slot.start_time || slot.startTime;
+            const endTime = slot.end_time || slot.endTime;
+            const slotId = slot.id || slot.timeSlotId;
+
+            // Handle different price formats
+            let price = 0;
+            if (slot.price) {
+              price = slot.price;
+            } else if (slot.weekdayPrice || slot.weekday_price) {
+              // Check if it's a weekend
+              const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
+              price = isWeekend
+                ? (slot.weekendPrice || slot.weekend_price || 0)
+                : (slot.weekdayPrice || slot.weekday_price || 0);
+            }
+
+            return {
+              id: slotId,
+              start: startTime ? startTime.substring(0, 5) : "00:00",
+              end: endTime ? endTime.substring(0, 5) : "00:00",
+              price: parseFloat(price) || 0,
+              available: slot.available !== false // Default to available unless explicitly set to false
+            };
+          });
+
+          console.log("Formatted time slots:", formattedTimeSlots);
           setTimeSlots(formattedTimeSlots);
         } else {
           console.error("API returned no time slots");
@@ -204,8 +257,22 @@ const BookingField = () => {
 
   const handlePaymentSuccess = async () => {
     try {
-      // Gửi thông tin thanh toán lên API
-      const paymentData = {
+      // Prepare booking data for API
+      const bookingData = {
+        fieldId: selectedField?.id,
+        timeSlotId: selectedTimeSlot?.id,
+        bookingDate: format(selectedDate, "yyyy-MM-dd"),
+        customerName: customerName,
+        customerPhone: phone,
+        customerEmail: email,
+        notes: note,
+        totalPrice: selectedTimeSlot?.price || 0,
+        paymentMethod: "vietqr",
+        paymentStatus: "paid"
+      };
+
+      // Also prepare alternative format for different API implementations
+      const alternativeData = {
         field_id: selectedField?.id,
         time_slot_id: selectedTimeSlot?.id,
         booking_date: format(selectedDate, "yyyy-MM-dd"),
@@ -213,38 +280,49 @@ const BookingField = () => {
         customer_phone: phone,
         customer_email: email,
         notes: note,
+        total_price: selectedTimeSlot?.price || 0,
         payment_method: "vietqr",
         payment_status: "paid"
       };
 
-      console.log("Sending payment confirmation:", paymentData);
+      console.log("Sending booking data:", bookingData);
+      console.log("Alternative format:", alternativeData);
 
+      // Try with camelCase format first
+      try {
+        const response = await fetch('http://localhost:9002/api/bookings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bookingData),
+        });
+
+        const data = await response.json();
+        console.log("Booking API response:", data);
+
+        if (data.success || data.booking || data.id) {
+          handleBookingSuccess();
+          return;
+        }
+      } catch (error) {
+        console.error("Error with camelCase format, trying snake_case:", error);
+      }
+
+      // If first attempt failed, try with snake_case format
       const response = await fetch('http://localhost:9002/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(paymentData),
+        body: JSON.stringify(alternativeData),
       });
 
       const data = await response.json();
+      console.log("Booking API response (snake_case):", data);
 
-      if (data.success) {
-        // Đóng dialog thanh toán
-        setShowPayment(false);
-
-        // Hiển thị thông báo đặt sân thành công
-        toast({
-          title: "Đặt sân thành công!",
-          description: `Sân: ${selectedField?.name}, Ngày: ${format(selectedDate, "dd/MM/yyyy")}, Giờ: ${selectedTimeSlot?.start} - ${selectedTimeSlot?.end}`,
-        });
-
-        // Reset form
-        setSelectedTimeSlot(null);
-        setCustomerName("");
-        setPhone("");
-        setEmail("");
-        setNote("");
+      if (data.success || data.booking || data.id) {
+        handleBookingSuccess();
       } else {
         throw new Error(data.message || "Không thể hoàn tất đặt sân");
       }
@@ -259,6 +337,24 @@ const BookingField = () => {
       // Đóng dialog thanh toán
       setShowPayment(false);
     }
+  };
+
+  const handleBookingSuccess = () => {
+    // Đóng dialog thanh toán
+    setShowPayment(false);
+
+    // Hiển thị thông báo đặt sân thành công
+    toast({
+      title: "Đặt sân thành công!",
+      description: `Sân: ${selectedField?.name}, Ngày: ${format(selectedDate, "dd/MM/yyyy")}, Giờ: ${selectedTimeSlot?.start} - ${selectedTimeSlot?.end}`,
+    });
+
+    // Reset form
+    setSelectedTimeSlot(null);
+    setCustomerName("");
+    setPhone("");
+    setEmail("");
+    setNote("");
   };
 
   return (

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Sử dụng đường dẫn tương đối để tận dụng proxy
-const API_URL = '/api';
+// Use absolute URL to connect to backend
+const API_URL = 'http://localhost:9002/api';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -9,18 +9,41 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add timeout to prevent hanging requests
+  timeout: 10000,
 });
 
 // Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('admin_token');
+    // Get admin token first, then regular user token as fallback
+    const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Add response interceptor to handle common errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Handle 401 Unauthorized errors
+    if (error.response && error.response.status === 401) {
+      console.log('Authentication error, redirecting to login...');
+      // Don't auto-logout from admin pages to avoid disruption
+      if (!window.location.pathname.includes('/admin')) {
+        localStorage.removeItem('user_token');
+        // Only redirect if not on admin page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Field API
@@ -30,6 +53,18 @@ export const fieldAPI = {
   createField: (data: any) => api.post('/fields', data),
   updateField: (id: number, data: any) => api.put(`/fields/${id}`, data),
   deleteField: (id: number) => api.delete(`/fields/${id}`),
+};
+
+// Field Management API
+export const fieldManagementAPI = {
+  getFieldStatus: (fieldId: number, date: string) =>
+    api.get('/field-management/status', { params: { fieldId, date } }),
+  lockTimeSlot: (fieldId: number, data: any) =>
+    api.post(`/field-management/${fieldId}/lock`, data),
+  unlockTimeSlot: (fieldId: number, data: any) =>
+    api.post(`/field-management/${fieldId}/unlock`, data),
+  lockAllTimeSlots: (fieldId: number, data: any) =>
+    api.post(`/field-management/${fieldId}/lock-all`, data),
 };
 
 // Booking API
@@ -58,24 +93,7 @@ export const userAPI = {
   deleteUser: (id: number) => api.delete(`/users/${id}`),
 };
 
-// Product API
-export const productAPI = {
-  getAllProducts: (params?: any) => api.get('/products', { params }),
-  getProductById: (id: number) => api.get(`/products/${id}`),
-  createProduct: (data: any) => api.post('/products', data),
-  updateProduct: (id: number, data: any) => api.put(`/products/${id}`, data),
-  deleteProduct: (id: number) => api.delete(`/products/${id}`),
-};
-
-// Finance API
-export const financeAPI = {
-  getAllFinances: (params?: any) => api.get('/finances', { params }),
-  getFinanceSummary: (params?: any) => api.get('/finances/summary', { params }),
-  getFinanceById: (id: number) => api.get(`/finances/${id}`),
-  createFinance: (data: any) => api.post('/finances', data),
-  updateFinance: (id: number, data: any) => api.put(`/finances/${id}`, data),
-  deleteFinance: (id: number) => api.delete(`/finances/${id}`),
-};
+// Removed product and finance APIs as part of simplification
 
 // Dashboard API
 export const dashboardAPI = {
@@ -85,11 +103,21 @@ export const dashboardAPI = {
 
 // Feedback API
 export const feedbackAPI = {
-  getAllFeedbacks: (params?: any) => api.get('/feedbacks', { params }),
-  getFeedbackById: (id: number) => api.get(`/feedbacks/${id}`),
-  createFeedback: (data: any) => api.post('/feedbacks', data),
-  updateFeedback: (id: number, data: any) => api.put(`/feedbacks/${id}`, data),
-  deleteFeedback: (id: number) => api.delete(`/feedbacks/${id}`),
+  getAllFeedbacks: (params?: any) => api.get('/feedback', { params }),
+  getFeedbackById: (id: number) => api.get(`/feedback/${id}`),
+  createFeedback: (data: any) => api.post('/feedback', data),
+  updateFeedback: (id: number, data: any) => api.patch(`/feedback/${id}/status`, data),
+  deleteFeedback: (id: number) => api.delete(`/feedback/${id}`),
+};
+
+// Opponent API
+export const opponentAPI = {
+  getAllOpponents: () => api.get('/opponents'),
+  getAvailableOpponents: () => api.get('/opponents/available'),
+  getOpponentById: (id: number) => api.get(`/opponents/${id}`),
+  createOpponent: (data: any) => api.post('/opponents', data),
+  updateOpponent: (id: number, data: any) => api.put(`/opponents/${id}`, data),
+  deleteOpponent: (id: number) => api.delete(`/opponents/${id}`),
 };
 
 export default api;

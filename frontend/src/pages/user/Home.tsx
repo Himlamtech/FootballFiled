@@ -26,7 +26,7 @@ const Home = () => {
       console.log("Sending feedback:", data);
 
       // Gửi phản hồi lên API
-      const response = await fetch('/api/feedbacks', {
+      const response = await fetch('/api/feedback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -34,11 +34,7 @@ const Home = () => {
         body: JSON.stringify({
           name: data.fullName,
           email: data.email,
-          content: data.message,
-          comment: data.message,
-          rating: data.rating || 5,
-          date: new Date().toISOString().split('T')[0],
-          status: "pending"
+          content: data.message
         }),
       });
 
@@ -56,12 +52,47 @@ const Home = () => {
     }
   };
 
-  // Location coordinates and address
-  const location = {
-    address: "96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội",
-    lat: 20.9732762,
-    lng: 105.7875231,
-  };
+  // Location coordinates and address - should be fetched from API in a real implementation
+  const [location, setLocation] = useState({
+    address: "",
+    lat: 0,
+    lng: 0,
+  });
+
+  // Fetch location data from API
+  useEffect(() => {
+    const fetchLocationData = async () => {
+      try {
+        const response = await fetch('/api/settings/location');
+        const data = await response.json();
+
+        if (data && data.address) {
+          setLocation({
+            address: data.address,
+            lat: data.lat || 0,
+            lng: data.lng || 0,
+          });
+        } else {
+          // Default location if API fails
+          setLocation({
+            address: "96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội",
+            lat: 20.9732762,
+            lng: 105.7875231,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching location data:", error);
+        // Default location if API fails
+        setLocation({
+          address: "96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội",
+          lat: 20.9732762,
+          lng: 105.7875231,
+        });
+      }
+    };
+
+    fetchLocationData();
+  }, []);
 
   // Create Google Maps embed URL
   const googleMapsEmbedUrl = `https://maps.google.com/maps?q=${location.lat},${location.lng}&z=16&output=embed`;
@@ -97,22 +128,47 @@ const Home = () => {
     const fetchFields = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/fields');
+        const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
+        console.log("Fields API response:", data);
 
-        if (data && data.fields) {
-          console.log("Fields data:", data.fields);
-          const mappedFields = data.fields.map((field: any) => ({
-            id: field.id,
+        // Process the field data based on the actual API response structure
+        let fieldsData = [];
+
+        // Handle different API response formats
+        if (Array.isArray(data)) {
+          // Direct array of fields
+          fieldsData = data;
+        } else if (data && data.fields && Array.isArray(data.fields)) {
+          // Fields in a 'fields' property
+          fieldsData = data.fields;
+        } else if (data && data.data && Array.isArray(data.data)) {
+          // Fields in a 'data' property
+          fieldsData = data.data;
+        } else if (data && data.success === true && Array.isArray(data.fields)) {
+          // Success response with fields array
+          fieldsData = data.fields;
+        }
+
+        console.log("Fields data to process:", fieldsData);
+
+        if (fieldsData && fieldsData.length > 0) {
+          const mappedFields = fieldsData.map((field: any) => ({
+            id: field.fieldId || field.id,
             name: field.name,
-            size: field.capacity ? `${field.capacity} người` : "Không xác định",
-            img: field.image_url || "https://placehold.co/600x400?text=Football+Field",
+            size: field.size || "Không xác định",
+            // Use a default image if the imageUrl is not available or is a relative path
+            img: field.imageUrl && field.imageUrl.startsWith('http')
+              ? field.imageUrl
+              : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
             description: field.description || "Sân bóng đá"
           }));
 
+          console.log("Mapped fields:", mappedFields);
           setFields(mappedFields);
         } else {
           console.error("API returned no fields");
+          toast.error("Không thể tải danh sách sân bóng");
           setFields([]);
         }
       } catch (error) {

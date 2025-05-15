@@ -1,147 +1,142 @@
 # Football Field Management System - Backend
 
-This repository contains the backend code for the Football Field Management System. The system is designed to manage football field bookings, products, users, and more.
+This is the backend for the Football Field Management System, built with Node.js, Express, and MySQL.
 
-## Requirements
+## Folder Structure
 
-- Node.js 14+
-- npm
-- Either SQLite (for development) or MySQL (for production)
-
-## Setup
-
-1. Clone the repository
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-## Database Configuration and Setup
-
-The application supports both SQLite (for development) and MySQL (for production or more robust development).
-
-### Using the Database Setup Utility
-
-The easiest way to set up the database is to use our interactive utility:
-
-```bash
-# Interactive mode
-npm run switch-db
-```
-
-This will prompt you to:
-1. Choose between SQLite and MySQL
-2. Configure database connection details (for MySQL)
-3. Generate sample data
-
-### Quick Setup Commands
-
-For faster setup, you can use these one-command shortcuts:
-
-```bash
-# Switch to SQLite and generate sample data
-npm run db:sqlite
-
-# Switch to MySQL and set up database
-npm run db:mysql
-```
-
-### Manual Database Configuration
-
-If you prefer to configure manually:
-
-#### Step 1: Switch Database Type
-
-```bash
-# Switch to SQLite
-npm run switch-db:sqlite
-
-# Switch to MySQL
-npm run switch-db:mysql
-```
-
-#### Step 2: Generate Sample Data
-
-```bash
-# For SQLite
-npm run setup-sqlite
-
-# For MySQL
-npm run setup-mysql-db
-```
-
-## Running the Application
-
-```bash
-# Development mode with nodemon (auto-restart on file changes)
-npm run dev
-
-# Production mode
-npm start
-```
-
-## API Documentation
-
-The API endpoints are organized into the following categories:
-
-- Authentication (`/api/auth`)
-- Fields (`/api/fields`)
-- Bookings (`/api/bookings`)
-- Products (`/api/products`)
-- Feedback (`/api/feedback`)
-- Opponents (`/api/opponents`)
-
-For detailed API documentation, refer to the Postman collection or Swagger documentation (if available).
-
-## Directory Structure
+The backend follows a standard MVC (Model-View-Controller) architecture:
 
 ```
 backend/
-├── data/               # SQLite database and other data files
-├── logs/               # Application logs
-├── src/                # Source code
-│   ├── config/         # Configuration files
-│   ├── controllers/    # Request handlers
-│   ├── middleware/     # Express middleware
-│   ├── models/         # Database models
-│   ├── routes/         # API routes
-│   ├── services/       # Business logic
-│   ├── utils/          # Utility functions
-│   ├── app.js          # Express application setup
-│   └── server.js       # Server entry point
-├── .env                # Environment variables
-├── .eslintrc.js        # ESLint configuration
-├── .gitignore          # Git ignore file
-├── jest.config.js      # Jest configuration
-├── package.json        # Node.js dependencies
-└── README.md           # This file
+├── config/             # Configuration files
+│   └── database.js     # Database connection configuration
+├── controllers/        # Request handlers
+├── database/           # Database setup scripts
+│   ├── create-database.sql  # Database schema
+│   ├── seed-data.sql        # Sample data
+│   ├── init-database.js     # Database initialization script
+│   └── database.sh          # Shell script for database setup
+├── middleware/         # Express middleware
+├── models/             # Database models (Sequelize)
+├── routes/             # API routes
+├── utils/              # Utility functions
+└── server.js           # Main application entry point
 ```
 
-## Available Scripts
+## Key Components
 
-```
-# Application
-npm start               # Start the server in production mode
-npm run dev             # Start the server in development mode with hot-reloading
+### Models
 
-# Database Management
-npm run switch-db       # Interactive database configuration utility
-npm run db:sqlite       # Switch to SQLite and generate sample data
-npm run db:mysql        # Switch to MySQL and set up database
-npm run switch-db:sqlite # Switch to SQLite without generating data
-npm run switch-db:mysql  # Switch to MySQL without generating data
-npm run setup-sqlite    # Generate sample data for SQLite
-npm run setup-mysql     # Generate sample data for MySQL
-npm run setup-mysql-db  # Create MySQL database and generate sample data
+The application uses Sequelize ORM with the following models:
 
-# Development Tools
-npm test                # Run tests in watch mode
-npm run test:ci         # Run tests in CI mode
-npm run lint            # Check code style
-npm run lint:fix        # Fix code style issues
-```
+- `User`: User accounts (admin, staff, customers)
+- `Field`: Football fields available for booking
+- `TimeSlot`: Available time slots for each field
+- `Booking`: Reservations made by users
+- `Opponent`: Teams looking for opponents
+- `Feedback`: User feedback and inquiries
+- `Review`: Field reviews from users
+- `Notification`: System notifications for users
 
-## License
+### Controllers
 
-This project is licensed under the ISC License. 
+Controllers handle the business logic for each resource:
+
+- `auth.controller.js`: Authentication (login, register)
+- `user.controller.js`: User management
+- `field.controller.js`: Football field management
+- `booking.controller.js`: Booking management
+- `feedback.controller.js`: User feedback handling
+- `timeSlot.controller.js`: Time slot management
+- `dashboard.controller.js`: Admin dashboard data
+
+### Routes
+
+API routes are organized by resource:
+
+- `/api/auth`: Authentication endpoints
+- `/api/users`: User management
+- `/api/fields`: Football field management
+- `/api/timeslots`: Time slot management
+- `/api/bookings`: Booking management
+- `/api/opponents`: Opponent finding
+- `/api/feedback`: User feedback
+- `/api/dashboard`: Admin dashboard data
+
+## API Endpoints
+
+### Authentication
+
+- `POST /api/auth/login`: User login
+- `POST /api/auth/register`: User registration
+
+### Fields
+
+- `GET /api/fields`: Get all fields
+- `GET /api/fields/:id`: Get field by ID
+- `POST /api/fields`: Create a new field (admin only)
+- `PUT /api/fields/:id`: Update field (admin only)
+- `DELETE /api/fields/:id`: Delete field (admin only)
+
+### Time Slots
+
+- `GET /api/timeslots`: Get available time slots
+- `GET /api/timeslots/all`: Get all time slots
+- `POST /api/timeslots`: Create a new time slot (admin only)
+- `PUT /api/timeslots/:id`: Update time slot (admin only)
+- `DELETE /api/timeslots/:id`: Delete time slot (admin only)
+
+### Bookings
+
+- `GET /api/bookings`: Get all bookings
+- `GET /api/bookings/:id`: Get booking by ID
+- `GET /api/bookings/timeslots`: Get available time slots for booking
+- `POST /api/bookings`: Create a new booking
+- `PATCH /api/bookings/:id/status`: Update booking status
+
+### Opponents
+
+- `GET /api/opponents`: Get all opponents
+- `GET /api/opponents/:id`: Get opponent by ID
+- `POST /api/opponents`: Create a new opponent
+- `PUT /api/opponents/:id`: Update opponent
+- `DELETE /api/opponents/:id`: Delete opponent
+
+### Feedback
+
+- `GET /api/feedback`: Get all feedback
+- `GET /api/feedback/:id`: Get feedback by ID
+- `POST /api/feedback`: Submit feedback
+- `PATCH /api/feedback/:id/status`: Update feedback status
+- `DELETE /api/feedback/:id`: Delete feedback
+
+## Setup and Running
+
+1. Install dependencies:
+   ```
+   npm install
+   ```
+
+2. Set up environment variables in `.env` file:
+   ```
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=your_password
+   DB_NAME=FootballField
+   JWT_SECRET=your_jwt_secret
+   PORT=9002
+   ```
+
+3. Initialize the database:
+   ```
+   cd database
+   node init-database.js
+   ```
+
+4. Start the server:
+   ```
+   npm start
+   ```
+
+The server will run on port 9002 by default.

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
-import { Home, Calendar, Users, ShoppingCart, MapPin, Facebook, Instagram, Youtube, Lock } from "lucide-react";
+import { Home, Calendar, Users, Facebook, Instagram, Youtube, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -70,20 +70,7 @@ const UserLayout = () => {
                     <span className="hidden sm:inline-block">Opponents</span>
                   </NavLink>
                 </li>
-                <li>
-                  <NavLink
-                    to="/services"
-                    className={({ isActive }) =>
-                      cn(
-                        "nav-link flex items-center gap-1",
-                        isActive ? "active" : ""
-                      )
-                    }
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Services</span>
-                  </NavLink>
-                </li>
+
               </ul>
 
               {/* Admin Button */}

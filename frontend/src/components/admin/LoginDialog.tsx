@@ -28,7 +28,7 @@ import { Lock, LogIn } from "lucide-react";
 
 // Define the form schema
 const loginFormSchema = z.object({
-  username: z
+  email: z
     .string()
     .min(1, { message: "Vui lòng nhập tên người dùng" }),
   password: z
@@ -51,7 +51,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -59,7 +59,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
-      const success = await login(data.username, data.password);
+      const success = await login(data.email, data.password);
       if (success) {
         toast({
           title: "Đăng nhập thành công",
@@ -72,7 +72,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         toast({
           variant: "destructive",
           title: "Đăng nhập thất bại",
-          description: "Tên người dùng hoặc mật khẩu không chính xác",
+          description: "Email hoặc mật khẩu không chính xác",
         });
       }
     } catch (error) {
@@ -103,12 +103,12 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tên người dùng</FormLabel>
                   <FormControl>
-                    <Input placeholder="admin" {...field} />
+                    <Input placeholder="admin" type="text" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -110,9 +110,9 @@ const Finance = () => {
           const response = await financeAPI.getAllFinances();
           const data = response.data;
 
-          if (data && data.data) {
-            console.log("Finances data:", data.data);
-            setTransactions(data.data);
+          if (data && data.finances) {
+            console.log("Finances data:", data.finances);
+            setTransactions(data.finances);
             // Also fetch the summary
             fetchSummary();
           } else {

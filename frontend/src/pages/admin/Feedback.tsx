@@ -4,8 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { feedbackAPI } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Feedback {
   id: number;
@@ -24,6 +34,8 @@ const Feedback = () => {
   const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [feedbackToDelete, setFeedbackToDelete] = useState<number | null>(null);
 
   const { toast } = useToast();
 
@@ -35,9 +47,18 @@ const Feedback = () => {
         const response = await feedbackAPI.getAllFeedbacks();
         const data = response.data;
 
-        if (data && data.feedbacks) {
-          console.log("Feedbacks data:", data.feedbacks);
-          setFeedbacks(data.feedbacks);
+        if (data && data.success) {
+          console.log("Feedbacks data:", data.data);
+          // Map the API response to match our component's expected format
+          const mappedFeedbacks = data.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            email: item.email,
+            date: new Date(item.createdAt).toLocaleDateString(),
+            content: item.content,
+            status: item.status
+          }));
+          setFeedbacks(mappedFeedbacks);
         } else {
           console.error("API returned no feedbacks");
           setFeedbacks([]);
@@ -45,8 +66,8 @@ const Feedback = () => {
       } catch (error) {
         console.error("Error fetching feedbacks:", error);
         toast({
-          title: "Lỗi",
-          description: "Không thể tải dữ liệu phản hồi",
+          title: "Error",
+          description: "Could not load feedback data",
           variant: "destructive",
         });
         setFeedbacks([]);
@@ -62,30 +83,85 @@ const Feedback = () => {
     ? feedbacks
     : feedbacks.filter(feedback => feedback.status === filter);
 
-  const markAsRead = (id: number) => {
-    setFeedbacks(feedbacks.map(feedback =>
-      feedback.id === id ? { ...feedback, status: "read" as const } : feedback
-    ));
+  const markAsRead = async (id: number) => {
+    try {
+      await feedbackAPI.updateFeedback(id, {
+        status: "read"
+      });
 
-    toast({
-      title: "Đã đánh dấu là đã đọc",
-    });
+      setFeedbacks(feedbacks.map(feedback =>
+        feedback.id === id ? { ...feedback, status: "read" as const } : feedback
+      ));
+
+      toast({
+        title: "Đã đánh dấu là đã đọc",
+      });
+    } catch (error) {
+      console.error("Error marking feedback as read:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái phản hồi",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSendResponse = () => {
+  const handleSendResponse = async () => {
     if (!selectedFeedback || !responseMessage.trim()) return;
 
-    setFeedbacks(feedbacks.map(feedback =>
-      feedback.id === selectedFeedback.id ? { ...feedback, status: "responded" as const } : feedback
-    ));
+    try {
+      await feedbackAPI.updateFeedback(selectedFeedback.id, {
+        status: "responded",
+        response: responseMessage
+      });
 
-    toast({
-      title: "Đã gửi phản hồi",
-      description: `Phản hồi đã được gửi đến ${selectedFeedback.email}`,
-    });
+      setFeedbacks(feedbacks.map(feedback =>
+        feedback.id === selectedFeedback.id ? { ...feedback, status: "responded" as const } : feedback
+      ));
 
-    setSelectedFeedback(null);
-    setResponseMessage("");
+      toast({
+        title: "Đã gửi phản hồi",
+        description: `Phản hồi đã được gửi đến ${selectedFeedback.email}`,
+      });
+
+      setSelectedFeedback(null);
+      setResponseMessage("");
+    } catch (error) {
+      console.error("Error sending response:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể gửi phản hồi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteFeedback = async () => {
+    if (feedbackToDelete === null) return;
+
+    try {
+      // Call the API to delete the feedback
+      await feedbackAPI.deleteFeedback(feedbackToDelete);
+
+      // Update the local state by removing the deleted feedback
+      setFeedbacks(feedbacks.filter(feedback => feedback.id !== feedbackToDelete));
+
+      toast({
+        title: "Feedback deleted",
+        description: "The feedback has been successfully deleted",
+      });
+    } catch (error) {
+      console.error("Error deleting feedback:", error);
+      toast({
+        title: "Error",
+        description: "Could not delete the feedback",
+        variant: "destructive",
+      });
+    } finally {
+      // Close the dialog and reset the feedbackToDelete
+      setDeleteDialogOpen(false);
+      setFeedbackToDelete(null);
+    }
   };
 
   return (
@@ -168,7 +244,7 @@ const Feedback = () => {
                           </div>
                         </div>
 
-                        <p className="text-sm my-3">{feedback.comment}</p>
+                        <p className="text-sm my-3">{feedback.content}</p>
 
                         <div className="flex justify-end gap-2 mt-2">
                           {feedback.status === "new" && (
@@ -189,6 +265,18 @@ const Feedback = () => {
                               Phản hồi
                             </Button>
                           )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => {
+                              setFeedbackToDelete(feedback.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-1" />
+                            Xóa
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -213,7 +301,7 @@ const Feedback = () => {
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-3 rounded-md">
                     <h3 className="font-medium text-sm">Phản hồi của khách hàng:</h3>
-                    <p className="text-sm mt-1">{selectedFeedback.comment}</p>
+                    <p className="text-sm mt-1">{selectedFeedback.content}</p>
                     <div className="mt-2 text-xs text-gray-500">
                       {selectedFeedback.name} ({selectedFeedback.email})
                     </div>
@@ -289,6 +377,27 @@ const Feedback = () => {
           </Card>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this feedback?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the feedback from the database.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setFeedbackToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteFeedback}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

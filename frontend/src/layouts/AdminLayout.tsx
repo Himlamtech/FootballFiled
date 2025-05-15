@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { BarChart, Calendar, ShoppingCart, FileText, LogOut, DollarSign } from "lucide-react";
+import { BarChart, Calendar, FileText, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
@@ -62,22 +62,7 @@ const AdminLayout = () => {
                   <span>Field Management</span>
                 </NavLink>
               </li>
-              <li>
-                <NavLink
-                  to="/admin/products"
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-4 py-3 text-sm rounded-md transition-colors",
-                      isActive
-                        ? "bg-field-700 text-white"
-                        : "text-field-100 hover:bg-field-700"
-                    )
-                  }
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Product Management</span>
-                </NavLink>
-              </li>
+
               <li>
                 <NavLink
                   to="/admin/feedback"
@@ -94,22 +79,7 @@ const AdminLayout = () => {
                   <span>Customer Feedback</span>
                 </NavLink>
               </li>
-              <li>
-                <NavLink
-                  to="/admin/finance"
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-4 py-3 text-sm rounded-md transition-colors",
-                      isActive
-                        ? "bg-field-700 text-white"
-                        : "text-field-100 hover:bg-field-700"
-                    )
-                  }
-                >
-                  <DollarSign className="w-5 h-5" />
-                  <span>Finance</span>
-                </NavLink>
-              </li>
+
             </ul>
           </nav>
         </aside>
