@@ -6,8 +6,8 @@
   },
   "item": [
     {
-      "name": "Xác thực Admin (Authentication)",
-      "description": "Các API liên quan đến xác thực admin",
+      "name": "Xác thực (Authentication)",
+      "description": "Các API liên quan đến xác thực người dùng",
       "item": [
         {
           "name": "Đăng nhập Admin",
@@ -35,10 +35,60 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Lấy thông tin của admin đã đăng nhập.\n\n**Tham số đầu vào:**\n- Authorization: Bearer token (JWT)\n\n**Kết quả trả về:**\n- user: Thông tin admin\n\n**Mã trạng thái:**\n- 200: Lấy thông tin thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy admin\n- 500: Lỗi server"
+          }
+        },
+        {
+          "name": "Đăng nhập Người dùng",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:9002/api/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{"email":"user@example.com","password":"password123"}"
+            },
+            "description": "Đăng nhập với tài khoản người dùng thông thường.\n\n**Tham số đầu vào:**\n- email: Email đăng nhập\n- password: Mật khẩu\n\n**Kết quả trả về:**\n- message: Thông báo kết quả\n- token: Token JWT để xác thực các API khác\n- user: Thông tin người dùng\n\n**Mã trạng thái:**\n- 200: Đăng nhập thành công\n- 401: Thông tin đăng nhập không hợp lệ\n- 500: Lỗi server"
+          }
+        },
+        {
+          "name": "Đăng ký Người dùng",
+          "request": {
+            "method": "POST",
+            "url": "http://localhost:9002/api/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{"name":"Nguyễn Văn A","email":"nguyenvana@example.com","password":"password123","phoneNumber":"0987654321"}"
+            },
+            "description": "Đăng ký tài khoản người dùng mới.\n\n**Tham số đầu vào:**\n- name: Họ tên người dùng\n- email: Email đăng nhập\n- password: Mật khẩu\n- phoneNumber: Số điện thoại\n\n**Kết quả trả về:**\n- message: Thông báo kết quả\n- token: Token JWT để xác thực\n- user: Thông tin người dùng đã đăng ký\n\n**Mã trạng thái:**\n- 201: Đăng ký thành công\n- 400: Thông tin đăng ký không hợp lệ hoặc email đã tồn tại\n- 500: Lỗi server"
+          }
+        },
+        {
+          "name": "Lấy thông tin người dùng hiện tại",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:9002/api/auth/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "description": "Lấy thông tin của người dùng đã đăng nhập.\n\n**Tham số đầu vào:**\n- Authorization: Bearer token (JWT)\n\n**Kết quả trả về:**\n- user: Thông tin người dùng\n\n**Mã trạng thái:**\n- 200: Lấy thông tin thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy người dùng\n- 500: Lỗi server"
           }
         }
       ]
@@ -75,7 +125,11 @@
               },
               {
                 "key": "Authorization",
+<<<<<<< HEAD
                 "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+=======
+                "value": "Bearer {{token}}"
+>>>>>>> 416fe38 (Update)
               }
             ],
             "body": {
@@ -97,7 +151,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -115,7 +169,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Xóa một sân bóng (chỉ dành cho admin).\n\n**Tham số đường dẫn:**\n- id: ID của sân bóng\n\n**Kết quả trả về:**\n- success: Trạng thái thành công\n- message: Thông báo kết quả\n\n**Mã trạng thái:**\n- 200: Xóa thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy sân bóng\n- 500: Lỗi server"
@@ -155,7 +209,11 @@
               },
               {
                 "key": "Authorization",
+<<<<<<< HEAD
                 "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+=======
+                "value": "Bearer {{token}}"
+>>>>>>> 416fe38 (Update)
               }
             ],
             "body": {
@@ -177,7 +235,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -195,7 +253,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Xóa một khung giờ (chỉ dành cho admin).\n\n**Tham số đường dẫn:**\n- id: ID của khung giờ\n\n**Kết quả trả về:**\n- success: Trạng thái thành công\n- message: Thông báo kết quả\n\n**Mã trạng thái:**\n- 200: Xóa thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy khung giờ\n- 500: Lỗi server"
@@ -215,7 +273,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Lấy danh sách tất cả các đặt sân (yêu cầu xác thực).\n\n**Tham số query (không bắt buộc):**\n- status: Lọc theo trạng thái (pending, confirmed, cancelled, completed)\n- fieldId: Lọc theo ID sân bóng\n- startDate: Lọc từ ngày (YYYY-MM-DD)\n- endDate: Lọc đến ngày (YYYY-MM-DD)\n- upcoming: Lọc các đặt sân sắp tới (true/false)\n- page: Số trang\n- limit: Số lượng kết quả mỗi trang\n\n**Kết quả trả về:**\n- bookings: Danh sách đặt sân\n- totalCount: Tổng số đặt sân\n- currentPage: Trang hiện tại\n- totalPages: Tổng số trang\n\n**Mã trạng thái:**\n- 200: Lấy danh sách thành công\n- 401: Không có quyền truy cập\n- 500: Lỗi server"
@@ -229,7 +287,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Lấy thông tin chi tiết của một đặt sân theo ID (yêu cầu xác thực).\n\n**Tham số đường dẫn:**\n- id: ID của đặt sân\n\n**Kết quả trả về:**\n- Thông tin chi tiết đặt sân bao gồm thông tin người dùng, sân bóng và khung giờ\n\n**Mã trạng thái:**\n- 200: Lấy thông tin thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy đặt sân\n- 500: Lỗi server"
@@ -281,7 +339,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -379,7 +437,11 @@
             "header": [
               {
                 "key": "Authorization",
+<<<<<<< HEAD
                 "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+=======
+                "value": "Bearer {{token}}"
+>>>>>>> 416fe38 (Update)
               }
             ],
             "description": "Lấy danh sách tất cả các phản hồi (chỉ dành cho admin).\n\n**Tham số query (không bắt buộc):**\n- status: Lọc theo trạng thái (new, read, responded)\n\n**Kết quả trả về:**\n- success: Trạng thái thành công\n- count: Số lượng phản hồi\n- data: Danh sách phản hồi\n\n**Mã trạng thái:**\n- 200: Lấy danh sách thành công\n- 401: Không có quyền truy cập\n- 500: Lỗi server"
@@ -393,7 +455,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Lấy thông tin chi tiết của một phản hồi theo ID (chỉ dành cho admin).\n\n**Tham số đường dẫn:**\n- id: ID của phản hồi\n\n**Kết quả trả về:**\n- success: Trạng thái thành công\n- data: Thông tin chi tiết phản hồi\n\n**Mã trạng thái:**\n- 200: Lấy thông tin thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy phản hồi\n- 500: Lỗi server"
@@ -429,7 +491,7 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -447,7 +509,7 @@
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IkFkbWluIiwiZW1haWwiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NzYzNTY2OSwiZXhwIjoxNzQ3NzIyMDY5fQ.W8fcql7n-MWZEVV680_R5PJypj_TXndZ5c7MBB_Quic"
+                "value": "Bearer {{token}}"
               }
             ],
             "description": "Xóa một phản hồi (chỉ dành cho admin).\n\n**Tham số đường dẫn:**\n- id: ID của phản hồi\n\n**Kết quả trả về:**\n- success: Trạng thái thành công\n- message: Thông báo kết quả\n\n**Mã trạng thái:**\n- 200: Xóa thành công\n- 401: Không có quyền truy cập\n- 404: Không tìm thấy phản hồi\n- 500: Lỗi server"

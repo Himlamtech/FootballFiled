@@ -26,14 +26,14 @@ app.use(morgan('dev'));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 // Define Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/users', require('./routes/user.routes'));
-app.use('/api/fields', require('./routes/field.routes'));
-app.use('/api/timeslots', require('./routes/timeslots.routes'));
-app.use('/api/bookings', require('./routes/booking.routes'));
-app.use('/api/opponents', require('./routes/opponents.routes'));
-app.use('/api/feedback', require('./routes/feedback.routes'));
-app.use('/api/dashboard', require('./routes/dashboard.routes'));
+app.use('/api/auth', require('./backend/routes/auth.routes'));
+app.use('/api/users', require('./backend/routes/user.routes'));
+app.use('/api/fields', require('./backend/routes/field.routes'));
+app.use('/api/timeslots', require('./backend/routes/timeslots.routes'));
+app.use('/api/bookings', require('./backend/routes/booking.routes'));
+app.use('/api/opponents', require('./backend/routes/opponents.routes'));
+app.use('/api/feedback', require('./backend/routes/feedback.routes'));
+app.use('/api/dashboard', require('./backend/routes/dashboard.routes'));
 
 // Test route
 app.get('/api/ping', (req, res) => {
