@@ -49,6 +49,11 @@ const Opponent = sequelize.define('Opponent', {
     type: DataTypes.ENUM('searching', 'matched', 'cancelled'),
     defaultValue: 'searching'
   },
+  expireDate: {
+    type: DataTypes.DATE,
+    allowNull: false,
+    defaultValue: DataTypes.NOW
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

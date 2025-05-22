@@ -3,6 +3,7 @@ import axios from 'axios';
 
 interface AuthContextType {
   isAuthenticated: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   token: string | null;
@@ -18,13 +19,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     localStorage.getItem("admin_token") !== null
   );
+  const [isAdmin, setIsAdmin] = useState<boolean>(
+    localStorage.getItem("admin_token") !== null
+  );
   const [token, setToken] = useState<string | null>(
     localStorage.getItem("admin_token")
   );
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Use the correct admin login endpoint
+      // Only admin login is supported
       const response = await axios.post('/api/auth/admin/login', {
         email,
         password
@@ -34,11 +38,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem("admin_token", response.data.token);
         setToken(response.data.token);
         setIsAuthenticated(true);
+        setIsAdmin(true);
         return true;
       }
       return false;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Admin login error:", error);
       return false;
     }
   };
@@ -47,6 +52,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem("admin_token");
     setToken(null);
     setIsAuthenticated(false);
+    setIsAdmin(false);
     // Redirect to home page
     window.location.href = "/";
   };
@@ -61,7 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [token]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, token }}>
+    <AuthContext.Provider value={{ isAuthenticated, isAdmin, login, logout, token }}>
       {children}
     </AuthContext.Provider>
   );

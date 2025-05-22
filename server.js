@@ -22,6 +22,9 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 
+// Serve static files from public/images
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+
 // Define Routes
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/users', require('./routes/user.routes'));

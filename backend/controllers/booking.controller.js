@@ -9,104 +9,6 @@ const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 
 /**
- * Get all bookings with filters
- * @param {Object} req - Request object
- * @param {Object} res - Response object
- */
-exports.getAllBookings = async (req, res) => {
-  try {
-    // Pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    // Filters
-    const {
-      userId,
-      fieldId,
-      status,
-      paymentStatus,
-      startDate,
-      endDate,
-      upcoming
-    } = req.query;
-
-    const filters = {};
-
-    if (userId) {
-      filters.userId = userId;
-    }
-
-    if (fieldId) {
-      filters.fieldId = fieldId;
-    }
-
-    if (status) {
-      filters.status = status;
-    }
-
-    if (paymentStatus) {
-      filters.paymentStatus = paymentStatus;
-    }
-
-    // Date range filter
-    if (startDate || endDate) {
-      filters.bookingDate = {};
-
-      if (startDate) {
-        filters.bookingDate[Op.gte] = new Date(startDate);
-      }
-
-      if (endDate) {
-        filters.bookingDate[Op.lte] = new Date(endDate);
-      }
-    }
-
-    // Upcoming bookings filter
-    if (upcoming === 'true') {
-      filters.bookingDate = {
-        [Op.gte]: new Date()
-      };
-      filters.status = {
-        [Op.in]: ['pending', 'confirmed']
-      };
-    }
-
-    // Execute query
-    const bookings = await Booking.findAndCountAll({
-      where: filters,
-      include: [
-        {
-          model: User,
-          attributes: ['userId', 'name', 'phoneNumber']
-        },
-        {
-          model: Field,
-          attributes: ['fieldId', 'name', 'size']
-        },
-        {
-          model: TimeSlot,
-          attributes: ['timeSlotId', 'startTime', 'endTime']
-        }
-      ],
-      order: [['bookingDate', 'DESC'], ['createdAt', 'DESC']],
-      limit,
-      offset
-    });
-
-    res.status(200).json({
-      bookings: bookings.rows,
-      totalCount: bookings.count,
-      currentPage: page,
-      totalPages: Math.ceil(bookings.count / limit)
-    });
-  } catch (error) {
-    console.error('Get bookings error:', error);
-    res.status(500).json({ message: 'Error fetching bookings', error: error.message });
-  }
-};
-
-/**
  * Get booking by ID
  * @param {Object} req - Request object
  * @param {Object} res - Response object
@@ -118,12 +20,8 @@ exports.getBookingById = async (req, res) => {
     const booking = await Booking.findByPk(bookingId, {
       include: [
         {
-          model: User,
-          attributes: ['userId', 'name', 'phoneNumber']
-        },
-        {
           model: Field,
-          attributes: ['fieldId', 'name', 'size', 'pricePerHour']
+          attributes: ['fieldId', 'name', 'size']
         },
         {
           model: TimeSlot,
@@ -163,11 +61,6 @@ exports.createBooking = async (req, res) => {
     const customerPhone = req.body.customerPhone || req.body.customer_phone || req.body.phone;
     const customerEmail = req.body.customerEmail || req.body.customer_email || req.body.email;
     const notes = req.body.notes || req.body.note;
-    const paymentMethod = req.body.paymentMethod || req.body.payment_method || 'vietqr';
-    const paymentStatus = req.body.paymentStatus || req.body.payment_status || 'pending';
-
-    // Use default user ID if not authenticated
-    const userId = req.user ? req.user.id : 1; // Default to admin user (ID 1)
 
     console.log('Processed booking parameters:', {
       fieldId, timeSlotId, bookingDate, totalPrice, customerName, customerPhone, customerEmail
@@ -181,62 +74,27 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // Check if the time slot is available
-    const existingBooking = await Booking.findOne({
-      where: {
-        fieldId,
-        timeSlotId,
-        bookingDate,
-        status: {
-          [Op.in]: ['pending', 'confirmed']
-        }
-      },
-      transaction
-    });
-
-    if (existingBooking) {
-      await transaction.rollback();
-      return res.status(400).json({
-        success: false,
-        message: 'This time slot is already booked'
-      });
-    }
-
-    // Get price info from field
-    const field = await Field.findByPk(fieldId, { transaction });
-    if (!field) {
-      await transaction.rollback();
-      return res.status(404).json({
-        success: false,
-        message: 'Field not found'
-      });
-    }
-
-    // Get time slot info
-    const timeSlot = await TimeSlot.findByPk(timeSlotId, { transaction });
-    if (!timeSlot) {
-      await transaction.rollback();
-      return res.status(404).json({
-        success: false,
-        message: 'Time slot not found'
-      });
-    }
-
     // Calculate price if not provided
     let calculatedPrice = totalPrice;
     if (!calculatedPrice) {
-      calculatedPrice = field.pricePerHour;
+      const timeSlot = await TimeSlot.findByPk(timeSlotId, { transaction });
+      if (!timeSlot) {
+        await transaction.rollback();
+        return res.status(404).json({
+          success: false,
+          message: 'Time slot not found'
+        });
+      }
+      calculatedPrice = timeSlot.price;
     }
 
     // Create booking
     const booking = await Booking.create({
-      userId,
       fieldId,
       timeSlotId,
       bookingDate,
       totalPrice: calculatedPrice,
-      status: 'pending',
-      paymentStatus: paymentStatus,
+      status: 'Đã đặt',
       customerName,
       customerPhone,
       customerEmail,
@@ -290,8 +148,6 @@ exports.getBookingsByField = async (req, res) => {
     }
 
     const filters = { fieldId };
-
-    // Add date filter if provided
     if (date) {
       filters.bookingDate = date;
     }
@@ -301,20 +157,34 @@ exports.getBookingsByField = async (req, res) => {
       where: filters,
       include: [
         {
-          model: User,
-          attributes: ['userId', 'name', 'phoneNumber']
+          model: TimeSlot,
+          attributes: ['timeSlotId', 'startTime', 'endTime', 'weekdayPrice', 'weekendPrice']
         },
         {
-          model: TimeSlot,
-          attributes: ['timeSlotId', 'startTime', 'endTime']
+          model: Field,
+          attributes: ['fieldId', 'name', 'size']
         }
       ],
       order: [['bookingDate', 'ASC'], ['createdAt', 'ASC']]
     });
 
+    // Map bookings to frontend-friendly format
+    const mapped = bookings.map(b => ({
+      id: b.bookingId,
+      customerName: b.customerName || '',
+      customerPhone: b.customerPhone || '',
+      fieldId: b.fieldId,
+      fieldName: b.Field ? b.Field.name : '',
+      timeSlotId: b.timeSlotId,
+      timeSlot: b.TimeSlot ? `${b.TimeSlot.startTime?.substring(0,5)} - ${b.TimeSlot.endTime?.substring(0,5)}` : '',
+      price: Number(b.totalPrice),
+      status: b.status,
+      bookingDate: b.bookingDate,
+    }));
+
     res.status(200).json({
-      bookings: bookings,
-      count: bookings.length
+      bookings: mapped,
+      count: mapped.length
     });
   } catch (error) {
     console.error('Get bookings by field error:', error);
@@ -322,65 +192,6 @@ exports.getBookingsByField = async (req, res) => {
       message: 'Error fetching bookings for field',
       error: error.message
     });
-  }
-};
-
-/**
- * Update booking status
- * @param {Object} req - Request object
- * @param {Object} res - Response object
- */
-exports.updateBookingStatus = async (req, res) => {
-  try {
-    const bookingId = req.params.id;
-    const { status } = req.body;
-
-    // Validate status
-    const validStatuses = ['pending', 'confirmed', 'cancelled', 'completed'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({
-        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
-      });
-    }
-
-    const booking = await Booking.findByPk(bookingId);
-    if (!booking) {
-      return res.status(404).json({ message: 'Booking not found' });
-    }
-
-    // Check if user is authorized
-    const isAdmin = req.user.role === 'admin';
-    const isStaff = req.user.role === 'staff';
-    const isOwner = req.user.id === booking.userId;
-
-    if (!isAdmin && !isStaff && !isOwner) {
-      return res.status(403).json({ message: 'Unauthorized to update this booking' });
-    }
-
-    // If user is not admin/staff, they can only cancel their own bookings
-    if (!isAdmin && !isStaff && status !== 'cancelled') {
-      return res.status(403).json({
-        message: 'As a user, you can only cancel your bookings'
-      });
-    }
-
-    // Update booking status
-    booking.status = status;
-
-    // If cancelling a booking that was paid, mark it for refund
-    if (status === 'cancelled' && booking.paymentStatus === 'paid') {
-      booking.paymentStatus = 'refunded';
-    }
-
-    await booking.save();
-
-    res.status(200).json({
-      message: 'Booking status updated successfully',
-      booking
-    });
-  } catch (error) {
-    console.error('Update booking error:', error);
-    res.status(500).json({ message: 'Error updating booking', error: error.message });
   }
 };
 
@@ -438,5 +249,33 @@ exports.getAvailableTimeSlots = async (req, res) => {
       message: 'Error fetching available time slots',
       error: error.message
     });
+  }
+};
+
+/**
+ * Get all bookings (admin)
+ * @param {Object} req
+ * @param {Object} res
+ */
+exports.getAllBookings = async (req, res) => {
+  try {
+    const bookings = await Booking.findAll({
+      include: [
+        {
+          model: Field,
+          attributes: ['fieldId', 'name', 'size']
+        },
+        {
+          model: TimeSlot,
+          attributes: ['timeSlotId', 'startTime', 'endTime']
+        }
+      ],
+      order: [['bookingDate', 'DESC'], ['createdAt', 'DESC']]
+    });
+
+    res.status(200).json({ bookings, count: bookings.length });
+  } catch (error) {
+    console.error('Get all bookings error:', error);
+    res.status(500).json({ message: 'Error fetching all bookings', error: error.message });
   }
 };

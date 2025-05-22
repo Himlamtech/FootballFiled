@@ -10,7 +10,7 @@ const { AppError } = require('../utils/error');
 
 /**
  * Middleware to authenticate JWT token
- * Used in routes that require authentication
+ * Chỉ dùng cho admin
  */
 exports.authenticate = async (req, res, next) => {
   try {
@@ -50,32 +50,18 @@ exports.authenticate = async (req, res, next) => {
 };
 
 /**
- * Middleware to check admin role
- * Used in routes that require admin privileges
+ * Middleware kiểm tra quyền admin
  */
 exports.isAdmin = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
-    res.status(403).json({ message: 'Access denied. Admin role required' });
+    res.status(403).json({ message: 'Chỉ admin mới được truy cập' });
   }
 };
 
 /**
- * Middleware to check staff or admin role
- * Used in routes that require staff or admin privileges
- */
-exports.isStaffOrAdmin = (req, res, next) => {
-  if (req.user && (req.user.role === 'staff' || req.user.role === 'admin')) {
-    next();
-  } else {
-    res.status(403).json({ message: 'Access denied. Staff or admin role required' });
-  }
-};
-
-/**
- * Alternative authentication middleware using AppError
- * This is an alternative implementation that uses the AppError utility
+ * Middleware xác thực sử dụng AppError (chỉ cho admin)
  */
 exports.protect = async (req, res, next) => {
   try {
@@ -107,17 +93,4 @@ exports.protect = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
-
-/**
- * Restrict certain routes to specific roles
- * @param {...string} roles - Allowed roles
- */
-exports.restrictTo = (...roles) => {
-  return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return next(new AppError('You do not have permission to perform this action', 403));
-    }
-    next();
-  };
 };

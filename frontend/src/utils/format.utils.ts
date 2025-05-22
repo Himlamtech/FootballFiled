@@ -45,18 +45,20 @@ export const formatBookingStatus = (status: string): { label: string; color: str
  * @param status - Payment status
  * @returns Formatted status with appropriate color class
  */
-export const formatPaymentStatus = (status: string): { label: string; color: string } => {
-  switch (status?.toLowerCase()) {
-    case 'unpaid':
-      return { label: 'Unpaid', color: 'text-yellow-500 bg-yellow-100' };
-    case 'paid':
-      return { label: 'Paid', color: 'text-green-500 bg-green-100' };
-    case 'refunded':
-      return { label: 'Refunded', color: 'text-blue-500 bg-blue-100' };
-    default:
-      return { label: status || 'Unknown', color: 'text-gray-500 bg-gray-100' };
-  }
-};
+// export const formatPaymentStatus = (status: string): { label: string; color: string } => {
+//   switch (status) {
+//     case 'pending':
+//       return { label: 'Chờ thanh toán', color: 'yellow' };
+//     case 'paid':
+//       return { label: 'Đã thanh toán', color: 'green' };
+//     case 'failed':
+//       return { label: 'Thất bại', color: 'red' };
+//     case 'refunded':
+//       return { label: 'Đã hoàn tiền', color: 'blue' };
+//     default:
+//       return { label: status, color: 'gray' };
+//   }
+// };
 
 /**
  * Format a feedback status

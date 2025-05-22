@@ -12,12 +12,8 @@ CREATE TABLE Users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(15),
-    role VARCHAR(20) NOT NULL DEFAULT 'user', -- 'user', 'admin', 'staff'
-    isActive BOOLEAN DEFAULT TRUE,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_user_email (email),
-    INDEX idx_user_role (role)
+    role VARCHAR(20) NOT NULL DEFAULT 'admin', -- chỉ có 'admin'
+    isActive BOOLEAN DEFAULT TRUE
 );
 
 -- Fields Table (Football Fields)
@@ -27,12 +23,7 @@ CREATE TABLE Fields (
     description VARCHAR(500),
     size VARCHAR(50) NOT NULL, -- '5v5', '7v7', '11v11'
     imageUrl VARCHAR(255),
-    pricePerHour DECIMAL(10, 2) NOT NULL,
-    isActive BOOLEAN DEFAULT TRUE,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_field_size (size),
-    INDEX idx_field_active (isActive)
+    isActive BOOLEAN DEFAULT TRUE
 );
 
 -- TimeSlots Table
@@ -41,8 +32,8 @@ CREATE TABLE TimeSlots (
     fieldId INT NOT NULL,
     startTime TIME NOT NULL,
     endTime TIME NOT NULL,
-    weekdayPrice DECIMAL(10, 2) NOT NULL DEFAULT 200000,
-    weekendPrice DECIMAL(10, 2) NOT NULL DEFAULT 250000,
+    weekdayPrice DECIMAL(10, 2) NOT NULL,
+    weekendPrice DECIMAL(10, 2) NOT NULL,
     isActive BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (fieldId) REFERENCES Fields(fieldId) ON DELETE CASCADE,
     UNIQUE KEY UQ_FieldTimeSlot (fieldId, startTime, endTime),
@@ -52,13 +43,12 @@ CREATE TABLE TimeSlots (
 -- Bookings Table
 CREATE TABLE Bookings (
     bookingId INT AUTO_INCREMENT PRIMARY KEY,
-    userId INT NOT NULL,
     fieldId INT NOT NULL,
     timeSlotId INT NOT NULL,
     bookingDate DATE NOT NULL,
     totalPrice DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'confirmed', 'cancelled', 'completed'
-    paymentStatus VARCHAR(20) NOT NULL DEFAULT 'unpaid', -- 'unpaid', 'paid', 'refunded'
+    status VARCHAR(20) NOT NULL DEFAULT 'Đã đặt', -- chỉ có 'Đã đặt'
+    paymentStatus VARCHAR(50) DEFAULT 'pending',
     customerName VARCHAR(100),
     customerPhone VARCHAR(20),
     customerEmail VARCHAR(100),
@@ -66,13 +56,11 @@ CREATE TABLE Bookings (
     paymentMethod VARCHAR(50) DEFAULT 'vietqr',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE CASCADE,
     FOREIGN KEY (fieldId) REFERENCES Fields(fieldId) ON DELETE CASCADE,
     FOREIGN KEY (timeSlotId) REFERENCES TimeSlots(timeSlotId) ON DELETE CASCADE,
     UNIQUE KEY UQ_Booking (fieldId, timeSlotId, bookingDate),
     INDEX idx_booking_date (bookingDate),
-    INDEX idx_booking_status (status),
-    INDEX idx_booking_payment (paymentStatus)
+    INDEX idx_booking_status (status)
 );
 
 -- Reviews Table
@@ -120,6 +108,7 @@ CREATE TABLE Opponents (
     skill_level VARCHAR(20) DEFAULT 'intermediate', -- 'beginner', 'intermediate', 'advanced'
     player_count INT DEFAULT 5,
     status ENUM('searching', 'matched', 'cancelled') DEFAULT 'searching',
+    expireDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (booking_id) REFERENCES Bookings(bookingId) ON DELETE CASCADE,

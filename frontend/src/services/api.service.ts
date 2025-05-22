@@ -41,11 +41,8 @@ export interface Field {
   name: string;
   description: string;
   size: string;
-  pricePerHour: number;
   imageUrl: string;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 // Types for time slots
@@ -57,8 +54,6 @@ export interface TimeSlot {
   weekdayPrice: number;
   weekendPrice: number;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface TimeSlotWithAvailability {
@@ -80,12 +75,9 @@ export interface Booking {
   customerEmail?: string;
   bookingDate: string;
   totalPrice: number;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  paymentStatus: 'unpaid' | 'paid' | 'refunded';
+  status: string;
   paymentMethod?: string;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface BookingCreateRequest {
@@ -96,8 +88,7 @@ export interface BookingCreateRequest {
   customerEmail?: string;
   bookingDate: string;
   totalPrice: number;
-  status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  paymentStatus?: 'unpaid' | 'paid' | 'refunded';
+  status?: string;
   paymentMethod?: string;
   notes?: string;
 }
@@ -113,8 +104,6 @@ export interface Opponent {
   skill_level?: 'beginner' | 'intermediate' | 'advanced';
   player_count?: number;
   status?: 'open' | 'matched' | 'closed';
-  created_at: string;
-  updated_at: string;
 }
 
 export interface OpponentCreateRequest {
@@ -134,8 +123,6 @@ export interface Feedback {
   email: string;
   content: string;
   status: 'unread' | 'read' | 'responded';
-  created_at: string;
-  updated_at: string;
 }
 
 export interface FeedbackCreateRequest {
@@ -252,33 +239,6 @@ class ApiService {
     });
     
     return response.data as Field;
-  }
-
-  public async createField(field: Partial<Field>): Promise<Field> {
-    const response = await this.request<ApiResponse<Field>>({
-      method: 'post',
-      url: '/fields',
-      data: field,
-    });
-    
-    return response.data as Field;
-  }
-
-  public async updateField(id: number, field: Partial<Field>): Promise<Field> {
-    const response = await this.request<ApiResponse<Field>>({
-      method: 'put',
-      url: `/fields/${id}`,
-      data: field,
-    });
-    
-    return response.data as Field;
-  }
-
-  public async deleteField(id: number): Promise<void> {
-    await this.request<ApiResponse<null>>({
-      method: 'delete',
-      url: `/fields/${id}`,
-    });
   }
 
   // Time slot methods

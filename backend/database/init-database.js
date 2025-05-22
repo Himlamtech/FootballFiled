@@ -29,7 +29,7 @@ const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'Himlam04@',
+  password: process.env.DB_PASSWORD || '2123',
   multipleStatements: true
 };
 
@@ -76,6 +76,20 @@ function isDatabaseInitialized() {
  */
 function markDatabaseInitialized() {
   fs.writeFileSync(DB_FLAG_FILE, new Date().toISOString());
+}
+
+/**
+ * Add expireDate column if it doesn't exist in the Opponents table
+ * @param {mysql.Connection} connection - MySQL connection
+ */
+async function addExpireDateColumnIfNotExists(connection) {
+  const [rows] = await connection.query("SHOW COLUMNS FROM Opponents LIKE 'expireDate'");
+  if (rows.length === 0) {
+    await connection.query("ALTER TABLE Opponents ADD COLUMN expireDate DATETIME DEFAULT CURRENT_TIMESTAMP");
+    console.log('Added expireDate column to Opponents table.');
+  } else {
+    console.log('expireDate column already exists in Opponents table.');
+  }
 }
 
 /**
@@ -148,6 +162,9 @@ async function initializeDatabase() {
 
     // Mark database as initialized
     markDatabaseInitialized();
+
+    // Add expireDate column if it doesn't exist
+    await addExpireDateColumnIfNotExists(connection);
 
     console.log(`\n${colors.green}${colors.bright}✓ Database initialization completed successfully!${colors.reset}`);
     return true;

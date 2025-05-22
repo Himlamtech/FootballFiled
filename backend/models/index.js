@@ -15,10 +15,6 @@ Field.hasMany(TimeSlot, { foreignKey: 'fieldId', as: 'timeSlots' });
 TimeSlot.belongsTo(Field, { foreignKey: 'fieldId' });
 
 // User <-> Booking (one-to-many)
-User.hasMany(Booking, { foreignKey: 'userId', as: 'bookings' });
-Booking.belongsTo(User, { foreignKey: 'userId' });
-
-// Field <-> Booking (one-to-many)
 Field.hasMany(Booking, { foreignKey: 'fieldId', as: 'bookings' });
 Booking.belongsTo(Field, { foreignKey: 'fieldId' });
 

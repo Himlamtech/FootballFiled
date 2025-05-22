@@ -8,14 +8,6 @@ const Booking = sequelize.define('Booking', {
     autoIncrement: true,
     field: 'bookingId'
   },
-  userId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'Users',
-      key: 'userId'
-    }
-  },
   fieldId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -44,21 +36,14 @@ const Booking = sequelize.define('Booking', {
     }
   },
   status: {
-    type: DataTypes.STRING(20),
-    allowNull: false,
-    defaultValue: 'pending',
-    validate: {
-      isIn: [['pending', 'confirmed', 'cancelled', 'completed']]
-    }
+    type: DataTypes.STRING,
+    allowNull: false
   },
-  paymentStatus: {
-    type: DataTypes.STRING(20),
-    allowNull: false,
-    defaultValue: 'unpaid',
-    validate: {
-      isIn: [['unpaid', 'paid', 'refunded']]
-    }
-  },
+  // paymentStatus: {
+  //   type: DataTypes.STRING, // e.g., 'pending', 'paid', 'failed', 'refunded'
+  //   allowNull: false,
+  //   defaultValue: 'pending'
+  // },
   customerName: {
     type: DataTypes.STRING(100),
     allowNull: true

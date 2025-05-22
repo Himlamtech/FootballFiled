@@ -108,7 +108,7 @@ FootballField/
    DB_PORT=3306
    DB_NAME=FootballField
    DB_USER=root
-   DB_PASSWORD=Himlam04@
+   DB_PASSWORD=2123
    JWT_SECRET=football_field_management_jwt_secret_key
    JWT_EXPIRES_IN=24h
    CORS_ORIGIN=http://localhost:9001

@@ -27,13 +27,11 @@ const TimeSlot = sequelize.define('TimeSlot', {
   },
   weekdayPrice: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 200000
+    allowNull: false
   },
   weekendPrice: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    defaultValue: 250000
+    allowNull: false
   },
   isActive: {
     type: DataTypes.BOOLEAN,

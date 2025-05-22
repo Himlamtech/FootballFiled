@@ -38,26 +38,18 @@ const User = sequelize.define('User', {
   role: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    defaultValue: 'user',
+    defaultValue: 'admin',
     validate: {
-      isIn: [['user', 'admin', 'staff']]
+      isIn: [['admin']]
     }
   },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'Users',
-  timestamps: true,
+  timestamps: false
 });
 
 // Password validation method

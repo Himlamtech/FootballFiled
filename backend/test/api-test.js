@@ -28,15 +28,12 @@ const TEST_DATA = {
     name: 'Test Field',
     description: 'A test field created by the API test script',
     size: '5v5',
-    pricePerHour: 200000,
     imageUrl: 'https://example.com/test-field.jpg',
     isActive: true
   },
   timeSlot: {
     startTime: '14:00:00',
     endTime: '15:00:00',
-    weekdayPrice: 200000,
-    weekendPrice: 250000,
     isActive: true
   },
   booking: {
@@ -171,21 +168,9 @@ async function testFieldEndpoints() {
     const fieldsResponse = await apiRequest('get', '/fields');
     log(`GET /fields: Retrieved ${fieldsResponse.fields?.length || 0} fields`, 'success');
 
-    // POST create a new field
-    const createFieldResponse = await apiRequest('post', '/fields', TEST_DATA.field);
-    CREATED_RESOURCES.fieldId = createFieldResponse.field.fieldId || createFieldResponse.field.id;
-    log(`POST /fields: Created field with ID ${CREATED_RESOURCES.fieldId}`, 'success');
-
     // GET field by ID
     const fieldByIdResponse = await apiRequest('get', `/fields/${CREATED_RESOURCES.fieldId}`);
     log(`GET /fields/${CREATED_RESOURCES.fieldId}: Retrieved field details`, 'success');
-
-    // PUT update field
-    const updateFieldResponse = await apiRequest('put', `/fields/${CREATED_RESOURCES.fieldId}`, {
-      ...TEST_DATA.field,
-      name: 'Updated Test Field'
-    });
-    log(`PUT /fields/${CREATED_RESOURCES.fieldId}: Updated field`, 'success');
 
     // We'll test DELETE at the end to avoid breaking other tests
   } catch (error) {
@@ -425,12 +410,6 @@ async function testDeleteEndpoints() {
     if (CREATED_RESOURCES.timeSlotId) {
       const deleteTimeSlotResponse = await apiRequest('delete', `/timeslots/${CREATED_RESOURCES.timeSlotId}`);
       log(`DELETE /timeslots/${CREATED_RESOURCES.timeSlotId}: Deleted time slot`, 'success');
-    }
-
-    // DELETE field
-    if (CREATED_RESOURCES.fieldId) {
-      const deleteFieldResponse = await apiRequest('delete', `/fields/${CREATED_RESOURCES.fieldId}`);
-      log(`DELETE /fields/${CREATED_RESOURCES.fieldId}: Deleted field`, 'success');
     }
 
     // DELETE feedback

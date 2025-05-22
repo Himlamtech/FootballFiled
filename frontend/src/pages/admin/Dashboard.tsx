@@ -54,7 +54,8 @@ const Dashboard = () => {
     }
   });
   const [chartData, setChartData] = useState<any[]>([]);
-  const [bookingsData, setBookingsData] = useState<any[]>([]);
+  const [revenueByQuarterData, setRevenueByQuarterData] = useState<any[]>([]);
+  const [bookingTrendData, setBookingTrendData] = useState<any[]>([]);
 
   const { toast } = useToast();
 
@@ -122,14 +123,19 @@ const Dashboard = () => {
           });
           const data = response.data;
 
-          if (data && data.chartData && data.chartData.length > 0) {
-            console.log(`Chart data for ${periodType}:`, data.chartData);
+          if (data && Array.isArray(data.chartData) && data.chartData.length > 0 && data.chartData.every(item => 'name' in item && 'value' in item)) {
             setChartData(data.chartData);
+            if (periodType === 'year' && data.revenueByQuarter && Array.isArray(data.revenueByQuarter) && data.revenueByQuarter.every(item => 'quarter' in item && 'value' in item)) {
+              setRevenueByQuarterData(data.revenueByQuarter);
+            } else {
+              setRevenueByQuarterData([]);
+            }
           } else {
-            // Generate sample data if API returns no data
+            console.warn(`API returned invalid or empty chart data for ${periodType}. Generating sample data.`, data);
+            // Generate sample chart data if API returns no data or invalid data
             const sampleData = generateSampleChartData(periodType, currentDate);
-            console.log(`Generated sample chart data for ${periodType}:`, sampleData);
             setChartData(sampleData);
+            setRevenueByQuarterData([]);
           }
         } catch (apiError) {
           console.error(`Error fetching chart data from API, generating sample data:`, apiError);
@@ -138,6 +144,7 @@ const Dashboard = () => {
           const sampleData = generateSampleChartData(periodType, currentDate);
           console.log(`Generated sample chart data for ${periodType}:`, sampleData);
           setChartData(sampleData);
+          setRevenueByQuarterData([]);
         }
       } catch (error) {
         console.error(`Error in chart data handling:`, error);
@@ -147,6 +154,7 @@ const Dashboard = () => {
           description: `Could not load chart data for ${periodType}`,
         });
         setChartData([]);
+        setRevenueByQuarterData([]);
       } finally {
         setLoading(false);
       }
@@ -154,6 +162,27 @@ const Dashboard = () => {
 
     fetchChartData();
   }, [periodType, currentDate]);
+
+  // Fetch booking trend data (average bookings per weekday)
+  useEffect(() => {
+    const fetchBookingTrend = async () => {
+      if (periodType !== 'week') return;
+      try {
+        const response = await dashboardAPI.getBookingTrend();
+        // Assuming the API returns an array of objects with { name: string, bookings: number }
+        if (response.data && Array.isArray(response.data) && response.data.every(item => 'name' in item && 'bookings' in item)) {
+          setBookingTrendData(response.data);
+        } else {
+          console.warn("API returned invalid or empty booking trend data.", response.data);
+          setBookingTrendData([]);
+        }
+      } catch (e) {
+        console.error("Error fetching booking trend data:", e);
+        setBookingTrendData([]);
+      }
+    };
+    fetchBookingTrend();
+  }, [periodType]);
 
   // Generate sample chart data for testing
   const generateSampleChartData = (period: string, date: Date) => {
@@ -201,54 +230,6 @@ const Dashboard = () => {
     }
 
     return data;
-  };
-
-  // Fetch bookings for selected date
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        const response = await bookingAPI.getAllBookings({ date: formattedDate });
-        const data = response.data;
-
-        if (data && data.bookings) {
-          console.log("Bookings for selected date:", data.bookings);
-          setBookingsData(data.bookings);
-        } else if (data && Array.isArray(data)) {
-          // Handle case where API returns array directly
-          console.log("Bookings for selected date (array):", data);
-          setBookingsData(data);
-        } else {
-          console.error("Unexpected API response format:", data);
-          setBookingsData([]);
-        }
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not load booking data for the selected date",
-        });
-        setBookingsData([]);
-      }
-    };
-
-    fetchBookings();
-  }, [selectedDate]);
-
-  // Format income value to show as "X.XXtr đ"
-  const formatIncome = (value: number) => {
-    // Convert to trillions (divide by 1,000,000 VND)
-    const inTrillions = value / 1000000;
-    
-    // Format with 2 decimal places
-    const formatted = inTrillions.toFixed(2);
-    
-    // Remove trailing zeros after decimal point (e.g., 0.30 -> 0.3, 1.00 -> 1)
-    const trimmed = formatted.replace(/\.?0+$/, '') || '0';
-    
-    // Return formatted string
-    return `${trimmed}tr đ`;
   };
 
   // Get chart data based on period type
@@ -345,21 +326,20 @@ const Dashboard = () => {
     }
   };
 
-  // Lọc các đặt sân cho ngày được chọn
-  const filteredBookings = bookingsData.filter(booking => {
-    // Chuyển đổi chuỗi ngày từ API thành đối tượng Date
-    const bookingDate = booking.date ? new Date(booking.date) : null;
-    return bookingDate && isSameDay(bookingDate, selectedDate);
-  });
+  // Format income value to show as "X.XXtr đ"
+  const formatIncome = (value: number) => {
+    // Convert to trillions (divide by 1,000,000 VND)
+    const inTrillions = value / 1000000;
 
-  // Xác định ngày có đặt sân
-  const getBookedDates = () => {
-    return bookingsData.map(booking => {
-      return booking.date ? new Date(booking.date) : null;
-    }).filter(date => date !== null);
+    // Format with 2 decimal places
+    const formatted = inTrillions.toFixed(2);
+
+    // Remove trailing zeros after decimal point (e.g., 0.30 -> 0.3, 1.00 -> 1)
+    const trimmed = formatted.replace(/\.?0+$/, '') || '0';
+
+    // Return formatted string
+    return `${trimmed}tr đ`;
   };
-
-  const bookedDates = getBookedDates();
 
   return (
     <div>
@@ -373,7 +353,7 @@ const Dashboard = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
             <Card className="p-6">
               <div className="flex items-start">
                 <div className="p-2 rounded-md bg-blue-100">
@@ -382,9 +362,9 @@ const Dashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm text-muted-foreground">Đặt sân</p>
                   <h3 className="text-2xl font-bold">{statsData.totalBookings}</h3>
-                  <p className="text-xs text-green-600 mt-1">
-                    {statsData.compareData.week.previous > 0 ?
-                      `${(((statsData.compareData.week.current - statsData.compareData.week.previous) / statsData.compareData.week.previous) * 100).toFixed(1)}% so với tuần trước` :
+                  <p className={`text-xs ${compareData.current >= compareData.previous ? 'text-green-600' : 'text-red-600'} mt-1`}>
+                    {compareData.previous > 0 ?
+                      `${(((compareData.current - compareData.previous) / compareData.previous) * 100).toFixed(1)}% so với kỳ trước` :
                       "Chưa có dữ liệu so sánh"}
                   </p>
                 </div>
@@ -399,30 +379,13 @@ const Dashboard = () => {
                 <div className="ml-4">
                   <p className="text-sm text-muted-foreground">Doanh thu</p>
                   <h3 className="text-2xl font-bold">
-                    {formatIncome(typeof statsData.totalIncome === 'number' 
-                      ? statsData.totalIncome 
+                    {formatIncome(typeof statsData.totalIncome === 'number'
+                      ? statsData.totalIncome
                       : parseFloat(String(statsData.totalIncome || 0).replace(/[^\d.-]/g, '')))}
                   </h3>
                   <p className="text-xs text-green-600 mt-1">
-                    {statsData.compareData.week.previous > 0 ?
-                      `${(((statsData.compareData.week.current - statsData.compareData.week.previous) / statsData.compareData.week.previous) * 100).toFixed(1)}% so với tuần trước` :
-                      "Chưa có dữ liệu so sánh"}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-start">
-                <div className="p-2 rounded-md bg-yellow-100">
-                  <ShoppingCartIcon className="w-7 h-7 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-muted-foreground">Bán hàng</p>
-                  <h3 className="text-2xl font-bold">{statsData.productSales}</h3>
-                  <p className="text-xs text-green-600 mt-1">
-                    {statsData.compareData.week.previous > 0 ?
-                      `${(((statsData.compareData.week.current - statsData.compareData.week.previous) / statsData.compareData.week.previous) * 100).toFixed(1)}% so với tuần trước` :
+                    {compareData.previous > 0 ?
+                      `${(((compareData.current - compareData.previous) / compareData.previous) * 100).toFixed(1)}% so với kỳ trước` :
                       "Chưa có dữ liệu so sánh"}
                   </p>
                 </div>
@@ -566,21 +529,17 @@ const Dashboard = () => {
             <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={currentChartData.slice(0, 7)} // Use only first 7 data points
+                  data={bookingTrendData}
                   margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tickFormatter={(value) => `${(value/1000).toFixed(0)}k`}
-                  />
-                  <Tooltip formatter={(value) => [`${formatIncome(Number(value))}`, 'Doanh thu']} />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#3b82f6" 
+                  <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip formatter={(value) => [`${value} lượt đặt`, 'Số lượt đặt']} />
+                  <Line
+                    type="monotone"
+                    dataKey="bookings"
+                    stroke="#3b82f6"
                     strokeWidth={3}
                     dot={{ r: 4, fill: "#3b82f6" }}
                     activeDot={{ r: 6, fill: "#3b82f6" }}
@@ -603,30 +562,43 @@ const Dashboard = () => {
             <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Đặt sân', value: statsData.totalIncome * 0.8 },
-                      { name: 'Bán phụ kiện', value: statsData.totalIncome * 0.15 },
-                      { name: 'Khác', value: statsData.totalIncome * 0.05 }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  >
-                    <Cell fill="#10b981" />
-                    <Cell fill="#3b82f6" />
-                    <Cell fill="#f59e0b" />
-                  </Pie>
-                  <Tooltip 
+                  {periodType === 'year' && revenueByQuarterData && revenueByQuarterData.length > 0 ? (
+                    <Pie
+                      data={revenueByQuarterData}
+                      dataKey="value"
+                      nameKey="quarter"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      label={({ quarter, percent }) => `${quarter}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#3b82f6" />
+                      <Cell fill="#f59e0b" />
+                      <Cell fill="#ef4444" />
+                    </Pie>
+                  ) : (
+                    <Pie
+                      data={[
+                        { name: 'Đặt sân', value: statsData.totalIncome * 0.8 },
+                        { name: 'Khác', value: statsData.totalIncome * 0.2 }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#3b82f6" />
+                    </Pie>
+                  )}
+                  <Tooltip
                     formatter={(value) => formatIncome(Number(value))}
-                    labelFormatter={(index) => {
-                      const items = ['Đặt sân', 'Bán phụ kiện', 'Khác'];
-                      return items[index];
-                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -634,118 +606,6 @@ const Dashboard = () => {
           )}
         </Card>
       </div>
-
-      {/* Upcoming Bookings Calendar */}
-      <Card className="mt-6">
-        <CardContent className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Lịch đặt sân</h2>
-
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            {/* Calendar */}
-            <div className="lg:col-span-2">
-              <div ref={calendarRef} className="border rounded-md p-4">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className="w-full p-0"
-                  modifiers={{
-                    booked: bookedDates
-                  }}
-                  modifiersStyles={{
-                    booked: { backgroundColor: '#059669', color: 'white', fontWeight: 'bold' }
-                  }}
-                />
-              </div>
-
-              <div className="mt-4">
-                <div className="flex items-center gap-2 text-sm mb-2">
-                  <div className="w-4 h-4 bg-emerald-600 rounded-full"></div>
-                  <span>Ngày có đặt sân</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-4 h-4 border rounded-full"></div>
-                  <span>Ngày chưa có đặt sân</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bookings for Selected Date */}
-            <div className="lg:col-span-3">
-              <div className="border rounded-md overflow-hidden">
-                <div className="bg-gray-50 p-3 border-b">
-                  <h3 className="font-medium">
-                    Đặt sân ngày: {format(selectedDate, 'dd/MM/yyyy')}
-                  </h3>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Khách hàng</TableHead>
-                        <TableHead>Sân</TableHead>
-                        <TableHead>Thời gian</TableHead>
-                        <TableHead>Giá</TableHead>
-                        <TableHead>Trạng thái</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {loading ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-32 text-center">
-                            <div className="flex justify-center items-center">
-                              <Loader2 className="w-6 h-6 animate-spin text-field-600 mr-2" />
-                              <span>Đang tải dữ liệu...</span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ) : filteredBookings.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="h-32 text-center">
-                            Không có đặt sân nào vào ngày này
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        filteredBookings.map((booking) => (
-                          <TableRow key={booking.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">
-                                  {booking.user?.name || booking.customer || "Khách hàng"}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {booking.user?.phone || booking.phone || booking.user?.email || "Không có thông tin"}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{booking.field?.name || booking.field || "Không xác định"}</TableCell>
-                            <TableCell>{`${booking.start_time?.substring(0, 5) || ""} - ${booking.end_time?.substring(0, 5) || ""}`}</TableCell>
-                            <TableCell>{(booking.price || 0).toLocaleString()}đ</TableCell>
-                            <TableCell>
-                              <Badge className={`
-                                ${booking.status === "paid" || booking.status === "completed" ? "bg-green-100 text-green-800" : ""}
-                                ${booking.status === "pending" ? "bg-yellow-100 text-yellow-800" : ""}
-                                ${booking.status === "cancelled" ? "bg-red-100 text-red-800" : ""}
-                                ${!booking.status ? "bg-gray-100 text-gray-800" : ""}
-                              `}>
-                                {booking.status === "paid" || booking.status === "completed" ? "Đã thanh toán" : ""}
-                                {booking.status === "pending" ? "Chờ thanh toán" : ""}
-                                {booking.status === "cancelled" ? "Đã hủy" : ""}
-                                {!booking.status ? "Không xác định" : ""}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

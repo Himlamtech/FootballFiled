@@ -17,10 +17,10 @@ const UserLayout = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-10 h-10 rounded-full bg-field-500 flex items-center justify-center">
-                <span className="text-white font-bold text-xl">XD</span>
+                <span className="text-white font-bold text-xl">X</span>
               </div>
               <span className="text-field-700 font-bold text-xl hidden sm:inline-block">
-                Xuân Duy
+                Sân Bóng Xanh
               </span>
             </Link>
 
@@ -39,7 +39,7 @@ const UserLayout = () => {
                     end
                   >
                     <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Home</span>
+                    <span className="hidden sm:inline-block">Trang chủ</span>
                   </NavLink>
                 </li>
                 <li>
@@ -53,7 +53,7 @@ const UserLayout = () => {
                     }
                   >
                     <Calendar className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Booking</span>
+                    <span className="hidden sm:inline-block">Đặt sân</span>
                   </NavLink>
                 </li>
                 <li>
@@ -67,7 +67,7 @@ const UserLayout = () => {
                     }
                   >
                     <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline-block">Opponents</span>
+                    <span className="hidden sm:inline-block">Giao lưu</span>
                   </NavLink>
                 </li>
 
@@ -81,7 +81,7 @@ const UserLayout = () => {
                 onClick={() => setShowLoginDialog(true)}
               >
                 <Lock className="w-4 h-4 mr-1" />
-                <span>Admin</span>
+                <span>QTV</span>
               </Button>
             </nav>
           </div>
@@ -106,17 +106,17 @@ const UserLayout = () => {
         <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Xuân Duy</h3>
+              <h3 className="text-lg font-semibold mb-4">Sân Bóng Xanh</h3>
               <p className="mb-2">
                 Địa chỉ: 96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội
               </p>
-              <p className="mb-2">Điện thoại: 0123 456 789</p>
+              <p className="mb-2">Điện thoại: 0382 802 842</p>
               <p>Email: nguyenthutrangbg03@gmail.com</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Giờ hoạt động</h3>
-              <p className="mb-2">Thứ 2 - Thứ 6: 6:00 - 22:00</p>
-              <p>Thứ 7 - Chủ nhật: 6:00 - 23:00</p>
+              <p className="mb-2">Thứ 2 - Thứ 6: 6:00 - 24:00</p>
+              <p>Thứ 7 - Chủ nhật: 5:00 - 24:00</p>
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-4">Kết nối</h3>
@@ -134,7 +134,7 @@ const UserLayout = () => {
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-field-700 text-center">
-            <p>&copy; {new Date().getFullYear()} Xuân Duy. Tất cả quyền được bảo lưu.</p>
+            <p>&copy; {new Date().getFullYear()} Sân Bóng Xanh. Tất cả quyền được bảo lưu.</p>
           </div>
         </div>
       </footer>

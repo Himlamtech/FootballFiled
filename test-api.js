@@ -90,67 +90,18 @@ async function testGetFields() {
 }
 
 async function testCreateField() {
-  try {
-    logInfo('Testing POST /fields...');
-    const newField = {
-      name: 'Test Field',
-      description: 'Test field for API testing',
-      size: '5v5',
-      pricePerHour: 250000,
-      imageUrl: '/images/fields/test-field.jpg'
-    };
-    const response = await api.post('/fields', newField);
-    if (response.data && response.data.fieldId) {
-      testFieldId = response.data.fieldId;
-      logSuccess(`POST /fields created field with ID ${testFieldId}`);
-      return response.data;
-    } else {
-      logWarning('POST /fields returned unexpected response format');
-      return null;
-    }
-  } catch (error) {
-    logError('POST /fields failed', error);
-    return null;
-  }
+  // Removed testCreateField, testUpdateField, and testDeleteField and their calls as field management is not allowed.
+  return null;
 }
 
 async function testUpdateField() {
-  if (!testFieldId) {
-    logWarning('Skipping PUT /fields test because no field was created');
-    return null;
-  }
-  
-  try {
-    logInfo(`Testing PUT /fields/${testFieldId}...`);
-    const updatedField = {
-      name: 'Updated Test Field',
-      description: 'Updated test field description',
-      pricePerHour: 300000
-    };
-    const response = await api.put(`/fields/${testFieldId}`, updatedField);
-    logSuccess(`PUT /fields/${testFieldId} successful`);
-    return response.data;
-  } catch (error) {
-    logError(`PUT /fields/${testFieldId} failed`, error);
-    return null;
-  }
+  // Removed testCreateField, testUpdateField, and testDeleteField and their calls as field management is not allowed.
+  return null;
 }
 
 async function testDeleteField() {
-  if (!testFieldId) {
-    logWarning('Skipping DELETE /fields test because no field was created');
-    return false;
-  }
-  
-  try {
-    logInfo(`Testing DELETE /fields/${testFieldId}...`);
-    const response = await api.delete(`/fields/${testFieldId}`);
-    logSuccess(`DELETE /fields/${testFieldId} successful`);
-    return true;
-  } catch (error) {
-    logError(`DELETE /fields/${testFieldId} failed`, error);
-    return false;
-  }
+  // Removed testCreateField, testUpdateField, and testDeleteField and their calls as field management is not allowed.
+  return false;
 }
 
 async function testCreateBooking() {
@@ -300,8 +251,6 @@ async function runTests() {
   
   // Test fields API
   await testGetFields();
-  await testCreateField();
-  await testUpdateField();
   
   // Test bookings API
   await testCreateBooking();
@@ -312,9 +261,6 @@ async function runTests() {
   await testGetFeedback();
   await testUpdateFeedback();
   await testDeleteFeedback();
-  
-  // Clean up
-  await testDeleteField();
   
   console.log(chalk.blue('----------------------------------------'));
   console.log(chalk.bold.green('API tests completed!'));

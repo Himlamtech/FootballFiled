@@ -52,47 +52,12 @@ const Home = () => {
     }
   };
 
-  // Location coordinates and address - should be fetched from API in a real implementation
+  // Location coordinates and address - dùng mặc định, không fetch API
   const [location, setLocation] = useState({
-    address: "",
-    lat: 0,
-    lng: 0,
+    address: "96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội",
+    lat: 20.9732762,
+    lng: 105.7875231,
   });
-
-  // Fetch location data from API
-  useEffect(() => {
-    const fetchLocationData = async () => {
-      try {
-        const response = await fetch('/api/settings/location');
-        const data = await response.json();
-
-        if (data && data.address) {
-          setLocation({
-            address: data.address,
-            lat: data.lat || 0,
-            lng: data.lng || 0,
-          });
-        } else {
-          // Default location if API fails
-          setLocation({
-            address: "96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội",
-            lat: 20.9732762,
-            lng: 105.7875231,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching location data:", error);
-        // Default location if API fails
-        setLocation({
-          address: "96A Đ. Trần Phú, P. Mộ Lao, Hà Đông, Hà Nội",
-          lat: 20.9732762,
-          lng: 105.7875231,
-        });
-      }
-    };
-
-    fetchLocationData();
-  }, []);
 
   // Create Google Maps embed URL
   const googleMapsEmbedUrl = `https://maps.google.com/maps?q=${location.lat},${location.lng}&z=16&output=embed`;
@@ -157,10 +122,11 @@ const Home = () => {
             id: field.fieldId || field.id,
             name: field.name,
             size: field.size || "Không xác định",
-            // Use a default image if the imageUrl is not available or is a relative path
-            img: field.imageUrl && field.imageUrl.startsWith('http')
-              ? field.imageUrl
-              : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
+            img: field.imageUrl
+              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9002${field.imageUrl}`)
+              : field.image
+                ? (field.image.startsWith('http') ? field.image : `http://localhost:9002${field.image}`)
+                : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
             description: field.description || "Sân bóng đá"
           }));
 
@@ -284,14 +250,14 @@ const Home = () => {
             Sân Bóng Xanh là một trong những địa điểm chơi bóng đá chất lượng hàng đầu tại thành phố. Chúng tôi cung cấp sân cỏ nhân tạo chuẩn FIFA, với hệ thống chiếu sáng hiện đại và các tiện nghi đi kèm.
           </p>
           <p className="mb-6 text-gray-700">
-            Được thành lập từ năm 2018, chúng tôi luôn cam kết mang đến không gian thi đấu tốt nhất, dịch vụ tuyệt vời với giá cả phải chăng cho người chơi bóng đá mọi lứa tuổi.
+            Được thành lập từ năm 2025, chúng tôi luôn cam kết mang đến không gian thi đấu tốt nhất, dịch vụ tuyệt vời với giá cả phải chăng cho người chơi bóng đá mọi lứa tuổi.
           </p>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-field-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">XD</span>
+              <span className="text-white font-bold text-xl">X</span>
             </div>
             <div>
-              <h3 className="font-bold text-xl">Xuân Duy</h3>
+              <h3 className="font-bold text-xl">Sân Bóng Xanh</h3>
               <p className="text-gray-600">Nơi đam mê hội tụ</p>
             </div>
           </div>

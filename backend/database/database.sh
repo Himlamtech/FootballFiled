@@ -16,7 +16,7 @@ CYAN='\033[0;36m'
 DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"3306"}
 DB_USER=${DB_USER:-"root"}
-DB_PASSWORD=${DB_PASSWORD:-"Himlam04@"}
+DB_PASSWORD=${DB_PASSWORD:-"2123"}
 DB_NAME="FootballField"
 
 # Script paths

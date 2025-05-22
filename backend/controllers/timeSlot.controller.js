@@ -48,7 +48,8 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
 
   // Prepare response with availability info
   const timeSlotsWithAvailability = timeSlots.map(timeSlot => {
-    const isBooked = bookedTimeSlotIds.includes(timeSlot.timeSlotId);
+    const booking = bookings.find(b => b.timeSlotId === timeSlot.timeSlotId);
+    const isBooked = !!booking;
 
     // Determine if it's a weekend to set the correct price
     const bookingDate = new Date(date);
@@ -59,7 +60,12 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
       start_time: timeSlot.startTime,
       end_time: timeSlot.endTime,
       price: isWeekend ? timeSlot.weekendPrice : timeSlot.weekdayPrice,
-      available: !isBooked
+      available: !isBooked,
+      isBooked: isBooked,
+      customer: isBooked ? {
+        name: booking.customerName || '',
+        phone: booking.customerPhone || ''
+      } : null
     };
   });
 

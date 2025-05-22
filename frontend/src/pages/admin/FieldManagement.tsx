@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, startOfDay } from "date-fns";
 import { vi } from "date-fns/locale";
-import { CalendarIcon, Pencil, Trash2, Lock } from "lucide-react";
+import { CalendarIcon, Pencil, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
@@ -64,15 +64,11 @@ interface Booking {
   price: number;
 }
 
-// Will be fetched from API
-
-// Đã xóa hàm tạo dữ liệu mẫu cũ
-
 const FieldManagement = () => {
   console.log("FieldManagement component rendering...");
 
   const [fields, setFields] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<string>(""); // Will be set after fields are loaded
+  const [activeTab, setActiveTab] = useState<string>(""); 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fieldStatuses, setFieldStatuses] = useState<FieldStatus[]>([]);
@@ -223,20 +219,6 @@ const FieldManagement = () => {
 
         console.log(`Fetching time slots for field ${fieldId} on ${formattedDate}`);
 
-        // Create default time slots first to ensure we always have data
-        const defaultTimeSlots = Array.from({ length: 18 }, (_, i) => {
-          const hour = i + 6; // Start from 6:00
-          return {
-            id: i + 1,
-            time: `${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`,
-            weekdayPrice: hour >= 17 && hour <= 21 ? 350000 : 200000, // Peak hours are more expensive
-            weekendPrice: hour >= 17 && hour <= 21 ? 400000 : 250000
-          };
-        });
-
-        // Set default time slots immediately to prevent "No data" message
-        setTimeSlots(defaultTimeSlots);
-
         // First try to get time slots from the fields API which includes weekday/weekend prices
         try {
           const fieldsResponse = await fieldAPI.getFieldById(fieldId);
@@ -244,7 +226,17 @@ const FieldManagement = () => {
 
           // Check if the response has timeSlots property
           if (fieldsResponse.data && fieldsResponse.data.timeSlots && Array.isArray(fieldsResponse.data.timeSlots)) {
-            const formattedTimeSlots = fieldsResponse.data.timeSlots.map((slot: any) => ({
+            // Loại trùng startTime-endTime (KHÔNG filter fieldId)
+            const uniqueSlots = Array.from(
+              new Map(
+                fieldsResponse.data.timeSlots
+                  .map((slot: any) => [
+                    `${slot.startTime}-${slot.endTime}`,
+                    slot
+                  ])
+              ).values()
+            );
+            const formattedTimeSlots = uniqueSlots.map((slot: any) => ({
               id: slot.timeSlotId,
               time: `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`,
               weekdayPrice: parseFloat(slot.weekdayPrice || slot.price || 0),
@@ -257,7 +249,16 @@ const FieldManagement = () => {
 
           // If the response has TimeSlots property (different casing)
           if (fieldsResponse.data && fieldsResponse.data.TimeSlots && Array.isArray(fieldsResponse.data.TimeSlots)) {
-            const formattedTimeSlots = fieldsResponse.data.TimeSlots.map((slot: any) => ({
+            const uniqueSlots = Array.from(
+              new Map(
+                fieldsResponse.data.TimeSlots
+                  .map((slot: any) => [
+                    `${slot.startTime}-${slot.endTime}`,
+                    slot
+                  ])
+              ).values()
+            );
+            const formattedTimeSlots = uniqueSlots.map((slot: any) => ({
               id: slot.timeSlotId,
               time: `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`,
               weekdayPrice: parseFloat(slot.weekdayPrice || slot.price || 0),
@@ -273,23 +274,30 @@ const FieldManagement = () => {
         }
 
         // Fallback to timeslots API
-        const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${fieldId}&date=${formattedDate}`);
+        const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${fieldId}&date=${formattedDate}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        });
         const data = await response.json();
 
+        let timeSlotData = [];
         if (data && Array.isArray(data.data)) {
-          console.log("Time slots API response:", data.data);
-          // Map API response to our TimeSlot interface
-          const formattedTimeSlots = data.data.map((slot: any) => ({
-            id: slot.id || slot.timeSlotId,
-            time: `${(slot.start_time || slot.startTime).substring(0, 5)} - ${(slot.end_time || slot.endTime).substring(0, 5)}`,
-            weekdayPrice: parseFloat(slot.weekday_price || slot.weekdayPrice || slot.price || 0),
-            weekendPrice: parseFloat(slot.weekend_price || slot.weekendPrice || slot.price || 0)
-          }));
-          setTimeSlots(formattedTimeSlots);
+          timeSlotData = data.data;
         } else if (data && Array.isArray(data)) {
-          // Handle case where API returns array directly
-          console.log("Time slots API response (direct array):", data);
-          const formattedTimeSlots = data.map((slot: any) => ({
+          timeSlotData = data;
+        }
+
+        if (timeSlotData.length > 0) {
+          // Loại trùng start-end (KHÔNG filter fieldId)
+          const uniqueSlots = Array.from(
+            new Map(
+              timeSlotData
+                .map((slot: any) => [
+                  `${slot.start_time || slot.startTime}-${slot.end_time || slot.endTime}`,
+                  slot
+                ])
+            ).values()
+          );
+          const formattedTimeSlots = uniqueSlots.map((slot: any) => ({
             id: slot.id || slot.timeSlotId,
             time: `${(slot.start_time || slot.startTime).substring(0, 5)} - ${(slot.end_time || slot.endTime).substring(0, 5)}`,
             weekdayPrice: parseFloat(slot.weekday_price || slot.weekdayPrice || slot.price || 0),
@@ -297,48 +305,14 @@ const FieldManagement = () => {
           }));
           setTimeSlots(formattedTimeSlots);
         } else {
-          console.error("Unexpected time slots API response structure:", data);
-
-          // Create default time slots as fallback
-          const defaultTimeSlots = Array.from({ length: 18 }, (_, i) => {
-            const hour = i + 6; // Start from 6:00
-            return {
-              id: i + 1,
-              time: `${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`,
-              weekdayPrice: hour >= 17 && hour <= 21 ? 350000 : 200000, // Peak hours are more expensive
-              weekendPrice: hour >= 17 && hour <= 21 ? 400000 : 250000
-            };
-          });
-
-          console.log("Using default time slots as fallback");
-          setTimeSlots(defaultTimeSlots);
-
-          toast({
-            title: "Warning",
-            description: "Using default time slots. Could not load from server.",
-            variant: "destructive",
-          });
+          setTimeSlots([]);
         }
       } catch (error) {
         console.error("Error fetching time slots:", error);
-
-        // Create default time slots as fallback
-        const defaultTimeSlots = Array.from({ length: 18 }, (_, i) => {
-          const hour = i + 6; // Start from 6:00
-          return {
-            id: i + 1,
-            time: `${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`,
-            weekdayPrice: hour >= 17 && hour <= 21 ? 350000 : 200000, // Peak hours are more expensive
-            weekendPrice: hour >= 17 && hour <= 21 ? 400000 : 250000
-          };
-        });
-
-        console.log("Using default time slots due to error");
-        setTimeSlots(defaultTimeSlots);
-
+        setTimeSlots([]);
         toast({
           title: "Error",
-          description: "Could not load time slots from server. Using defaults.",
+          description: "Không thể tải khung giờ từ server.",
           variant: "destructive",
         });
       } finally {
@@ -371,17 +345,15 @@ const FieldManagement = () => {
           return;
         }
 
-        const response = await bookingAPI.getBookingsByField(fieldId, { date: formattedDate });
-        console.log("Bookings API response:", response.data);
-
-        if (response.data.bookings && Array.isArray(response.data.bookings)) {
-          console.log("Setting bookings:", response.data.bookings);
-          setBookings(response.data.bookings);
-          // Generate field statuses based on bookings
-          generateFieldStatus(response.data.bookings);
+        const response = await fetch(`http://localhost:9002/api/bookings/field/${fieldId}?date=${formattedDate}`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        });
+        const data = await response.json();
+        console.log("Bookings API response:", data);
+        if (data.bookings && Array.isArray(data.bookings)) {
+          setBookings(data.bookings);
+          generateFieldStatus(data.bookings);
         } else {
-          console.log("API returned no bookings or invalid format - using empty field status");
-          // Use empty field status if no bookings or invalid format
           const emptyStatus = createEmptyFieldStatus();
           setFieldStatuses(emptyStatus);
         }
@@ -418,7 +390,7 @@ const FieldManagement = () => {
         // Check if this time slot is booked
         const booking = bookingsData.find(b => {
           // Get the time slot information from the booking
-          const timeSlot = b.TimeSlot;
+          const timeSlot = b.timeSlot;
 
           if (!timeSlot || !timeSlot.startTime) {
             return false;
@@ -438,10 +410,10 @@ const FieldManagement = () => {
           time: slot.time,
           isBooked: !!booking,
           isLocked: false, // Default to not locked
-          ...(booking ? {
+          ...(booking && (booking.customerName || booking.customerPhone) ? {
             customer: {
-              name: booking.User?.name || "Customer",
-              phone: booking.User?.phoneNumber || booking.User?.email || "No contact info"
+              name: booking.customerName || '',
+              phone: booking.customerPhone || ''
             }
           } : {})
         };
@@ -900,115 +872,6 @@ const FieldManagement = () => {
     }
   };
 
-  const handleUnlockTimeSlot = async (slotId: number) => {
-    try {
-      setLoading(true);
-      const fieldId = parseInt(activeTab);
-      console.log(`Attempting to unlock time slot ${slotId} for field ${fieldId}`);
-
-      // Call the API to unlock the time slot
-      const formattedDate = format(selectedDate, "yyyy-MM-dd");
-      const unlockData = {
-        date: formattedDate,
-        timeSlotId: slotId
-      };
-
-      // Try to use fieldManagementAPI first
-      try {
-        const response = await fieldManagementAPI.unlockTimeSlot(fieldId, unlockData);
-        console.log("Unlock time slot response:", response.data);
-
-        // Update the UI to reflect the unlocked status
-        setFieldStatuses(prevStatuses => {
-          const updatedStatuses = [...prevStatuses];
-          const fieldStatus = updatedStatuses.find(fs => fs.fieldId === fieldId);
-          
-          if (fieldStatus) {
-            const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === slotId);
-            
-            if (timeSlotIndex !== -1) {
-              fieldStatus.timeSlots[timeSlotIndex].isLocked = false;
-            }
-          }
-          
-          return updatedStatuses;
-        });
-
-        toast({
-          title: "Thành công",
-          description: "Đã mở khóa khung giờ thành công",
-        });
-      } catch (error) {
-        console.error("Error unlocking time slot with fieldManagementAPI:", error);
-        
-        // Fallback to using axios directly
-        try {
-          const response = await axios.post(
-            `http://localhost:9002/api/field-management/${fieldId}/unlock`,
-            unlockData
-          );
-          console.log("Unlock time slot response (direct):", response.data);
-
-          // Update the UI to reflect the unlocked status
-          setFieldStatuses(prevStatuses => {
-            const updatedStatuses = [...prevStatuses];
-            const fieldStatus = updatedStatuses.find(fs => fs.fieldId === fieldId);
-            
-            if (fieldStatus) {
-              const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === slotId);
-              
-              if (timeSlotIndex !== -1) {
-                fieldStatus.timeSlots[timeSlotIndex].isLocked = false;
-              }
-            }
-            
-            return updatedStatuses;
-          });
-
-          toast({
-            title: "Thành công",
-            description: "Đã mở khóa khung giờ thành công",
-          });
-        } catch (directError) {
-          console.error("Error unlocking time slot with direct API call:", directError);
-          
-          // If both API calls fail, fake a successful response for demo purposes
-          console.log("Using fake success response for unlocking time slot");
-          
-          // Update the UI to reflect the unlocked status
-          setFieldStatuses(prevStatuses => {
-            const updatedStatuses = [...prevStatuses];
-            const fieldStatus = updatedStatuses.find(fs => fs.fieldId === fieldId);
-            
-            if (fieldStatus) {
-              const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === slotId);
-              
-              if (timeSlotIndex !== -1) {
-                fieldStatus.timeSlots[timeSlotIndex].isLocked = false;
-              }
-            }
-            
-            return updatedStatuses;
-          });
-
-          toast({
-            title: "Thành công",
-            description: "Đã mở khóa khung giờ thành công (chế độ demo)",
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error unlocking time slot:", error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể mở khóa khung giờ. Vui lòng thử lại sau.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Lock entire day
   const handleLockEntireDay = async () => {
     const key = `${activeTab}_${format(selectedDate, "yyyy-MM-dd")}`;
@@ -1130,6 +993,9 @@ const FieldManagement = () => {
     }
   };
 
+  // Xác định ngày là cuối tuần hay ngày thường
+  const isWeekend = selectedDate.getDay() === 0 || selectedDate.getDay() === 6;
+
   return (
     <div className="p-2">
       <h1 className="text-3xl font-bold mb-4">Quản lý sân bóng</h1>
@@ -1179,24 +1045,6 @@ const FieldManagement = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  if (window.confirm("Xác nhận xóa tất cả dữ liệu đặt sân cho ngày này?")) {
-                    // Implement delete bookings functionality
-                    toast({
-                      title: "Thành công",
-                      description: "Đã xóa tất cả đặt sân trong ngày này.",
-                    });
-                  }
-                }}
-                className="text-red-600 border-red-300 hover:bg-red-50"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Xóa đặt sân
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
                   setShowBulkEditDialog(true);
                   setSelectedTimeSlots([]);
                   setBulkPrice("");
@@ -1227,7 +1075,7 @@ const FieldManagement = () => {
                       <CardContent className="p-6">
                         <div className="flex justify-between items-center mb-4">
                           <h2 className="text-xl font-semibold">
-                            Khung giờ sân{" "}
+                            Khung giờ {" "}
                             {fields.find(f => f.id.toString() === activeTab)?.name || ""}
                           </h2>
 
@@ -1247,66 +1095,63 @@ const FieldManagement = () => {
                             <TableHeader>
                               <TableRow>
                                 <TableHead className="w-1/4">Khung giờ</TableHead>
-                                <TableHead className="w-1/5">Giá ngày thường</TableHead>
-                                <TableHead className="w-1/5">Giá cuối tuần</TableHead>
+                                <TableHead className="w-1/5">Giá</TableHead>
                                 <TableHead className="w-1/5">Trạng thái</TableHead>
+                                <TableHead className="w-1/5">Khách hàng</TableHead>
+                                <TableHead className="w-1/5">Số điện thoại</TableHead>
                                 <TableHead className="w-1/5 text-right">Thao tác</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {currentFieldStatus?.timeSlots.map((slot) => {
-                                const timeSlot = timeSlots.find(ts => ts.id === slot.id);
+                              {timeSlots.map((slot) => {
+                                // Tìm booking ứng với timeSlot này
+                                const booking = bookings.find(b => {
+                                  if (b.timeSlot === slot.time) {
+                                    return true;
+                                  }
+                                  return false;
+                                });
                                 return (
                                   <TableRow key={slot.id}>
-                                    <TableCell className="font-medium">
-                                      {slot.time}
-                                    </TableCell>
+                                    <TableCell className="font-medium">{slot.time}</TableCell>
+                                    <TableCell>{(isWeekend ? slot.weekendPrice : slot.weekdayPrice).toLocaleString()} đ</TableCell>
                                     <TableCell>
-                                      {timeSlot ? timeSlot.weekdayPrice.toLocaleString() : 0} đ
-                                    </TableCell>
-                                    <TableCell>
-                                      {timeSlot ? timeSlot.weekendPrice.toLocaleString() : 0} đ
-                                    </TableCell>
-                                    <TableCell>
-                                      {slot.isBooked ? (
-                                        <Badge className="bg-blue-100 text-blue-800">
-                                          Đã đặt
-                                        </Badge>
-                                      ) : slot.isLocked ? (
-                                        <Badge className="bg-red-100 text-red-800">
-                                          Đã khóa
-                                        </Badge>
+                                      {booking ? (
+                                        <Badge className="bg-blue-100 text-blue-800">Đã đặt</Badge>
                                       ) : (
-                                        <Badge className="bg-green-100 text-green-800">
-                                          Khả dụng
-                                        </Badge>
+                                        <Badge className="bg-green-100 text-green-800">Khả dụng</Badge>
                                       )}
                                     </TableCell>
+                                    <TableCell>
+                                      {booking ? (
+                                        <>
+                                          <div className="font-medium">{booking.customerName || 'Khách hàng'}</div>
+                                        </>
+                                      ) : '--'}
+                                    </TableCell>
+                                    <TableCell>
+                                      {booking ? (
+                                        <>
+                                          <div className="font-medium">{booking.phone || 'Không có SĐT'}</div>
+                                        </>
+                                      ) : '--'}
+                                    </TableCell>
                                     <TableCell className="text-right flex justify-end gap-2">
-                                      {slot.isBooked ? (
-                                        <div className="italic text-gray-500 text-sm">
-                                          Đã đặt bởi {slot.customer?.name || "Khách hàng"}
-                                        </div>
-                                      ) : slot.isLocked ? (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => handleUnlockTimeSlot(slot.id)}
-                                        >
-                                          Mở khóa
-                                        </Button>
+                                      {booking ? (
+                                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100">
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                          </svg>
+                                        </span>
                                       ) : (
                                         <>
                                           <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => {
-                                              const timeSlot = timeSlots.find(ts => ts.id === slot.id);
-                                              if (timeSlot) {
-                                                setEditingTimeSlot(timeSlot);
-                                                setWeekdayPrice(timeSlot.weekdayPrice.toString());
-                                                setWeekendPrice(timeSlot.weekendPrice.toString());
-                                              }
+                                              setEditingTimeSlot(slot);
+                                              setWeekdayPrice(slot.weekdayPrice.toString());
+                                              setWeekendPrice(slot.weekendPrice.toString());
                                             }}
                                           >
                                             <Pencil className="h-4 w-4" />

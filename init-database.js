@@ -30,7 +30,7 @@ async function executeSqlFile(connection, filePath, description) {
     console.log(`${colors.blue}${colors.bright}Executing ${description}...${colors.reset}`);
 
     // Read SQL file
-    const sqlScript = fs.readFileSync(path.join(__dirname, filePath), 'utf8');
+    const sqlScript = fs.readFileSync(path.join(__dirname, 'backend/database/', filePath), 'utf8');
 
     // Execute SQL script
     await connection.query(sqlScript);
@@ -52,7 +52,7 @@ async function initializeDatabase() {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'Himlam04@',
+    password: process.env.DB_PASSWORD || '2123',
     multipleStatements: true
   };
 

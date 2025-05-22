@@ -50,9 +50,6 @@ api.interceptors.response.use(
 export const fieldAPI = {
   getAllFields: () => api.get('/fields'),
   getFieldById: (id: number) => api.get(`/fields/${id}`),
-  createField: (data: any) => api.post('/fields', data),
-  updateField: (id: number, data: any) => api.put(`/fields/${id}`, data),
-  deleteField: (id: number) => api.delete(`/fields/${id}`),
 };
 
 // Field Management API
@@ -61,22 +58,17 @@ export const fieldManagementAPI = {
     api.get('/field-management/status', { params: { fieldId, date } }),
   lockTimeSlot: (fieldId: number, data: any) =>
     api.post(`/field-management/${fieldId}/lock`, data),
-  unlockTimeSlot: (fieldId: number, data: any) =>
-    api.post(`/field-management/${fieldId}/unlock`, data),
   lockAllTimeSlots: (fieldId: number, data: any) =>
     api.post(`/field-management/${fieldId}/lock-all`, data),
 };
 
 // Booking API
 export const bookingAPI = {
-  getAllBookings: (params?: any) => api.get('/bookings', { params }),
   getBookingById: (id: number) => api.get(`/bookings/${id}`),
   getBookingsByUser: (userId: number, params?: any) => api.get(`/bookings/user/${userId}`, { params }),
   getBookingsByField: (fieldId: number, params?: any) => api.get(`/bookings/field/${fieldId}`, { params }),
   createBooking: (data: any) => api.post('/bookings', data),
   updateBooking: (id: number, data: any) => api.put(`/bookings/${id}`, data),
-  deleteBooking: (id: number) => api.delete(`/bookings/${id}`),
-  updatePaymentStatus: (id: number, data: any) => api.patch(`/bookings/${id}/payment`, data),
 };
 
 // User API
@@ -99,6 +91,7 @@ export const userAPI = {
 export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getChartData: (params?: any) => api.get('/dashboard/chart', { params }),
+  getBookingTrend: () => api.get('/dashboard/chart/booking-trend'),
 };
 
 // Feedback API

@@ -30,28 +30,13 @@ const Field = sequelize.define('Field', {
     type: DataTypes.STRING(255),
     allowNull: true
   },
-  pricePerHour: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    validate: {
-      min: 0
-    }
-  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
-  },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
-  },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'Fields',
-  timestamps: true
+  timestamps: false
 });
 
 module.exports = Field; 

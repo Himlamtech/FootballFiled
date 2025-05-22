@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { validateBookingInfo } from "@/components/validation/BookingValidation";
 import QRCodePayment from "@/components/payment/QRCodePayment";
 import { useToast } from "@/components/ui/use-toast";
+import apiService from '@/services/api.service';
 
 interface TimeSlot {
   id: number;
@@ -58,6 +59,7 @@ const BookingField = () => {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingTimeSlots, setLoadingTimeSlots] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("vietqr");
 
   const { toast } = useToast();
 
@@ -91,7 +93,9 @@ const BookingField = () => {
             id: field.fieldId || field.id,
             name: field.name,
             size: field.size || field.capacity ? `${field.capacity || field.size}` : "Không xác định",
-            image: field.imageUrl || field.image_url || "https://placehold.co/600x400?text=Football+Field",
+            image: field.imageUrl
+              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9002${field.imageUrl}`)
+              : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
             description: field.description || "Sân bóng đá"
           }));
 
@@ -178,8 +182,13 @@ const BookingField = () => {
             };
           });
 
-          console.log("Formatted time slots:", formattedTimeSlots);
-          setTimeSlots(formattedTimeSlots);
+          // Lọc trùng khung giờ (theo start + end)
+          const uniqueTimeSlots = Array.from(
+            new Map(formattedTimeSlots.map(slot => [slot.start + slot.end, slot])).values()
+          );
+
+          console.log("Formatted time slots (unique):", uniqueTimeSlots);
+          setTimeSlots(uniqueTimeSlots);
         } else {
           console.error("API returned no time slots");
           setTimeSlots([]);
@@ -227,114 +236,45 @@ const BookingField = () => {
     // Reset lỗi nếu thông tin hợp lệ
     setValidationError(null);
 
+    // Show payment dialog
+    setShowPayment(true);
+  };
+
+  const handlePaymentSuccess = async () => {
     try {
-      // Gửi thông tin đặt sân lên API
+      // Prepare booking data for API using camelCase
       const bookingData = {
-        field_id: selectedField.id,
-        date: format(selectedDate, "yyyy-MM-dd"),
-        start_time: selectedTimeSlot.start,
-        end_time: selectedTimeSlot.end,
-        customer_name: customerName,
-        phone: phone,
-        email: email,
-        note: note,
-        price: selectedTimeSlot.price
+        fieldId: selectedField?.id || 0, // Provide default 0 if null
+        timeSlotId: selectedTimeSlot?.id || 0, // Provide default 0 if null
+        bookingDate: format(selectedDate, "yyyy-MM-dd"),
+        totalPrice: Number(selectedTimeSlot?.price || 0), // Ensure number type
+        customerName: customerName,
+        customerPhone: phone,
+        customerEmail: email,
+        notes: note,
+        paymentMethod: paymentMethod, // Use state paymentMethod
+        // status will default to 'Đã đặt' on backend
       };
 
-      console.log("Sending booking data:", bookingData);
+      console.log("Creating booking with data:", bookingData);
 
-      // Hiển thị QR thanh toán
-      setShowPayment(true);
+      // Use apiService to create booking
+      const response = await apiService.createBooking(bookingData);
+
+      console.log("Booking API response:", response);
+
+      // Check if booking was successful (apiService throws error on failure)
+      handleBookingSuccess();
+
     } catch (error) {
       console.error("Error creating booking:", error);
       toast({
         variant: "destructive",
         title: "Lỗi",
-        description: "Không thể tạo đơn đặt sân. Vui lòng thử lại sau.",
-      });
-    }
-  };
-
-  const handlePaymentSuccess = async () => {
-    try {
-      // Prepare booking data for API
-      const bookingData = {
-        fieldId: selectedField?.id,
-        timeSlotId: selectedTimeSlot?.id,
-        bookingDate: format(selectedDate, "yyyy-MM-dd"),
-        customerName: customerName,
-        customerPhone: phone,
-        customerEmail: email,
-        notes: note,
-        totalPrice: selectedTimeSlot?.price || 0,
-        paymentMethod: "vietqr",
-        paymentStatus: "paid"
-      };
-
-      // Also prepare alternative format for different API implementations
-      const alternativeData = {
-        field_id: selectedField?.id,
-        time_slot_id: selectedTimeSlot?.id,
-        booking_date: format(selectedDate, "yyyy-MM-dd"),
-        customer_name: customerName,
-        customer_phone: phone,
-        customer_email: email,
-        notes: note,
-        total_price: selectedTimeSlot?.price || 0,
-        payment_method: "vietqr",
-        payment_status: "paid"
-      };
-
-      console.log("Sending booking data:", bookingData);
-      console.log("Alternative format:", alternativeData);
-
-      // Try with camelCase format first
-      try {
-        const response = await fetch('http://localhost:9002/api/bookings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(bookingData),
-        });
-
-        const data = await response.json();
-        console.log("Booking API response:", data);
-
-        if (data.success || data.booking || data.id) {
-          handleBookingSuccess();
-          return;
-        }
-      } catch (error) {
-        console.error("Error with camelCase format, trying snake_case:", error);
-      }
-
-      // If first attempt failed, try with snake_case format
-      const response = await fetch('http://localhost:9002/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(alternativeData),
+        description: error.message || "Không thể hoàn tất đặt sân. Vui lòng thử lại sau.",
       });
 
-      const data = await response.json();
-      console.log("Booking API response (snake_case):", data);
-
-      if (data.success || data.booking || data.id) {
-        handleBookingSuccess();
-      } else {
-        throw new Error(data.message || "Không thể hoàn tất đặt sân");
-      }
-    } catch (error) {
-      console.error("Error confirming booking:", error);
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể hoàn tất đặt sân. Vui lòng liên hệ quản trị viên.",
-      });
-
-      // Đóng dialog thanh toán
+      // Close payment dialog on error
       setShowPayment(false);
     }
   };
@@ -380,7 +320,7 @@ const BookingField = () => {
                 </div>
               ) : (
                 <Tabs
-                  defaultValue={fields[0]?.id.toString()}
+                  defaultValue={fields[0]?.id ? String(fields[0].id) : undefined}
                   onValueChange={(value) => {
                     const field = fields.find(f => f.id.toString() === value);
                     if (field) setSelectedField(field);
@@ -388,7 +328,7 @@ const BookingField = () => {
                 >
                   <TabsList className={`grid grid-cols-${Math.min(fields.length, 4)} mb-4`}>
                     {fields.map((field) => (
-                      <TabsTrigger key={field.id} value={field.id.toString()}>
+                      <TabsTrigger key={String(field.id)} value={String(field.id)}>
                         {field.name}
                       </TabsTrigger>
                     ))}

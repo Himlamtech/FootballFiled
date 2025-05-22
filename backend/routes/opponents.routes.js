@@ -1,21 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const { Opponent, Booking, Field, TimeSlot } = require('../models');
+const { Op } = require('sequelize');
 
 // Get all opponents
 router.get('/', async (req, res) => {
   try {
-    console.log('Fetching all opponents...');
+    console.log('Fetching all valid opponents...');
 
+    const today = new Date();
     const opponents = await Opponent.findAll({
-      attributes: ['id', 'booking_id', 'team_name', 'contact_phone', 'contact_email', 'description', 'status', 'createdAt', 'updatedAt'],
+      attributes: ['id', 'booking_id', 'team_name', 'contact_phone', 'contact_email', 'description', 'status', 'expireDate', 'createdAt', 'updatedAt'],
+      where: {
+        expireDate: {
+          [Op.gte]: today
+        }
+      },
       include: [
         {
           model: Booking,
           include: [
             {
               model: Field,
-              attributes: ['fieldId', 'name', 'size', 'description', 'imageUrl', 'pricePerHour', 'isActive']
+              attributes: ['fieldId', 'name', 'size', 'description', 'imageUrl', 'isActive']
             },
             {
               model: TimeSlot,
@@ -26,13 +33,11 @@ router.get('/', async (req, res) => {
       ]
     });
 
-    console.log(`Found ${opponents.length} opponents`);
+    console.log(`Found ${opponents.length} valid opponents`);
 
     // Transform data to be more frontend-friendly
     const transformedOpponents = opponents.map(opponent => {
       const plainOpponent = opponent.get({ plain: true });
-
-      // Add camelCase aliases for snake_case properties
       return {
         ...plainOpponent,
         id: plainOpponent.id,
@@ -40,7 +45,7 @@ router.get('/', async (req, res) => {
         teamName: plainOpponent.team_name,
         contactPhone: plainOpponent.contact_phone,
         contactEmail: plainOpponent.contact_email,
-        // Keep the original snake_case properties too for backward compatibility
+        expireDate: plainOpponent.expireDate,
       };
     });
 
@@ -75,7 +80,7 @@ router.get('/available', async (req, res) => {
           include: [
             {
               model: Field,
-              attributes: ['fieldId', 'name', 'size', 'description', 'imageUrl', 'pricePerHour', 'isActive']
+              attributes: ['fieldId', 'name', 'size', 'description', 'imageUrl', 'isActive']
             },
             {
               model: TimeSlot,
@@ -132,7 +137,7 @@ router.get('/:id', async (req, res) => {
           include: [
             {
               model: Field,
-              attributes: ['fieldId', 'name', 'size', 'description', 'imageUrl', 'pricePerHour', 'isActive']
+              attributes: ['fieldId', 'name', 'size', 'description', 'imageUrl', 'isActive']
             },
             {
               model: TimeSlot,
@@ -191,6 +196,7 @@ router.post('/', async (req, res) => {
     const contactPhone = req.body.contactPhone || req.body.contact_phone;
     const contactEmail = req.body.contactEmail || req.body.contact_email;
     const description = req.body.description;
+    const expireDate = req.body.expireDate || req.body.expire_date || new Date();
 
     console.log('Processed opponent parameters:', {
       bookingId, teamName, contactPhone, contactEmail
@@ -220,7 +226,8 @@ router.post('/', async (req, res) => {
       contact_phone: contactPhone,
       contact_email: contactEmail || null,
       description: description || null,
-      status: 'searching'
+      status: 'searching',
+      expireDate: expireDate
     });
 
     res.status(201).json({

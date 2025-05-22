@@ -24,8 +24,8 @@ const AdminLayout = () => {
         {/* Sidebar */}
         <aside className="w-64 bg-field-800 text-white fixed h-full overflow-y-auto z-10">
           <div className="p-6">
-            <h3 className="text-2xl font-semibold">Admin panel</h3>
-            <h2 className="text-1xl text-black font-semibold">Xuân Duy</h2>
+            <h3 className="text-2xl font-semibold">Quản trị viên</h3>
+            <h2 className="text-1xl text-black font-semibold">Sân Bóng Xanh</h2>
           </div>
           <nav className="mt-6">
             <ul className="space-y-1 px-4">
@@ -43,7 +43,7 @@ const AdminLayout = () => {
                   }
                 >
                   <BarChart className="w-5 h-5" />
-                  <span>Dashboard</span>
+                  <span>Thống kê</span>
                 </NavLink>
               </li>
               <li>
@@ -59,7 +59,7 @@ const AdminLayout = () => {
                   }
                 >
                   <Calendar className="w-5 h-5" />
-                  <span>Field Management</span>
+                  <span>Quản lý sân</span>
                 </NavLink>
               </li>
 
@@ -76,7 +76,7 @@ const AdminLayout = () => {
                   }
                 >
                   <FileText className="w-5 h-5" />
-                  <span>Customer Feedback</span>
+                  <span>Phản hồi khách hàng</span>
                 </NavLink>
               </li>
 
@@ -90,7 +90,7 @@ const AdminLayout = () => {
             <div className="px-6 py-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold"></h2>
               <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium">Admin</span>
+                <span className="text-sm font-medium">Quản trị viên</span>
                 {isAuthenticated && (
                   <Button
                     variant="ghost"

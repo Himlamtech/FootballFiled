@@ -60,6 +60,7 @@ interface Opponent {
   createdAt: string;
   updatedAt: string;
   booking?: Booking;
+  expireDate?: string;
 }
 
 interface Team {
@@ -75,6 +76,7 @@ interface Team {
   fieldId?: number;
   fieldName?: string;
   bookingId?: number;
+  expireDate?: string;
 }
 
 const FindOpponents = () => {
@@ -90,6 +92,7 @@ const FindOpponents = () => {
   const [filter, setFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [matchDate, setMatchDate] = useState<string>("");
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -106,10 +109,10 @@ const FindOpponents = () => {
         // Try using the API service first
         let response;
         try {
-          response = await opponentAPI.getAvailableOpponents();
+          response = await opponentAPI.getAllOpponents();
         } catch (error) {
           console.error("Error using opponentAPI service, falling back to direct axios:", error);
-          response = await axios.get('http://localhost:9002/api/opponents/available');
+          response = await axios.get('http://localhost:9002/api/opponents');
         }
         console.log("Opponents API response:", response.data);
 
@@ -204,6 +207,9 @@ const FindOpponents = () => {
               members = 11;
             }
 
+            // Lấy trường expireDate
+            const expireDate = opponent.expireDate || opponent.expire_date;
+
             return {
               id: opponentId,
               name: teamName,
@@ -216,7 +222,8 @@ const FindOpponents = () => {
               description: description || "",
               fieldId,
               fieldName,
-              bookingId
+              bookingId,
+              expireDate: expireDate,
             };
           });
 
@@ -246,10 +253,10 @@ const FindOpponents = () => {
 
     try {
       // Validate form data
-      if (!teamName || !contact || !dateTime || !location) {
+      if (!teamName || !contact || !dateTime || !location || !matchDate) {
         toast({
           title: "Thiếu thông tin",
-          description: "Vui lòng điền đầy đủ thông tin đội bóng",
+          description: "Vui lòng điền đầy đủ thông tin đội bóng, bao gồm ngày giao lưu",
           variant: "destructive"
         });
         setIsSubmitting(false);
@@ -257,8 +264,7 @@ const FindOpponents = () => {
       }
 
       // Tạo dữ liệu mẫu để hiển thị UI ngay lập tức
-      const bookingDate = new Date();
-      bookingDate.setDate(bookingDate.getDate() + 1); // Set to tomorrow by default
+      const bookingDate = matchDate ? new Date(matchDate) : new Date();
 
       // Tạo đối tượng team mới để hiển thị ngay trên UI
       const newTeam: Team = {
@@ -295,6 +301,7 @@ const FindOpponents = () => {
       setDateTime("");
       setContact("");
       setDescription("");
+      setMatchDate("");
 
       // Now make the actual API call in the background
       try {
@@ -331,14 +338,12 @@ const FindOpponents = () => {
         const bookingData = {
           fieldId: fieldId,
           timeSlotId: timeSlotId,
-          bookingDate: bookingDate.toISOString().split('T')[0],
+          bookingDate: matchDate,
+          totalPrice: 200000,
           customerName: teamName,
           customerPhone: contact,
           customerEmail: "",
           notes: description,
-          paymentMethod: "cash",
-          paymentStatus: "paid",
-          totalPrice: 200000
         };
 
         const bookingResponse = await bookingAPI.createBooking(bookingData);
@@ -372,7 +377,7 @@ const FindOpponents = () => {
         console.log("Opponent response:", opponentResponse.data);
         
         // Refresh opponent list
-        const refreshResponse = await opponentAPI.getAvailableOpponents();
+        const refreshResponse = await opponentAPI.getAllOpponents();
         const opponentsData = refreshResponse.data?.opponents || refreshResponse.data || [];
         
         if (opponentsData.length > 0) {
@@ -412,6 +417,9 @@ const FindOpponents = () => {
             
             const bookingDate = booking?.bookingDate || booking?.booking_date || booking?.date;
             
+            // Lấy trường expireDate
+            const expireDate = opponent.expireDate || opponent.expire_date;
+            
             return {
               id: opponentId,
               name: teamName,
@@ -424,7 +432,8 @@ const FindOpponents = () => {
               description: description || "",
               fieldId: field?.id || field?.fieldId,
               fieldName: field?.name,
-              bookingId: booking?.id || booking?.bookingId
+              bookingId: booking?.id || booking?.bookingId,
+              expireDate: expireDate,
             };
           });
           
@@ -444,6 +453,15 @@ const FindOpponents = () => {
       });
       setIsSubmitting(false);
     }
+  };
+
+  const handleCopyPhone = (phone: string) => {
+    navigator.clipboard.writeText(phone);
+    toast({
+      title: "Đã sao chép số điện thoại!",
+      description: phone,
+      duration: 2000
+    });
   };
 
   const filteredTeams = filter === "all"
@@ -479,16 +497,13 @@ const FindOpponents = () => {
                     <Users className="w-4 h-4 mr-2" /> Đăng tin mới
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="w-full max-w-sm mx-auto max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Đăng tin tìm đối</DialogTitle>
-                    <DialogDescription>
-                      Nhập thông tin đội bóng của bạn để tìm đối thủ phù hợp
-                    </DialogDescription>
                   </DialogHeader>
 
-                  <div className="space-y-4 py-4">
-                    <div className="grid grid-cols-1 gap-4">
+                  <div className="py-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div>
                         <label className="text-sm font-medium">Tên đội bóng</label>
                         <Input
@@ -497,34 +512,30 @@ const FindOpponents = () => {
                           onChange={(e) => setTeamName(e.target.value)}
                         />
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium">Trình độ</label>
-                          <select
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
-                            value={level}
-                            onChange={(e) => setLevel(e.target.value)}
-                          >
-                            <option>Thấp</option>
-                            <option>Trung bình</option>
-                            <option>Cao</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium">Số người/đội</label>
-                          <select
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
-                            value={members}
-                            onChange={(e) => setMembers(e.target.value)}
-                          >
-                            <option>5</option>
-                            <option>7</option>
-                            <option>11</option>
-                          </select>
-                        </div>
+                      <div>
+                        <label className="text-sm font-medium">Trình độ</label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
+                          value={level}
+                          onChange={(e) => setLevel(e.target.value)}
+                        >
+                          <option>Thấp</option>
+                          <option>Trung bình</option>
+                          <option>Cao</option>
+                        </select>
                       </div>
-
+                      <div>
+                        <label className="text-sm font-medium">Số người/đội</label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
+                          value={members}
+                          onChange={(e) => setMembers(e.target.value)}
+                        >
+                          <option>5</option>
+                          <option>7</option>
+                          <option>11</option>
+                        </select>
+                      </div>
                       <div>
                         <label className="text-sm font-medium">Địa điểm</label>
                         <Input
@@ -533,7 +544,6 @@ const FindOpponents = () => {
                           onChange={(e) => setLocation(e.target.value)}
                         />
                       </div>
-
                       <div>
                         <label className="text-sm font-medium">Thời gian</label>
                         <Input
@@ -542,8 +552,15 @@ const FindOpponents = () => {
                           onChange={(e) => setDateTime(e.target.value)}
                         />
                       </div>
-
                       <div>
+                        <label className="text-sm font-medium">Ngày giao lưu</label>
+                        <Input
+                          type="date"
+                          value={matchDate}
+                          onChange={(e) => setMatchDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
                         <label className="text-sm font-medium">Liên hệ</label>
                         <Input
                           placeholder="Số điện thoại"
@@ -551,8 +568,7 @@ const FindOpponents = () => {
                           onChange={(e) => setContact(e.target.value)}
                         />
                       </div>
-
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="text-sm font-medium">Mô tả thêm</label>
                         <Textarea
                           placeholder="Mô tả thêm về đội bóng và yêu cầu"
@@ -651,6 +667,11 @@ const FindOpponents = () => {
                           <MapPin className="w-4 h-4 mr-1" />
                           <span className="text-sm">{team.location}</span>
                         </div>
+                        {team.expireDate && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            Hạn hiệu lực: {format(new Date(team.expireDate), 'dd/MM/yyyy')}
+                          </div>
+                        )}
                       </div>
                       <Badge className={
                         team.level === "Cao" ? "bg-red-500" :
@@ -685,7 +706,11 @@ const FindOpponents = () => {
                     </p>
 
                     <div className="mt-4 flex justify-end">
-                      <Button variant="outline" className="border-field-500 text-field-700 hover:bg-field-50">
+                      <Button
+                        variant="outline"
+                        className="border-field-500 text-field-700 hover:bg-field-50"
+                        onClick={() => handleCopyPhone(team.contact)}
+                      >
                         Liên hệ
                       </Button>
                     </div>

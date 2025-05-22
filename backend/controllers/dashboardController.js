@@ -1,23 +1,34 @@
 const { catchAsync } = require('../utils/error');
 const { Booking, Field } = require('../models');
 const moment = require('moment');
+const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 
 // Get dashboard statistics from database
 exports.getStats = catchAsync(async (_, res) => {
-  // Get all bookings
+  console.log('Fetching bookings for stats...');
+
+  const targetStatus = 'đã đặt'; // Lowercase target
+
+  // Get bookings with status 'Đã đặt'
   const bookings = await Booking.findAll({
-    attributes: ['bookingId', 'totalPrice', 'createdAt', 'status']
+    attributes: ['bookingId', 'totalPrice', 'createdAt', 'status'],
+    where: sequelize.where(sequelize.fn('LOWER', sequelize.fn('TRIM', sequelize.col('status'))), 'LIKE', '%' + targetStatus + '%')
   });
 
-  // Calculate total bookings
+  console.log(`Found ${bookings.length} bookings matching status '${targetStatus}' in DB query.`);
+
+  // Calculate total bookings based on the fetched bookings
   const totalBookings = bookings.length;
+  console.log(`Calculated total bookings from fetched bookings: ${totalBookings}`);
 
-  // Calculate total income from confirmed bookings
+  // Calculate total income from the fetched bookings
   const totalIncome = bookings
-    .filter(booking => booking.status === 'confirmed')
-    .reduce((sum, booking) => sum + (booking.totalPrice || 0), 0);
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
 
-  // Get date ranges for comparisons
+  console.log(`Total income from fetched matching bookings: ${totalIncome}`);
+
+  // Get date ranges for comparisons (using original moment logic)
   const today = moment().startOf('day');
   const yesterday = moment().subtract(1, 'days').startOf('day');
   const thisWeekStart = moment().startOf('week');
@@ -27,7 +38,9 @@ exports.getStats = catchAsync(async (_, res) => {
   const thisYearStart = moment().startOf('year');
   const lastYearStart = moment().subtract(1, 'years').startOf('year');
 
-  // Count bookings for each period
+  console.log(`Date ranges: Today=${today.format()}, Yesterday=${yesterday.format()}, This Week=${thisWeekStart.format()}, Last Week=${lastWeekStart.format()}, This Month=${thisMonthStart.format()}, Last Month=${lastMonthStart.format()}, This Year=${thisYearStart.format()}, Last Year=${lastYearStart.format()}`);
+
+  // Count bookings for each period - Filter using the fetched bookings and date comparison
   const todayBookings = bookings.filter(booking =>
     moment(booking.createdAt).isSame(today, 'day')
   ).length;
@@ -60,6 +73,8 @@ exports.getStats = catchAsync(async (_, res) => {
     moment(booking.createdAt).isSame(lastYearStart, 'year')
   ).length;
 
+  console.log(`Booking counts (filtered): Today=${todayBookings}, Yesterday=${yesterdayBookings}, This Week=${thisWeekBookings}, Last Week=${lastWeekBookings}, This Month=${thisMonthBookings}, Last Month=${lastMonthBookings}, This Year=${thisYearBookings}, Last Year=${lastYearBookings}`);
+
   res.status(200).json({
     totalBookings,
     totalIncome,
@@ -75,129 +90,127 @@ exports.getStats = catchAsync(async (_, res) => {
 
 // Get booking chart data from database
 exports.getBookingChartData = catchAsync(async (req, res) => {
-  const { period } = req.query;
+  const { period, date } = req.query;
+  const selectedDate = moment(date);
+
   let chartData = [];
 
   // Simplified implementation that returns sample data based on actual bookings
   // This avoids complex SQL functions that might not be supported in all database engines
 
-  // Get all bookings
+  let startDate, endDate;
+  let groupingFormat;
+  let intervalType;
+  let labels = [];
+
+  switch(period) {
+    case 'day':
+      startDate = moment(selectedDate).startOf('day');
+      endDate = moment(selectedDate).endOf('day');
+      groupingFormat = 'H:00';
+      intervalType = 'hour';
+      labels = Array(24).fill(0).map((_, i) => moment(startDate).add(i, 'hours').format(groupingFormat));
+      break;
+    case 'week':
+      startDate = moment(selectedDate).startOf('week');
+      endDate = moment(selectedDate).endOf('week');
+      groupingFormat = 'ddd'; // Mon, Tue, etc.
+      intervalType = 'day';
+      labels = Array(7).fill(0).map((_, i) => moment(startDate).add(i, 'days').format(groupingFormat));
+      break;
+    case 'month':
+      startDate = moment(selectedDate).startOf('month');
+      endDate = moment(selectedDate).endOf('month');
+      groupingFormat = 'D'; // 1, 2, 3, etc.
+      intervalType = 'day';
+      labels = Array(moment(endDate).diff(startDate, 'days') + 1).fill(0).map((_, i) => moment(startDate).add(i, 'days').format(groupingFormat));
+      break;
+    case 'year':
+    default:
+      startDate = moment(selectedDate).startOf('year');
+      endDate = moment(selectedDate).endOf('year');
+      groupingFormat = 'MMM'; // Jan, Feb, etc.
+      intervalType = 'month';
+      labels = Array(12).fill(0).map((_, i) => moment(startDate).add(i, 'months').format(groupingFormat));
+      break;
+  }
+
+  // Get bookings within the calculated date range
   const bookings = await Booking.findAll({
-    attributes: ['bookingId', 'totalPrice', 'createdAt', 'status'],
+    attributes: ['bookingId', 'totalPrice', 'bookingDate', 'status'],
     where: {
-      status: 'confirmed'
+      [Op.and]: [
+        sequelize.where(sequelize.fn('LOWER', sequelize.fn('TRIM', sequelize.col('status'))), 'LIKE', '%booked%'),
+        {
+          bookingDate: {
+            [Op.between]: [startDate.toDate(), endDate.toDate()]
+          }
+        }
+      ]
     }
   });
 
-  // Process bookings based on period
-  switch(period) {
-    case 'day': {
-      // Create hourly buckets (0-23)
-      const hourlyBuckets = Array(24).fill(0).map((_, i) => ({
-        name: `${i}:00`,
-        value: 0
-      }));
+  // Initialize chart data with labels and zero values
+  chartData = labels.map(label => ({
+    name: label,
+    value: 0
+  }));
 
-      // Filter bookings for today
-      const todayStart = moment().startOf('day');
-      const todayBookings = bookings.filter(booking =>
-        moment(booking.createdAt).isSame(todayStart, 'day')
-      );
+  // Aggregate booking data into chartData buckets
+  bookings.forEach(booking => {
+    const bookingDateMoment = moment(booking.bookingDate);
+    let labelIndex;
 
-      // Group by hour
-      todayBookings.forEach(booking => {
-        const hour = moment(booking.createdAt).hour();
-        hourlyBuckets[hour].value += booking.totalPrice || 0;
-      });
-
-      // Only include hours with data
-      chartData = hourlyBuckets.filter(bucket => bucket.value > 0);
-
-      // If no data, include some hours for display
-      if (chartData.length === 0) {
-        chartData = [
-          { name: '08:00', value: 0 },
-          { name: '12:00', value: 0 },
-          { name: '16:00', value: 0 },
-          { name: '20:00', value: 0 }
-        ];
-      }
-
-      break;
+    switch(period) {
+      case 'day':
+        labelIndex = bookingDateMoment.hour();
+        if (labelIndex >= 0 && labelIndex < 24) {
+           chartData[labelIndex].value += parseFloat(booking.totalPrice) || 0;
+        }
+        break;
+      case 'week':
+        // Calculate the difference in days from the start of the week
+        labelIndex = bookingDateMoment.diff(startDate, 'days');
+        if (labelIndex >= 0 && labelIndex < chartData.length) {
+          chartData[labelIndex].value += parseFloat(booking.totalPrice) || 0;
+        }
+        break;
+      case 'month':
+        // Day of month is 1-based. Subtract 1 for 0-based index.
+        labelIndex = bookingDateMoment.date() - 1;
+         if (labelIndex >= 0 && labelIndex < chartData.length) {
+           chartData[labelIndex].value += parseFloat(booking.totalPrice) || 0;
+        }
+        break;
+      case 'year':
+        labelIndex = bookingDateMoment.month(); // 0-11 for Jan-Dec
+        chartData[labelIndex].value += parseFloat(booking.totalPrice) || 0;
+        break;
     }
+  });
 
-    case 'week': {
-      // Create daily buckets (0-6, Sunday to Saturday)
-      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const dailyBuckets = dayNames.map(name => ({
-        name,
-        value: 0
-      }));
-
-      // Filter bookings for this week
-      const weekStart = moment().startOf('week');
-      const weekBookings = bookings.filter(booking =>
-        moment(booking.createdAt).isSame(weekStart, 'week')
-      );
-
-      // Group by day of week
-      weekBookings.forEach(booking => {
-        const dayOfWeek = moment(booking.createdAt).day(); // 0-6, Sunday to Saturday
-        dailyBuckets[dayOfWeek].value += booking.totalPrice || 0;
+  // Handle year period separately for revenueByQuarter
+  if (period === 'year') {
+     // Tính doanh thu theo quý
+      const revenueByQuarter = [0, 0, 0, 0];
+      bookings.forEach(booking => {
+        const month = moment(booking.createdAt).month();
+        const quarter = Math.floor(month / 3); // 0-3
+        revenueByQuarter[quarter] += booking.totalPrice || 0;
       });
-
-      chartData = dailyBuckets;
-      break;
-    }
-
-    case 'month': {
-      // Create weekly buckets (1-5)
-      const weeklyBuckets = Array(5).fill(0).map((_, i) => ({
-        name: `Week ${i + 1}`,
-        value: 0
-      }));
-
-      // Filter bookings for this month
-      const monthStart = moment().startOf('month');
-      const monthBookings = bookings.filter(booking =>
-        moment(booking.createdAt).isSame(monthStart, 'month')
-      );
-
-      // Group by week of month (approximate)
-      monthBookings.forEach(booking => {
-        const day = moment(booking.createdAt).date();
-        const weekOfMonth = Math.min(Math.floor((day - 1) / 7), 4); // 0-4
-        weeklyBuckets[weekOfMonth].value += booking.totalPrice || 0;
+      // Định dạng dữ liệu trả về cho từng quý
+      const revenueByQuarterData = [
+        { quarter: 'Quý 1', value: revenueByQuarter[0] },
+        { quarter: 'Quý 2', value: revenueByQuarter[1] },
+        { quarter: 'Quý 3', value: revenueByQuarter[2] },
+        { quarter: 'Quý 4', value: revenueByQuarter[3] }
+      ];
+      return res.status(200).json({
+        chartData,
+        revenueByQuarter: revenueByQuarterData
       });
-
-      chartData = weeklyBuckets;
-      break;
-    }
-
-    case 'year':
-    default: {
-      // Create monthly buckets (0-11, January to December)
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const monthlyBuckets = monthNames.map(name => ({
-        name,
-        value: 0
-      }));
-
-      // Filter bookings for this year
-      const yearStart = moment().startOf('year');
-      const yearBookings = bookings.filter(booking =>
-        moment(booking.createdAt).isSame(yearStart, 'year')
-      );
-
-      // Group by month
-      yearBookings.forEach(booking => {
-        const month = moment(booking.createdAt).month(); // 0-11
-        monthlyBuckets[month].value += booking.totalPrice || 0;
-      });
-
-      chartData = monthlyBuckets;
-    }
   }
+
 
   res.status(200).json({
     chartData
@@ -244,4 +257,47 @@ exports.getPopularFields = catchAsync(async (_, res) => {
   res.status(200).json({
     data: sortedFields
   });
+});
+
+// API: Xu hướng đặt sân trung bình mỗi thứ trong tuần
+exports.getBookingTrend = catchAsync(async (req, res) => {
+  // Calculate date range for the current week
+  const now = moment();
+  const weekStart = now.clone().startOf('week');
+  const weekEnd = now.clone().endOf('week');
+
+  console.log(`Calculating booking trend for week: ${weekStart.format()} - ${weekEnd.format()}`);
+
+  const bookings = await Booking.findAll({
+    attributes: ['bookingDate'],
+    where: {
+      bookingDate: {
+        [Op.between]: [weekStart.toDate(), weekEnd.toDate()]
+      }
+    }
+  });
+
+  console.log(`Found ${bookings.length} bookings matching status 'Đã đặt' or similar in the current week.`);
+
+  // Đếm số lượt đặt theo từng thứ trong tuần
+  const weekdayCounts = Array(7).fill(0);
+  bookings.forEach(booking => {
+    const bookingDateMoment = moment(booking.bookingDate);
+    // Moment day() returns 0 for Sunday, 1 for Monday, ..., 6 for Saturday.
+    const dayIndex = bookingDateMoment.day();
+    if (dayIndex >= 0 && dayIndex < 7) {
+      weekdayCounts[dayIndex]++;
+    }
+  });
+
+  // For booking trend, we just need the counts per day of the week within the period
+  const weekdays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+  const data = weekdays.map((name, i) => ({
+    name,
+    bookings: weekdayCounts[i]
+  }));
+
+  console.log('Booking trend data:', data);
+
+  res.status(200).json(data);
 });

@@ -22,12 +22,15 @@ app.use(cors({
 }));
 app.use(morgan('dev'));
 
+// Serve static files
+app.use('/images', express.static(path.join(__dirname, 'public/images')));
+
 // Define Routes
 // Authentication routes
 app.use('/api/auth', require('./routes/auth.routes'));
 
 // User management routes
-app.use('/api/users', require('./routes/user.routes'));
+// app.use('/api/users', require('./routes/user.routes'));
 
 // Field management routes
 app.use('/api/fields', require('./routes/field.routes'));

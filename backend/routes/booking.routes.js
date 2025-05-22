@@ -1,17 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/booking.controller');
-const { authenticate, isStaffOrAdmin } = require('../middleware/auth.middleware');
+const { authenticate, isAdmin } = require('../middleware/auth.middleware');
 const { bookingValidationRules, validate } = require('../middleware/validation.middleware');
 
 /**
  * @route   GET /api/bookings
  * @desc    Get all bookings with filters
- * @access  Private
+ * @access  Private/Admin
  */
 router.get(
   '/',
   authenticate,
+  isAdmin,
   bookingController.getAllBookings
 );
 
@@ -38,11 +39,10 @@ router.get(
 /**
  * @route   GET /api/bookings/:id
  * @desc    Get booking by ID
- * @access  Private
+ * @access  Public
  */
 router.get(
   '/:id',
-  authenticate,
   bookingController.getBookingById
 );
 
@@ -56,17 +56,6 @@ router.post(
   bookingValidationRules,
   validate,
   bookingController.createBooking
-);
-
-/**
- * @route   PATCH /api/bookings/:id/status
- * @desc    Update booking status
- * @access  Private
- */
-router.patch(
-  '/:id/status',
-  authenticate,
-  bookingController.updateBookingStatus
 );
 
 module.exports = router;
