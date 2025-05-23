@@ -453,11 +453,11 @@ const Dashboard = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-sm text-gray-600">Kỳ hiện tại</p>
-                  <p className="text-lg font-semibold">{compareData.current.toLocaleString()} đ</p>
+                  <p className="text-lg font-semibold">{formatIncome(statsData.totalIncome)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Kỳ trước</p>
-                  <p className="text-lg font-semibold">{compareData.previous.toLocaleString()} đ</p>
+                  <p className="text-lg font-semibold">{formatIncome(0)}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Thay đổi</p>
@@ -582,8 +582,7 @@ const Dashboard = () => {
                   ) : (
                     <Pie
                       data={[
-                        { name: 'Đặt sân', value: statsData.totalIncome * 0.8 },
-                        { name: 'Khác', value: statsData.totalIncome * 0.2 }
+                        { name: 'Đặt sân', value: statsData.totalIncome }
                       ]}
                       cx="50%"
                       cy="50%"
@@ -591,10 +590,9 @@ const Dashboard = () => {
                       outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name}: 100%`}
                     >
                       <Cell fill="#10b981" />
-                      <Cell fill="#3b82f6" />
                     </Pie>
                   )}
                   <Tooltip
