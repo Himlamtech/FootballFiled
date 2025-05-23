@@ -208,37 +208,42 @@ exports.getAvailableTimeSlots = async (req, res) => {
       return res.status(400).json({ message: 'Field ID and date are required' });
     }
 
-    // Get all time slots for the field
-    const timeSlots = await TimeSlot.findAll({
-      where: {
-        fieldId,
-        isActive: true
-      },
-      attributes: ['timeSlotId', 'startTime', 'endTime']
-    });
+    // Determine if it's a weekend to set the correct price
+    const bookingDate = new Date(date);
+    const isWeekend = bookingDate.getDay() === 0 || bookingDate.getDay() === 6;
 
     // Get booked time slots for the field on the given date
     const bookedTimeSlots = await Booking.findAll({
       where: {
         fieldId,
         bookingDate: date,
-        status: {
-          [Op.in]: ['pending', 'confirmed']
-        }
+        status: 'Đã đặt'
       },
       attributes: ['timeSlotId']
     });
 
     const bookedTimeSlotIds = bookedTimeSlots.map(booking => booking.timeSlotId);
 
-    // Filter out booked time slots
-    const availableTimeSlots = timeSlots.map(slot => {
+    // Get all time slots with pricing information
+    const timeSlotsWithPricing = await TimeSlot.findAll({
+      where: {
+        fieldId,
+        isActive: true
+      },
+      attributes: ['timeSlotId', 'startTime', 'endTime', 'weekdayPrice', 'weekendPrice']
+    });
+
+    // Filter out booked time slots and format for frontend
+    const availableTimeSlots = timeSlotsWithPricing.map(slot => {
       const isBooked = bookedTimeSlotIds.includes(slot.timeSlotId);
+      const price = isWeekend ? Number(slot.weekendPrice) : Number(slot.weekdayPrice);
+
       return {
-        timeSlotId: slot.timeSlotId,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        isAvailable: !isBooked
+        id: slot.timeSlotId,
+        start_time: slot.startTime,
+        end_time: slot.endTime,
+        price: price,
+        available: !isBooked
       };
     });
 
