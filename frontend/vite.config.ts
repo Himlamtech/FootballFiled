@@ -6,11 +6,11 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 9001,
+    port: 9004,
     strictPort: true, // Force the specified port
     proxy: {
       '/api': {
-        target: 'http://localhost:9002',
+        target: 'http://localhost:9003',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),

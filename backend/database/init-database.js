@@ -1,6 +1,6 @@
 /**
  * Football Field Management System - Database Initialization Script
- * 
+ *
  * This script initializes the database only once by checking if it already exists
  */
 
@@ -29,9 +29,17 @@ const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '2123',
+  password: process.env.DB_PASSWORD || 'Himlam04@',
   multipleStatements: true
 };
+
+// Log database connection parameters for debugging (without showing the actual password)
+console.log('Database initialization parameters:');
+console.log(`Host: ${dbConfig.host}`);
+console.log(`Port: ${dbConfig.port}`);
+console.log(`User: ${dbConfig.user}`);
+console.log(`Password: ${dbConfig.password ? '[PROVIDED]' : '[DEFAULT]'}`);
+console.log(`Database: FootballField`);
 
 // Script paths
 const CREATE_DB_SCRIPT = path.join(__dirname, 'create-database.sql');
@@ -48,13 +56,13 @@ const DB_FLAG_FILE = path.join(__dirname, '.db_initialized');
 async function executeSqlFile(connection, filePath, description) {
   try {
     console.log(`${colors.blue}${colors.bright}Executing ${description}...${colors.reset}`);
-    
+
     // Read SQL file
     const sqlScript = fs.readFileSync(filePath, 'utf8');
-    
+
     // Execute SQL script
     await connection.query(sqlScript);
-    
+
     console.log(`${colors.green}✓ ${description} executed successfully!${colors.reset}`);
     return true;
   } catch (error) {
@@ -129,7 +137,7 @@ async function initializeDatabase() {
   console.log(`Database: FootballField\n`);
 
   let connection;
-  
+
   try {
     // Create connection
     console.log(`${colors.blue}Connecting to MySQL server...${colors.reset}`);
@@ -138,24 +146,24 @@ async function initializeDatabase() {
 
     // Execute create-database.sql
     const schemaCreated = await executeSqlFile(
-      connection, 
-      CREATE_DB_SCRIPT, 
+      connection,
+      CREATE_DB_SCRIPT,
       'database schema creation'
     );
-    
+
     if (!schemaCreated) {
       throw new Error('Failed to create database schema');
     }
-    
+
     console.log(''); // Empty line for better readability
-    
+
     // Execute seed-data.sql
     const dataSeeded = await executeSqlFile(
-      connection, 
-      SEED_DATA_SCRIPT, 
+      connection,
+      SEED_DATA_SCRIPT,
       'sample data insertion'
     );
-    
+
     if (!dataSeeded) {
       throw new Error('Failed to seed database with sample data');
     }

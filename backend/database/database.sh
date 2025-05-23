@@ -16,7 +16,7 @@ CYAN='\033[0;36m'
 DB_HOST=${DB_HOST:-"localhost"}
 DB_PORT=${DB_PORT:-"3306"}
 DB_USER=${DB_USER:-"root"}
-DB_PASSWORD=${DB_PASSWORD:-"2123"}
+DB_PASSWORD=${DB_PASSWORD:-"Himlam04@"}
 DB_NAME="FootballField"
 
 # Script paths
@@ -57,11 +57,11 @@ fi
 execute_sql_script() {
     local script_path=$1
     local description=$2
-    
+
     echo -e "${BLUE}${BOLD}Executing ${description}...${RESET}"
-    
+
     mysql -h"$DB_HOST" -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" --default-character-set=utf8mb4 < "$script_path"
-    
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ ${description} executed successfully!${RESET}\n"
         return 0

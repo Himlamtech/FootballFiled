@@ -1,3 +1,8 @@
+/**
+ * Models and relationships for the Football Field Management System
+ * This file defines all database models and their relationships
+ */
+
 const User = require('./User');
 const Field = require('./Field');
 const TimeSlot = require('./TimeSlot');
@@ -14,15 +19,13 @@ const FieldManagement = require('./FieldManagement');
 Field.hasMany(TimeSlot, { foreignKey: 'fieldId', as: 'timeSlots' });
 TimeSlot.belongsTo(Field, { foreignKey: 'fieldId' });
 
-// User <-> Booking (one-to-many)
+// Field <-> Booking (one-to-many)
 Field.hasMany(Booking, { foreignKey: 'fieldId', as: 'bookings' });
 Booking.belongsTo(Field, { foreignKey: 'fieldId' });
 
 // TimeSlot <-> Booking (one-to-many)
 TimeSlot.hasMany(Booking, { foreignKey: 'timeSlotId', as: 'bookings' });
 Booking.belongsTo(TimeSlot, { foreignKey: 'timeSlotId' });
-
-// Removed relationships for products, orders, payments
 
 // User <-> Review (one-to-many)
 User.hasMany(Review, { foreignKey: 'userId', as: 'reviews' });
@@ -47,8 +50,6 @@ Feedback.belongsTo(User, { foreignKey: 'user_id' });
 // Booking <-> Opponent (one-to-one)
 Booking.hasOne(Opponent, { foreignKey: 'booking_id', sourceKey: 'bookingId' });
 Opponent.belongsTo(Booking, { foreignKey: 'booking_id', targetKey: 'bookingId' });
-
-// Removed transaction associations
 
 // Field <-> FieldManagement (one-to-many)
 Field.hasMany(FieldManagement, { foreignKey: 'fieldId', as: 'managements' });

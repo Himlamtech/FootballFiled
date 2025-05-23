@@ -65,16 +65,16 @@ interface Booking {
 }
 
 const FieldManagement = () => {
-  console.log("FieldManagement component rendering...");
+  // Component for managing football fields
 
   const [fields, setFields] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<string>(""); 
+  const [activeTab, setActiveTab] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fieldStatuses, setFieldStatuses] = useState<FieldStatus[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
-  console.log("Initial state setup");
+  // Initialize state variables
   const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null);
   const [weekdayPrice, setWeekdayPrice] = useState<string>("");
   const [weekendPrice, setWeekendPrice] = useState<string>("");
@@ -94,13 +94,12 @@ const FieldManagement = () => {
   useEffect(() => {
     const fetchFields = async () => {
       try {
-        console.log("Fetching fields from API...");
+        // Set loading state while fetching data
         setLoading(true);
 
         // Try using the API service first
         try {
           const response = await fieldAPI.getAllFields();
-          console.log("Fields API response:", response.data);
 
           // Process the field data based on the actual API response structure
           let fieldsData = [];
@@ -131,8 +130,7 @@ const FieldManagement = () => {
             isActive: field.isActive !== undefined ? field.isActive : true
           }));
 
-          console.log("Processed fields data:", mappedFields);
-
+          // Set fields data and active tab if fields are found
           if (mappedFields.length > 0) {
             setFields(mappedFields);
             setActiveTab(mappedFields[0].id.toString());
@@ -143,9 +141,8 @@ const FieldManagement = () => {
         }
 
         // Fallback to direct fetch if API service fails
-        const response = await fetch('http://localhost:9002/api/fields');
+        const response = await fetch('http://localhost:9003/api/fields');
         const data = await response.json();
-        console.log("Direct fetch fields response:", data);
 
         // Process the field data based on the actual API response structure
         let fieldsData = [];
@@ -175,7 +172,7 @@ const FieldManagement = () => {
           isActive: field.isActive !== undefined ? field.isActive : true
         }));
 
-        console.log("Processed fields data from direct fetch:", mappedFields);
+        // Process fields data from direct fetch
 
         if (mappedFields.length > 0) {
           setFields(mappedFields);
@@ -211,19 +208,16 @@ const FieldManagement = () => {
       }
 
       try {
-        console.log("Fetching time slots from API...");
+        // Set loading state while fetching time slots
         setLoading(true);
 
+        // Get field ID and format date
         const fieldId = parseInt(activeTab);
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-
-        console.log(`Fetching time slots for field ${fieldId} on ${formattedDate}`);
 
         // First try to get time slots from the fields API which includes weekday/weekend prices
         try {
           const fieldsResponse = await fieldAPI.getFieldById(fieldId);
-          console.log("Field API response with time slots:", fieldsResponse.data);
-
           // Check if the response has timeSlots property
           if (fieldsResponse.data && fieldsResponse.data.timeSlots && Array.isArray(fieldsResponse.data.timeSlots)) {
             // Loại trùng startTime-endTime (KHÔNG filter fieldId)
@@ -264,9 +258,9 @@ const FieldManagement = () => {
               weekdayPrice: parseFloat(slot.weekdayPrice || slot.price || 0),
               weekendPrice: parseFloat(slot.weekendPrice || slot.price || 0)
             }));
-            console.log("Formatted time slots from field API (TimeSlots property):", formattedTimeSlots);
+            // Set time slots and exit early if we got the data
             setTimeSlots(formattedTimeSlots);
-            return; // Exit early if we got the data
+            return;
           }
         } catch (error) {
           console.error("Error fetching time slots from fields API:", error);
@@ -274,7 +268,7 @@ const FieldManagement = () => {
         }
 
         // Fallback to timeslots API
-        const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${fieldId}&date=${formattedDate}`, {
+        const response = await fetch(`http://localhost:9003/api/timeslots?field_id=${fieldId}&date=${formattedDate}`, {
           headers: { 'Cache-Control': 'no-cache' }
         });
         const data = await response.json();
@@ -331,11 +325,12 @@ const FieldManagement = () => {
         return;
       }
 
+      // Set loading state while fetching bookings
       setLoading(true);
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        console.log("Fetching bookings for field:", activeTab, "date:", formattedDate);
 
+        // Validate field ID
         const fieldId = parseInt(activeTab);
         if (isNaN(fieldId)) {
           console.error("Invalid field ID:", activeTab);
@@ -345,11 +340,13 @@ const FieldManagement = () => {
           return;
         }
 
-        const response = await fetch(`http://localhost:9002/api/bookings/field/${fieldId}?date=${formattedDate}`, {
+        // Fetch bookings for the selected field and date
+        const response = await fetch(`http://localhost:9003/api/bookings/field/${fieldId}?date=${formattedDate}`, {
           headers: { 'Cache-Control': 'no-cache' }
         });
         const data = await response.json();
-        console.log("Bookings API response:", data);
+
+        // Process booking data if available
         if (data.bookings && Array.isArray(data.bookings)) {
           setBookings(data.bookings);
           generateFieldStatus(data.bookings);
@@ -487,9 +484,9 @@ const FieldManagement = () => {
       return undefined;
     }
 
+    // Parse field ID from active tab
     const fieldId = parseInt(activeTab);
     if (isNaN(fieldId)) {
-      console.log("Invalid field ID, returning undefined");
       return undefined;
     }
 
@@ -499,11 +496,9 @@ const FieldManagement = () => {
     );
 
     if (status) {
-      console.log("Found field status:", status);
       return status;
     } else {
       // If no status found for this field and date, create a default one
-      console.log("No status found for field and date, creating default");
       return {
         fieldId,
         date: selectedDate,
@@ -516,8 +511,6 @@ const FieldManagement = () => {
       };
     }
   }, [activeTab, selectedDate, fieldStatuses]);
-
-  console.log("Current field status:", currentFieldStatus);
 
   // Đếm số khung giờ trống
   const availableSlots = currentFieldStatus?.timeSlots.filter(
@@ -546,9 +539,8 @@ const FieldManagement = () => {
     }
 
     try {
+      // Set loading state while updating price
       setLoading(true);
-      console.log(`Updating price for time slot ${editingTimeSlot.id}`);
-      console.log(`New weekday price: ${weekdayPrice}, new weekend price: ${weekendPrice}`);
 
       // Prepare the data for the API call
       const priceData = {
@@ -558,18 +550,17 @@ const FieldManagement = () => {
       };
 
       try {
-        // Make the API call
+        // Make API call to update time slot price
         const response = await axios.put(
-          `http://localhost:9002/api/timeslots/${editingTimeSlot.id}`,
+          `http://localhost:9003/api/timeslots/${editingTimeSlot.id}`,
           priceData
         );
-        console.log("Update time slot price response:", response.data);
 
         // Update local state with the new prices
         setTimeSlots(prevTimeSlots => {
           const updatedTimeSlots = [...prevTimeSlots];
           const index = updatedTimeSlots.findIndex(slot => slot.id === editingTimeSlot.id);
-          
+
           if (index !== -1) {
             updatedTimeSlots[index] = {
               ...updatedTimeSlots[index],
@@ -577,7 +568,7 @@ const FieldManagement = () => {
               weekendPrice: parseFloat(weekendPrice)
             };
           }
-          
+
           return updatedTimeSlots;
         });
 
@@ -592,15 +583,14 @@ const FieldManagement = () => {
         });
       } catch (error) {
         console.error("Error updating time slot price:", error);
-        
-        // Fake successful response for demo
-        console.log("Using fake success response for updating time slot price");
-        
+
+        // Fallback for demo purposes
+
         // Update local state with the new prices anyway
         setTimeSlots(prevTimeSlots => {
           const updatedTimeSlots = [...prevTimeSlots];
           const index = updatedTimeSlots.findIndex(slot => slot.id === editingTimeSlot.id);
-          
+
           if (index !== -1) {
             updatedTimeSlots[index] = {
               ...updatedTimeSlots[index],
@@ -608,7 +598,7 @@ const FieldManagement = () => {
               weekendPrice: parseFloat(weekendPrice)
             };
           }
-          
+
           return updatedTimeSlots;
         });
 
@@ -646,11 +636,10 @@ const FieldManagement = () => {
     if (!bulkPrice || selectedTimeSlots.length === 0) return;
 
     try {
+      // Parse price value and initialize counters
       const priceValue = parseFloat(bulkPrice);
       let successCount = 0;
       let errorCount = 0;
-
-      console.log(`Bulk updating ${selectedTimeSlots.length} time slots with price: ${priceValue}, type: ${bulkPriceType}`);
 
       // Create an array of promises for all the update requests
       const updatePromises = selectedTimeSlots.map(async (slotId) => {
@@ -658,7 +647,7 @@ const FieldManagement = () => {
           // Find the time slot in the current state
           const timeSlot = timeSlots.find(slot => slot.id === slotId);
           if (!timeSlot) {
-            console.error(`Time slot with ID ${slotId} not found in local state`);
+            // Skip time slots that don't exist in local state
             errorCount++;
             return null;
           }
@@ -672,17 +661,15 @@ const FieldManagement = () => {
             updateData.weekendPrice = priceValue;
           }
 
-          console.log(`Updating time slot ${slotId} with data:`, updateData);
-
           // Make API call to update the time slot using axios
-          const response = await axios.put(`http://localhost:9002/api/timeslots/${slotId}`, updateData, {
+          const response = await axios.put(`http://localhost:9003/api/timeslots/${slotId}`, updateData, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
             }
           });
 
-          console.log(`Time slot ${slotId} update response:`, response.data);
+          // Increment success counter and return the slot ID
           successCount++;
           return slotId;
         } catch (error) {
@@ -694,7 +681,6 @@ const FieldManagement = () => {
 
       // Wait for all update requests to complete
       const results = await Promise.all(updatePromises);
-      console.log("Bulk update results:", results);
 
       // Update the local state for successful updates
       const successfulUpdates = results.filter(Boolean) as number[];
@@ -753,8 +739,8 @@ const FieldManagement = () => {
     }
 
     try {
+      // Set loading state while locking time slot
       setLoading(true);
-      console.log(`Attempting to lock time slot ${lockingSlot.slotId} for field ${lockingSlot.fieldId}`);
 
       // Call the API to lock the time slot
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
@@ -766,22 +752,22 @@ const FieldManagement = () => {
 
       // Try to use fieldManagementAPI first
       try {
+        // Call the API to lock the time slot
         const response = await fieldManagementAPI.lockTimeSlot(lockingSlot.fieldId, lockData);
-        console.log("Lock time slot response:", response.data);
 
         // Update the UI to reflect the locked status
         setFieldStatuses(prevStatuses => {
           const updatedStatuses = [...prevStatuses];
           const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
-          
+
           if (fieldStatus) {
             const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
-            
+
             if (timeSlotIndex !== -1) {
               fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
             }
           }
-          
+
           return updatedStatuses;
         });
 
@@ -795,28 +781,28 @@ const FieldManagement = () => {
         });
       } catch (error) {
         console.error("Error locking time slot with fieldManagementAPI:", error);
-        
+
         // Fallback to using axios directly
         try {
+          // Fallback to direct API call
           const response = await axios.post(
-            `http://localhost:9002/api/field-management/${lockingSlot.fieldId}/lock`,
+            `http://localhost:9003/api/field-management/${lockingSlot.fieldId}/lock`,
             lockData
           );
-          console.log("Lock time slot response (direct):", response.data);
 
           // Update the UI to reflect the locked status
           setFieldStatuses(prevStatuses => {
             const updatedStatuses = [...prevStatuses];
             const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
-            
+
             if (fieldStatus) {
               const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
-              
+
               if (timeSlotIndex !== -1) {
                 fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
               }
             }
-            
+
             return updatedStatuses;
           });
 
@@ -830,23 +816,22 @@ const FieldManagement = () => {
           });
         } catch (directError) {
           console.error("Error locking time slot with direct API call:", directError);
-          
-          // If both API calls fail, fake a successful response for demo purposes
-          console.log("Using fake success response for locking time slot");
-          
+
+          // If both API calls fail, use a fallback for demo purposes
+
           // Update the UI to reflect the locked status
           setFieldStatuses(prevStatuses => {
             const updatedStatuses = [...prevStatuses];
             const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
-            
+
             if (fieldStatus) {
               const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
-              
+
               if (timeSlotIndex !== -1) {
                 fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
               }
             }
-            
+
             return updatedStatuses;
           });
 
@@ -912,7 +897,7 @@ const FieldManagement = () => {
 
           // Fallback to direct API call
           try {
-            await axios.post(`http://localhost:9002/api/fields/${fieldId}/unlock-day`, {
+            await axios.post(`http://localhost:9003/api/fields/${fieldId}/unlock-day`, {
               date: formattedDate
             }, {
               headers: {
@@ -963,7 +948,7 @@ const FieldManagement = () => {
 
           // Fallback to direct API call
           try {
-            await axios.post(`http://localhost:9002/api/fields/${fieldId}/lock-day`, {
+            await axios.post(`http://localhost:9003/api/fields/${fieldId}/lock-day`, {
               date: formattedDate,
               reason: "Locked by admin"
             }, {
@@ -1226,13 +1211,13 @@ const FieldManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setEditingTimeSlot(null)}
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleUpdatePrice}
               disabled={!weekdayPrice || !weekendPrice}
             >
@@ -1260,8 +1245,8 @@ const FieldManagement = () => {
             />
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowLockDialog(false);
                 setLockingSlot(null);
@@ -1269,7 +1254,7 @@ const FieldManagement = () => {
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleLockTimeSlot}
               disabled={!lockReason}
               className="bg-red-600 hover:bg-red-700"
@@ -1306,7 +1291,7 @@ const FieldManagement = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="bulk-price" className="text-right col-span-1">
                 Giá mới
@@ -1320,7 +1305,7 @@ const FieldManagement = () => {
                 placeholder="Nhập giá mới..."
               />
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <label className="text-right col-span-1">
                 Áp dụng cho
@@ -1340,13 +1325,13 @@ const FieldManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowBulkEditDialog(false)}
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleBulkUpdatePrice}
               disabled={selectedTimeSlots.length === 0 || !bulkPrice}
             >

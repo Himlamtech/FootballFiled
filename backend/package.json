@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "cleanup": "node backend/utils/cleanupExpiredOpponents.js"
+    "cleanup": "node backend/utils/cleanupExpiredOpponents.js",
+    "test": "node test/run-tests.js"
   },
   "dependencies": {
     "axios": "^1.9.0",

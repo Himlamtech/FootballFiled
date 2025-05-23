@@ -68,9 +68,9 @@ const BookingField = () => {
     const fetchFields = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:9002/api/fields');
+        // Fetch fields from API
+        const response = await fetch('http://localhost:9003/api/fields');
         const data = await response.json();
-        console.log("Fields API response:", data);
 
         if (data) {
           let fieldsData = [];
@@ -87,19 +87,18 @@ const BookingField = () => {
             fieldsData = data.data;
           }
 
-          console.log("Fields data to process:", fieldsData);
-
+          // Map API response to our Field interface
           const mappedFields = fieldsData.map((field: any) => ({
             id: field.fieldId || field.id,
             name: field.name,
             size: field.size || field.capacity ? `${field.capacity || field.size}` : "Không xác định",
             image: field.imageUrl
-              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9002${field.imageUrl}`)
+              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9003${field.imageUrl}`)
               : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
             description: field.description || "Sân bóng đá"
           }));
 
-          console.log("Mapped fields:", mappedFields);
+          // Update state with mapped fields
           setFields(mappedFields);
 
           // Set default selected field
@@ -132,13 +131,13 @@ const BookingField = () => {
       if (!selectedField) return;
 
       try {
+        // Set loading state while fetching time slots
         setLoadingTimeSlots(true);
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        console.log(`Fetching time slots for field ${selectedField.id} on ${formattedDate}`);
 
-        const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
+        // Fetch time slots from API
+        const response = await fetch(`http://localhost:9003/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
         const data = await response.json();
-        console.log("Time slots API response:", data);
 
         let timeSlotData = [];
 
@@ -151,8 +150,8 @@ const BookingField = () => {
           timeSlotData = data.data;
         }
 
+        // Process time slot data if available
         if (timeSlotData.length > 0) {
-          console.log("Time slots data to process:", timeSlotData);
 
           // Convert API data to the format needed for frontend
           const formattedTimeSlots = timeSlotData.map(slot => {
@@ -187,7 +186,7 @@ const BookingField = () => {
             new Map(formattedTimeSlots.map(slot => [slot.start + slot.end, slot])).values()
           );
 
-          console.log("Formatted time slots (unique):", uniqueTimeSlots);
+          // Update state with unique time slots
           setTimeSlots(uniqueTimeSlots);
         } else {
           console.error("API returned no time slots");
@@ -256,12 +255,8 @@ const BookingField = () => {
         // status will default to 'Đã đặt' on backend
       };
 
-      console.log("Creating booking with data:", bookingData);
-
       // Use apiService to create booking
       const response = await apiService.createBooking(bookingData);
-
-      console.log("Booking API response:", response);
 
       // Check if booking was successful (apiService throws error on failure)
       handleBookingSuccess();

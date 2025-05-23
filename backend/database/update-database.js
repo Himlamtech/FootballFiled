@@ -1,17 +1,25 @@
+/**
+ * Database Update Script
+ * 
+ * This script updates the database schema by adding new columns to existing tables.
+ * It's designed to be run when the database schema needs to be updated without
+ * recreating the entire database.
+ */
+
 const mysql = require('mysql2/promise');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Database configuration
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 3306, // Default MySQL port is 3306, not 3036
+  port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '2123',
+  password: process.env.DB_PASSWORD || 'Himlam04@',
   database: process.env.DB_NAME || 'FootballField',
   multipleStatements: true
 };
