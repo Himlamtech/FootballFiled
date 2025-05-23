@@ -1,6 +1,6 @@
 /**
  * API Service
- * 
+ *
  * This service provides methods for interacting with the backend API.
  * It handles authentication, error handling, and provides typed interfaces for API responses.
  */
@@ -8,7 +8,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:9002/api';
+const API_BASE_URL = 'http://localhost:9003/api';
 
 // Types for API responses
 export interface ApiResponse<T> {
@@ -210,11 +210,11 @@ class ApiService {
       url: '/auth/login',
       data: credentials,
     });
-    
+
     if (response.token) {
       this.setToken(response.token);
     }
-    
+
     return response;
   }
 
@@ -228,7 +228,7 @@ class ApiService {
       method: 'get',
       url: '/fields',
     });
-    
+
     return response.data || [];
   }
 
@@ -237,7 +237,7 @@ class ApiService {
       method: 'get',
       url: `/fields/${id}`,
     });
-    
+
     return response.data as Field;
   }
 
@@ -247,7 +247,7 @@ class ApiService {
       method: 'get',
       url: '/timeslots/all',
     });
-    
+
     return response;
   }
 
@@ -257,7 +257,7 @@ class ApiService {
       url: '/timeslots',
       params: { field_id: fieldId, date },
     });
-    
+
     return response;
   }
 
@@ -267,7 +267,7 @@ class ApiService {
       method: 'get',
       url: '/bookings',
     });
-    
+
     return response.data || [];
   }
 
@@ -276,7 +276,7 @@ class ApiService {
       method: 'get',
       url: `/bookings/${id}`,
     });
-    
+
     return response.data as Booking;
   }
 
@@ -286,7 +286,7 @@ class ApiService {
       url: '/bookings',
       data: booking,
     });
-    
+
     return response.data as Booking;
   }
 
@@ -296,7 +296,7 @@ class ApiService {
       url: `/bookings/${id}/status`,
       data: { status },
     });
-    
+
     return response.data as Booking;
   }
 
@@ -306,7 +306,7 @@ class ApiService {
       method: 'get',
       url: '/opponents',
     });
-    
+
     return response;
   }
 
@@ -315,7 +315,7 @@ class ApiService {
       method: 'get',
       url: `/opponents/${id}`,
     });
-    
+
     return response;
   }
 
@@ -325,7 +325,7 @@ class ApiService {
       url: '/opponents',
       data: opponent,
     });
-    
+
     return response;
   }
 
@@ -335,7 +335,7 @@ class ApiService {
       url: `/opponents/${id}`,
       data: opponent,
     });
-    
+
     return response;
   }
 
@@ -352,7 +352,7 @@ class ApiService {
       method: 'get',
       url: '/feedback',
     });
-    
+
     return response.data || [];
   }
 
@@ -362,7 +362,7 @@ class ApiService {
       url: '/feedback',
       data: feedback,
     });
-    
+
     return response.data as Feedback;
   }
 
@@ -372,7 +372,7 @@ class ApiService {
       method: 'get',
       url: '/dashboard/stats',
     });
-    
+
     return response;
   }
 
@@ -382,7 +382,7 @@ class ApiService {
       url: '/dashboard/booking-chart',
       params: { period },
     });
-    
+
     return response;
   }
 
@@ -391,7 +391,7 @@ class ApiService {
       method: 'get',
       url: '/dashboard/popular-fields',
     });
-    
+
     return response;
   }
 }

@@ -1,6 +1,6 @@
 /**
  * API Test Script for Football Field Management System
- * 
+ *
  * This script tests all API endpoints to ensure they are working correctly.
  * It tests GET, POST, PUT, and DELETE methods for all resources.
  */
@@ -62,6 +62,15 @@ api.interceptors.request.use(
 async function testAdminLogin() {
   try {
     logInfo('Testing admin login...');
+    // First check if the server is running
+    try {
+      await api.get('/fields');
+      logSuccess('Server is running');
+    } catch (error) {
+      logError('Server is not running', error);
+      return false;
+    }
+
     const response = await api.post('/auth/login', ADMIN_CREDENTIALS);
     adminToken = response.data.token;
     logSuccess('Admin login successful');
@@ -89,21 +98,6 @@ async function testGetFields() {
   }
 }
 
-async function testCreateField() {
-  // Removed testCreateField, testUpdateField, and testDeleteField and their calls as field management is not allowed.
-  return null;
-}
-
-async function testUpdateField() {
-  // Removed testCreateField, testUpdateField, and testDeleteField and their calls as field management is not allowed.
-  return null;
-}
-
-async function testDeleteField() {
-  // Removed testCreateField, testUpdateField, and testDeleteField and their calls as field management is not allowed.
-  return false;
-}
-
 async function testCreateBooking() {
   try {
     logInfo('Testing POST /bookings...');
@@ -112,19 +106,19 @@ async function testCreateBooking() {
       logWarning('Skipping POST /bookings test because no fields are available');
       return null;
     }
-    
+
     const fieldId = fields[0].fieldId;
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const formattedDate = tomorrow.toISOString().split('T')[0];
-    
+
     const newBooking = {
       fieldId: fieldId,
       timeSlotId: 1, // Assuming time slot 1 exists
       bookingDate: formattedDate,
       totalPrice: 200000
     };
-    
+
     const response = await api.post('/bookings', newBooking);
     if (response.data && response.data.id) {
       testBookingId = response.data.id;
@@ -145,7 +139,7 @@ async function testUpdateBookingStatus() {
     logWarning('Skipping PATCH /bookings/status test because no booking was created');
     return null;
   }
-  
+
   try {
     logInfo(`Testing PATCH /bookings/${testBookingId}/status...`);
     const response = await api.patch(`/bookings/${testBookingId}/status`, {
@@ -204,7 +198,7 @@ async function testUpdateFeedback() {
     logWarning('Skipping PATCH /feedback/status test because no feedback was created');
     return null;
   }
-  
+
   try {
     logInfo(`Testing PATCH /feedback/${testFeedbackId}/status...`);
     const response = await api.patch(`/feedback/${testFeedbackId}/status`, {
@@ -224,7 +218,7 @@ async function testDeleteFeedback() {
     logWarning('Skipping DELETE /feedback test because no feedback was created');
     return false;
   }
-  
+
   try {
     logInfo(`Testing DELETE /feedback/${testFeedbackId}...`);
     const response = await api.delete(`/feedback/${testFeedbackId}`);
@@ -241,32 +235,40 @@ async function runTests() {
   console.log(chalk.bold.blue('=== Football Field Management API Test ==='));
   console.log(chalk.blue(`Testing API at ${API_URL}`));
   console.log(chalk.blue('----------------------------------------'));
-  
+
   // Test authentication
   const loginSuccess = await testAdminLogin();
   if (!loginSuccess) {
     logError('Authentication failed, aborting tests');
     return;
   }
-  
+
   // Test fields API
   await testGetFields();
-  
+
   // Test bookings API
   await testCreateBooking();
   await testUpdateBookingStatus();
-  
+
   // Test feedback API
   await testCreateFeedback();
   await testGetFeedback();
   await testUpdateFeedback();
   await testDeleteFeedback();
-  
+
   console.log(chalk.blue('----------------------------------------'));
   console.log(chalk.bold.green('API tests completed!'));
 }
 
 // Run the tests
-runTests().catch(error => {
-  console.error(chalk.red('Test execution failed:'), error);
-});
+module.exports = {
+  runTests,
+  testAdminLogin,
+  testGetFields,
+  testCreateBooking,
+  testUpdateBookingStatus,
+  testCreateFeedback,
+  testGetFeedback,
+  testUpdateFeedback,
+  testDeleteFeedback
+};

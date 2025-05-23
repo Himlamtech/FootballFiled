@@ -1,106 +1,113 @@
-# Hệ Thống Quản Lý Sân Bóng Đá
+# Football Field Management System
 
-Ứng dụng web toàn diện để quản lý đặt sân bóng đá, tìm đối thủ và quản lý phản hồi. Hệ thống cho phép người dùng đặt sân bóng đá, tìm đối thủ để thi đấu, đồng thời cung cấp cho quản trị viên các công cụ để quản lý sân, lịch đặt và phản hồi từ khách hàng.
+A comprehensive web application for managing football field bookings, finding opponents, and handling customer feedback. The system allows users to book football fields, find opponents for matches, and provides administrators with tools to manage fields, bookings, and customer feedback.
 
-## Tính Năng
+![Football Field Management System](backend/public/images/field-a.jpg)
 
-- **Quản Lý Người Dùng**
-  - Xác thực và phân quyền
-  - Quản lý vai trò (Người dùng, Quản trị viên)
-  - Quản lý thông tin cá nhân
+## Features
 
-- **Quản Lý Sân Bóng**
-  - Nhiều loại sân (5v5, 7v7, 11v11)
-  - Theo dõi tình trạng sân
-  - Thông tin chi tiết và hình ảnh sân
+- **User Management**
+  - Authentication and authorization
+  - Role management (User, Administrator)
+  - User profile management
 
-- **Hệ Thống Đặt Sân**
-  - Kiểm tra tình trạng sân theo thời gian thực
-  - Tạo và quản lý lịch đặt sân
-  - Theo dõi lịch sử và trạng thái đặt sân
+- **Football Field Management**
+  - Multiple field types (5v5, 7v7, 11v11)
+  - Field status tracking
+  - Detailed field information and images
 
-- **Tìm Đối Thủ**
-  - Đăng ký tìm đối thủ
-  - Ghép cặp đối thủ phù hợp
-  - Quản lý trạng thái tìm đối
+- **Booking System**
+  - Real-time field availability checking
+  - Booking creation and management
+  - Booking history and status tracking
 
-- **Hệ Thống Đánh Giá**
-  - Đánh giá và nhận xét về sân
-  - Quản lý đánh giá
+- **Opponent Finding**
+  - Register to find opponents
+  - Opponent matching
+  - Opponent finding status management
 
-- **Phản Hồi Khách Hàng**
-  - Gửi phản hồi
-  - Quản lý và phản hồi từ quản trị viên
+- **Review System**
+  - Field ratings and reviews
+  - Review management
 
-## Công Nghệ Sử Dụng
+- **Customer Feedback**
+  - Submit feedback
+  - Admin feedback management and response
+
+## Technology Stack
 
 ### Backend
-- Node.js
-- Express.js
-- MySQL
-- Sequelize ORM
-- JWT Authentication
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web framework
+- **MySQL** - Database
+- **Sequelize ORM** - Object-Relational Mapping
+- **JWT Authentication** - Secure authentication
 
 ### Frontend
-- React
-- TypeScript
-- Material-UI
-- Redux quản lý state
-- Axios gọi API
+- **React** - UI library
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn/UI** - Component library
+- **React Query** - Data fetching and state management
+- **Axios** - HTTP client
 
-## Cấu Trúc Dự Án
+## Project Structure
 
 ```
 FootballField/
-├── backend/                 # Mã nguồn backend
-│   ├── config/              # Cấu hình
-│   ├── controllers/         # Bộ điều khiển
-│   ├── database/            # Cơ sở dữ liệu
-│   │   ├── create-database.sql  # Tạo cấu trúc cơ sở dữ liệu
-│   │   ├── seed-data.sql        # Dữ liệu mẫu
-│   │   ├── database.sh          # Script khởi tạo cơ sở dữ liệu (Linux/Mac)
-│   │   └── init-database.js     # Script khởi tạo cơ sở dữ liệu (Windows)
-│   ├── middleware/          # Middleware Express
-│   ├── models/              # Mô hình Sequelize
-│   ├── routes/              # Định tuyến API
-│   └── utils/               # Tiện ích
-├── frontend/                # Mã nguồn frontend
-│   ├── public/              # Tệp tĩnh
-│   └── src/                 # Mã nguồn React
-│       ├── components/      # Các component
+├── backend/                 # Backend source code
+│   ├── config/              # Configuration
+│   ├── controllers/         # Request handlers
+│   ├── database/            # Database
+│   │   ├── create-database.sql  # Database schema
+│   │   ├── seed-data.sql        # Sample data
+│   │   ├── database.sh          # Database initialization script (Linux/Mac)
+│   │   └── init-database.js     # Database initialization script (Node.js)
+│   ├── middleware/          # Express middleware
+│   ├── models/              # Sequelize models
+│   ├── routes/              # API routes
+│   ├── test/                # Test files
+│   └── utils/               # Utilities
+├── frontend/                # Frontend source code
+│   ├── public/              # Static files
+│   └── src/                 # React source code
+│       ├── components/      # React components
 │       ├── hooks/           # Custom hooks
-│       ├── pages/           # Các trang
-│       ├── services/        # Dịch vụ API
-│       ├── utils/           # Tiện ích
-│       └── App.tsx          # Component App chính
-├── .env                     # Biến môi trường
-├── package.json             # Tệp cấu hình NPM
-└── README.md                # Tài liệu dự án
+│       ├── layouts/         # Layout components
+│       ├── pages/           # Page components
+│       ├── services/        # API services
+│       ├── utils/           # Utilities
+│       └── App.tsx          # Main App component
+├── docs/                    # Documentation
+├── .env                     # Environment variables
+├── app.sh                   # Application startup script (Linux/Mac)
+├── app.bat                  # Application startup script (Windows)
+└── README.md                # Project documentation
 ```
 
-## Bắt Đầu
+## Getting Started
 
-### Yêu Cầu Hệ Thống
+### System Requirements
 
-- Node.js (v14 trở lên)
+- Node.js (v14 or higher)
 - MySQL Server
-- npm hoặc yarn
+- npm or yarn
 
-### Cài Đặt
+### Installation
 
-1. Clone repository
-   ```
+1. Clone the repository
+   ```bash
    git clone https://github.com/your-username/football-field-management.git
    cd football-field-management
    ```
 
-2. Cài đặt các gói phụ thuộc
-   ```
+2. Install dependencies
+   ```bash
    npm install
    ```
 
-3. Thiết lập biến môi trường
-   Tạo tệp `.env` trong thư mục gốc với các biến sau:
+3. Set up environment variables
+   Create a `.env` file in the root directory with the following variables:
    ```
    PORT=9002
    NODE_ENV=development
@@ -108,95 +115,113 @@ FootballField/
    DB_PORT=3306
    DB_NAME=FootballField
    DB_USER=root
-   DB_PASSWORD=2123
+   DB_PASSWORD=Himlam04@
    JWT_SECRET=football_field_management_jwt_secret_key
    JWT_EXPIRES_IN=24h
    CORS_ORIGIN=http://localhost:9001
    ```
 
-4. Khởi tạo cơ sở dữ liệu
+4. Initialize the database
 
-   **Đối với Linux/Mac:**
-   ```
+   **For Linux/Mac:**
+   ```bash
    cd backend/database
    chmod +x database.sh
    ./database.sh
    ```
 
-   **Đối với Windows:**
-   ```
+   **For Windows:**
+   ```bash
    cd backend/database
    node init-database.js
    ```
 
-5. Khởi động backend server
-   ```
-   cd backend
-   npm run dev
-   ```
+5. Start the application using the provided script
+   ```bash
+   # For Linux/Mac
+   chmod +x app.sh
+   ./app.sh
 
-6. Cài đặt và khởi động frontend
-   ```
-   cd frontend
-   npm install
-   npm start
+   # For Windows
+   app.bat
    ```
 
-7. Truy cập ứng dụng tại `http://localhost:9001`
+6. Access the application at `http://localhost:9001`
 
-## API Endpoints
+### Admin Access
 
-### Xác thực
+- Username: `admin`
+- Password: `admin`
 
-- `POST /api/auth/register` - Đăng ký người dùng mới
-- `POST /api/auth/login` - Đăng nhập và nhận token
-- `POST /api/auth/admin/login` - Đăng nhập quản trị viên
-- `GET /api/auth/me` - Lấy thông tin người dùng hiện tại
+## API Documentation
 
-### Sân bóng
+### Authentication
 
-- `GET /api/fields` - Lấy tất cả sân bóng
-- `GET /api/fields/:id` - Lấy sân bóng theo ID
-- `POST /api/fields` - Tạo sân bóng mới (Chỉ Admin)
-- `PUT /api/fields/:id` - Cập nhật sân bóng (Chỉ Admin)
-- `DELETE /api/fields/:id` - Xóa sân bóng (Chỉ Admin)
+- `POST /api/auth/login` - Login and receive token
+- `GET /api/auth/me` - Get current user information
 
-### Khung giờ
+### Football Fields
 
-- `GET /api/timeslots` - Lấy khung giờ có sẵn
-- `GET /api/timeslots/all` - Lấy tất cả khung giờ
-- `POST /api/timeslots` - Tạo khung giờ mới (Chỉ Admin)
-- `PUT /api/timeslots/:id` - Cập nhật khung giờ (Chỉ Admin)
-- `DELETE /api/timeslots/:id` - Xóa khung giờ (Chỉ Admin)
+- `GET /api/fields` - Get all fields
+- `GET /api/fields/:id` - Get field by ID
+- `POST /api/fields` - Create a new field (Admin only)
+- `PUT /api/fields/:id` - Update field (Admin only)
+- `DELETE /api/fields/:id` - Delete field (Admin only)
 
-### Đặt sân
+### Time Slots
 
-- `GET /api/bookings` - Lấy tất cả lịch đặt sân
-- `GET /api/bookings/:id` - Lấy lịch đặt sân theo ID
-- `GET /api/bookings/timeslots` - Lấy khung giờ còn trống
-- `GET /api/bookings/field/:id` - Lấy lịch đặt sân theo sân
-- `POST /api/bookings` - Tạo lịch đặt sân mới
-- `PATCH /api/bookings/:id/status` - Cập nhật trạng thái đặt sân
+- `GET /api/timeslots` - Get available time slots
+- `GET /api/timeslots/all` - Get all time slots
+- `POST /api/timeslots` - Create a new time slot (Admin only)
+- `PUT /api/timeslots/:id` - Update time slot (Admin only)
+- `DELETE /api/timeslots/:id` - Delete time slot (Admin only)
 
-### Tìm đối thủ
+### Bookings
 
-- `GET /api/opponents` - Lấy tất cả đối thủ
-- `GET /api/opponents/available` - Lấy đối thủ đang tìm
-- `GET /api/opponents/:id` - Lấy đối thủ theo ID
-- `POST /api/opponents` - Đăng ký tìm đối thủ
-- `PUT /api/opponents/:id` - Cập nhật thông tin đối thủ
-- `DELETE /api/opponents/:id` - Hủy tìm đối thủ
+- `GET /api/bookings` - Get all bookings
+- `GET /api/bookings/:id` - Get booking by ID
+- `GET /api/bookings/timeslots` - Get available time slots for booking
+- `GET /api/bookings/field/:id` - Get bookings by field
+- `POST /api/bookings` - Create a new booking
+- `PATCH /api/bookings/:id/status` - Update booking status
 
-### Phản hồi
+### Opponents
 
-- `GET /api/feedback` - Lấy tất cả phản hồi (Chỉ Admin)
-- `GET /api/feedback/:id` - Lấy phản hồi theo ID (Chỉ Admin)
-- `POST /api/feedback` - Gửi phản hồi mới
-- `PATCH /api/feedback/:id/status` - Cập nhật trạng thái phản hồi (Chỉ Admin)
-- `DELETE /api/feedback/:id` - Xóa phản hồi (Chỉ Admin)
+- `GET /api/opponents` - Get all opponents
+- `GET /api/opponents/available` - Get available opponents
+- `GET /api/opponents/:id` - Get opponent by ID
+- `POST /api/opponents` - Register to find an opponent
+- `PUT /api/opponents/:id` - Update opponent information
+- `DELETE /api/opponents/:id` - Cancel opponent finding
 
-### Bảng điều khiển
+### Feedback
 
-- `GET /api/dashboard/stats` - Lấy thống kê tổng quan
-- `GET /api/dashboard/chart` - Lấy dữ liệu biểu đồ đặt sân
-- `GET /api/dashboard/popular-fields` - Lấy sân phổ biến nhất
+- `GET /api/feedback` - Get all feedback (Admin only)
+- `GET /api/feedback/:id` - Get feedback by ID (Admin only)
+- `POST /api/feedback` - Submit new feedback
+- `PATCH /api/feedback/:id/status` - Update feedback status (Admin only)
+- `DELETE /api/feedback/:id` - Delete feedback (Admin only)
+
+### Dashboard
+
+- `GET /api/dashboard/stats` - Get overview statistics
+- `GET /api/dashboard/chart` - Get booking chart data
+- `GET /api/dashboard/popular-fields` - Get most popular fields
+
+## Testing
+
+Run the automated tests:
+
+```bash
+cd backend
+npm test
+```
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Special thanks to all contributors
+- Inspired by the need for efficient football field management

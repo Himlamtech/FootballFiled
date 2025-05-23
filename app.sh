@@ -9,6 +9,51 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# Function to display help
+function show_help {
+  echo -e "${CYAN}${BOLD}Football Field Management System${NC}"
+  echo -e "Usage: ./app.sh [options]"
+  echo -e ""
+  echo -e "Options:"
+  echo -e "  -h, --help     Show this help message"
+  echo -e "  -t, --test     Run tests only"
+  echo -e "  -r, --reset    Reset database and start application"
+  echo -e ""
+  echo -e "Without options, the script will start the application normally."
+  exit 0
+}
+
+# Parse command line arguments
+RUN_TESTS=false
+RESET_DB=false
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      show_help
+      ;;
+    -t|--test)
+      RUN_TESTS=true
+      shift
+      ;;
+    -r|--reset)
+      RESET_DB=true
+      shift
+      ;;
+    *)
+      echo -e "${RED}Unknown option: $1${NC}"
+      show_help
+      ;;
+  esac
+done
+
+# If running tests only
+if [ "$RUN_TESTS" = true ]; then
+  echo -e "${BLUE}${BOLD}Running tests...${NC}"
+  cd backend && npm test
+  exit $?
+fi
+
 echo -e "${GREEN}${BOLD}Starting Football Field Management System...${NC}"
 
 # Check if .env file exists, create it if not
@@ -21,7 +66,7 @@ DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=FootballField
 DB_USER=root
-DB_PASSWORD=2123
+DB_PASSWORD=Himlam04@
 JWT_SECRET=football_field_management_jwt_secret_key
 JWT_EXPIRES_IN=24h
 CORS_ORIGIN=http://localhost:9001
@@ -43,24 +88,19 @@ fi
 
 # Initialize database
 echo -e "${BLUE}${BOLD}Initializing database...${NC}"
-if [ -f "backend/database/.db_initialized" ]; then
-  echo -e "${YELLOW}Database already initialized. To reinitialize, delete the file:${NC}"
+if [ -f "backend/database/.db_initialized" ] && [ "$RESET_DB" = false ]; then
+  echo -e "${YELLOW}Database already initialized. To reinitialize, use the --reset flag or delete the file:${NC}"
   echo -e "${YELLOW}backend/database/.db_initialized${NC}"
+  echo -e "${YELLOW}Example: ./app.sh --reset${NC}"
+fi
 
-  # Ask if user wants to reinitialize
-  read -p "Do you want to reinitialize the database? (y/n): " answer
-  if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+# Reinitialize database if needed
+if [ "$RESET_DB" = true ] || [ ! -f "backend/database/.db_initialized" ]; then
+  if [ -f "backend/database/.db_initialized" ]; then
     echo -e "${YELLOW}Removing database flag file...${NC}"
     rm -f backend/database/.db_initialized
-    echo -e "${BLUE}Running database initialization script...${NC}"
-    cd backend/database && node init-database.js
-    if [ $? -ne 0 ]; then
-      echo -e "${RED}${BOLD}Database initialization failed. Please check the error messages above.${NC}"
-      exit 1
-    fi
-    cd ../..
   fi
-else
+
   echo -e "${BLUE}Running database initialization script...${NC}"
   cd backend/database && node init-database.js
   if [ $? -ne 0 ]; then

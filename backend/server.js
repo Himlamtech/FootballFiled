@@ -17,7 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: [process.env.CORS_ORIGIN || 'http://localhost:9001', 'http://localhost:5173', 'http://localhost:3000'],
+  origin: [process.env.CORS_ORIGIN || 'http://localhost:9001', 'http://localhost:5173', 'http://localhost:3000', 'http://localhost:9004'],
   credentials: true
 }));
 app.use(morgan('dev'));

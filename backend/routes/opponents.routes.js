@@ -45,7 +45,9 @@ router.get('/', async (req, res) => {
         teamName: plainOpponent.team_name,
         contactPhone: plainOpponent.contact_phone,
         contactEmail: plainOpponent.contact_email,
-        expireDate: plainOpponent.expireDate,
+        skillLevel: plainOpponent.skill_level,
+        playerCount: plainOpponent.player_count,
+        expireDate: plainOpponent.expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now if missing
       };
     });
 
@@ -105,6 +107,9 @@ router.get('/available', async (req, res) => {
         teamName: plainOpponent.team_name,
         contactPhone: plainOpponent.contact_phone,
         contactEmail: plainOpponent.contact_email,
+        skillLevel: plainOpponent.skill_level,
+        playerCount: plainOpponent.player_count,
+        expireDate: plainOpponent.expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now if missing
         // Keep the original snake_case properties too for backward compatibility
       };
     });
@@ -167,6 +172,9 @@ router.get('/:id', async (req, res) => {
       teamName: plainOpponent.team_name,
       contactPhone: plainOpponent.contact_phone,
       contactEmail: plainOpponent.contact_email,
+      skillLevel: plainOpponent.skill_level,
+      playerCount: plainOpponent.player_count,
+      expireDate: plainOpponent.expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now if missing
       // Keep the original snake_case properties too for backward compatibility
     };
 
@@ -196,10 +204,12 @@ router.post('/', async (req, res) => {
     const contactPhone = req.body.contactPhone || req.body.contact_phone;
     const contactEmail = req.body.contactEmail || req.body.contact_email;
     const description = req.body.description;
+    const skillLevel = req.body.skillLevel || req.body.skill_level;
+    const playerCount = req.body.playerCount || req.body.player_count;
     const expireDate = req.body.expireDate || req.body.expire_date || new Date();
 
     console.log('Processed opponent parameters:', {
-      bookingId, teamName, contactPhone, contactEmail
+      bookingId, teamName, contactPhone, contactEmail, skillLevel, playerCount, expireDate
     });
 
     // Validate required fields
@@ -226,8 +236,10 @@ router.post('/', async (req, res) => {
       contact_phone: contactPhone,
       contact_email: contactEmail || null,
       description: description || null,
+      skill_level: skillLevel || 'intermediate',
+      player_count: playerCount || 5,
       status: 'searching',
-      expireDate: expireDate
+      expireDate: expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Default to 7 days from now
     });
 
     res.status(201).json({

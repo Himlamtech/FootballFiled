@@ -17,12 +17,13 @@ exports.getAllTimeSlots = catchAsync(async (req, res) => {
 
 // Get time slots with availability for a specific field and date
 exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
-  const { field_id, date } = req.query;
+  const fieldId = req.query.fieldId || req.query.field_id;
+  const date = req.query.date;
 
-  if (!field_id || !date) {
+  if (!fieldId || !date) {
     return res.status(400).json({
       success: false,
-      message: 'Please provide field_id and date'
+      message: 'Please provide fieldId and date'
     });
   }
 
@@ -35,11 +36,9 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
   // Get bookings for the specified field and date
   const bookings = await Booking.findAll({
     where: {
-      fieldId: field_id,
+      fieldId: fieldId,
       bookingDate: date,
-      status: {
-        [Op.notIn]: ['cancelled']
-      }
+      status: 'Đã đặt'
     }
   });
 

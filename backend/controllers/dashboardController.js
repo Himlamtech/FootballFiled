@@ -8,15 +8,15 @@ const { sequelize } = require('../config/database');
 exports.getStats = catchAsync(async (_, res) => {
   console.log('Fetching bookings for stats...');
 
-  const targetStatus = 'đã đặt'; // Lowercase target
-
   // Get bookings with status 'Đã đặt'
   const bookings = await Booking.findAll({
     attributes: ['bookingId', 'totalPrice', 'createdAt', 'status'],
-    where: sequelize.where(sequelize.fn('LOWER', sequelize.fn('TRIM', sequelize.col('status'))), 'LIKE', '%' + targetStatus + '%')
+    where: {
+      status: 'Đã đặt'
+    }
   });
 
-  console.log(`Found ${bookings.length} bookings matching status '${targetStatus}' in DB query.`);
+  console.log(`Found ${bookings.length} bookings matching status 'Đã đặt' in DB query.`);
 
   // Calculate total bookings based on the fetched bookings
   const totalBookings = bookings.length;
@@ -140,7 +140,7 @@ exports.getBookingChartData = catchAsync(async (req, res) => {
     attributes: ['bookingId', 'totalPrice', 'bookingDate', 'status'],
     where: {
       [Op.and]: [
-        sequelize.where(sequelize.fn('LOWER', sequelize.fn('TRIM', sequelize.col('status'))), 'LIKE', '%booked%'),
+        { status: 'Đã đặt' },
         {
           bookingDate: {
             [Op.between]: [startDate.toDate(), endDate.toDate()]
