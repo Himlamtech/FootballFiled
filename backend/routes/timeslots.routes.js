@@ -10,13 +10,9 @@ router.get('/all', timeSlotController.getAllTimeSlots);
 // Admin only routes
 router.use(protect);
 
-// Create a new time slot
-router.post('/', timeSlotController.createTimeSlot);
-
-// Update time slot
+// Update time slot (only keep this one as it's used for price updates)
 router.put('/:id', timeSlotController.updateTimeSlot);
 
-// Delete time slot
-router.delete('/:id', timeSlotController.deleteTimeSlot);
+// Removed POST and DELETE endpoints as we're using fixed time slots
 
 module.exports = router;

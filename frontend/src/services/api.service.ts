@@ -8,7 +8,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 // API base URL
-const API_BASE_URL = 'http://localhost:9003/api';
+const API_BASE_URL = 'http://localhost:9002/api';
 
 // Types for API responses
 export interface ApiResponse<T> {

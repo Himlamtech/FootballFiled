@@ -38,69 +38,58 @@ backend/
 
 The application uses a relational database with the following main entities:
 
-### Core Entities
+### Core Entities (Optimized Schema)
 
-- **Users**: Admin users for the system
+- **Admin**: Admin users for the system (simplified from Users)
 - **Fields**: Football fields available for booking (fixed at 4 fields)
-- **TimeSlots**: Available time slots for each field
-- **Bookings**: Reservations made by users
-- **Opponents**: Teams looking for opponents
-- **Feedback**: User feedback and inquiries
-- **Reviews**: Field reviews from users
-- **Notifications**: System notifications for users
+- **TimeSlots**: Available time slots for each field with isActive column for locking
+- **Bookings**: Reservations made by users with comprehensive customer information
+- **Opponents**: Teams looking for opponents with expiration dates
+- **Feedback**: User feedback and inquiries with priority levels
 
-### Entity Relationships
+### Entity Relationships (Optimized)
 
 - Field <-> TimeSlot (one-to-many)
 - Field <-> Booking (one-to-many)
 - TimeSlot <-> Booking (one-to-many)
-- User <-> Review (one-to-many)
-- Field <-> Review (one-to-many)
-- Booking <-> Review (one-to-one)
-- User <-> Notification (one-to-many)
-- User <-> Feedback (one-to-many)
+- Admin <-> Feedback (one-to-many, optional)
 - Booking <-> Opponent (one-to-one)
 
 ## Key Components
 
 ### Models
 
-The application uses Sequelize ORM with the following models:
+The application uses Sequelize ORM with the following optimized models:
 
-- `User`: Admin user accounts
-- `Field`: Football fields available for booking
-- `TimeSlot`: Available time slots for each field
-- `Booking`: Reservations made by users
-- `Opponent`: Teams looking for opponents
-- `Feedback`: User feedback and inquiries
-- `Review`: Field reviews from users
-- `Notification`: System notifications for users
-- `FieldManagement`: Field management records
+- `Admin`: Admin user accounts (simplified authentication)
+- `Field`: Football fields available for booking (exactly 4 fixed fields)
+- `TimeSlot`: Available time slots for each field with isActive column
+- `Booking`: Reservations made by users with comprehensive customer data
+- `Opponent`: Teams looking for opponents with expiration handling
+- `Feedback`: User feedback and inquiries with priority and admin response
 
 ### Controllers
 
 Controllers handle the business logic for each resource:
 
-- `auth.controller.js`: Authentication (login)
-- `field.controller.js`: Football field management
-- `booking.controller.js`: Booking management
-- `feedback.controller.js`: User feedback handling
-- `timeSlot.controller.js`: Time slot management
-- `fieldManagement.controller.js`: Field management
-- `dashboard.controller.js`: Admin dashboard data
+- `auth.controller.js`: Admin authentication (login only)
+- `field.controller.js`: Football field management (read-only for 4 fixed fields)
+- `booking.controller.js`: Booking management with email notifications
+- `feedback.controller.js`: User feedback handling with admin responses
+- `timeSlot.controller.js`: Time slot management with locking capability
+- `dashboard.controller.js`: Admin dashboard data with real statistics
 
 ### Routes
 
 API routes are organized by resource:
 
-- `/api/auth`: Authentication endpoints
-- `/api/fields`: Football field management
-- `/api/timeslots`: Time slot management
-- `/api/bookings`: Booking management
-- `/api/opponents`: Opponent finding
-- `/api/feedback`: User feedback
-- `/api/dashboard`: Admin dashboard data
-- `/api/field-management`: Field management
+- `/api/auth`: Admin authentication endpoints
+- `/api/fields`: Football field management (read-only)
+- `/api/timeslots`: Time slot management with locking
+- `/api/bookings`: Booking management with email notifications
+- `/api/opponents`: Opponent finding with expiration handling
+- `/api/feedback`: User feedback with admin responses
+- `/api/dashboard`: Admin dashboard with real statistics
 
 ## API Endpoints
 

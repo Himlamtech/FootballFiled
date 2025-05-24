@@ -1,18 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const fieldManagementController = require('../controllers/fieldManagement.controller');
+const fieldManagementController = require('../controllers/field-management.controller');
 const { authenticate, isAdmin } = require('../middleware/auth.middleware');
 
 /**
  * @route   GET /api/field-management/status
- * @desc    Get field management status for a specific field and date
- * @access  Public
+ * @desc    Get field status with bookings and lock information
+ * @access  Private/Admin
  */
-router.get('/status', fieldManagementController.getFieldStatus);
+router.get(
+  '/status',
+  authenticate,
+  isAdmin,
+  fieldManagementController.getFieldStatus
+);
 
 /**
  * @route   POST /api/field-management/:fieldId/lock
- * @desc    Lock a time slot for a specific field and date
+ * @desc    Lock a specific time slot
  * @access  Private/Admin
  */
 router.post(
@@ -24,7 +29,7 @@ router.post(
 
 /**
  * @route   POST /api/field-management/:fieldId/unlock
- * @desc    Unlock a time slot for a specific field and date
+ * @desc    Unlock a specific time slot
  * @access  Private/Admin
  */
 router.post(
@@ -36,7 +41,7 @@ router.post(
 
 /**
  * @route   POST /api/field-management/:fieldId/lock-all
- * @desc    Lock all time slots for a specific field and date
+ * @desc    Lock all time slots for a field on a specific date
  * @access  Private/Admin
  */
 router.post(
@@ -44,6 +49,18 @@ router.post(
   authenticate,
   isAdmin,
   fieldManagementController.lockAllTimeSlots
+);
+
+/**
+ * @route   POST /api/field-management/:fieldId/unlock-all
+ * @desc    Unlock all time slots for a field on a specific date
+ * @access  Private/Admin
+ */
+router.post(
+  '/:fieldId/unlock-all',
+  authenticate,
+  isAdmin,
+  fieldManagementController.unlockAllTimeSlots
 );
 
 module.exports = router;

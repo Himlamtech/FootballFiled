@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+// Note: dotenv is already configured in server.js
 
 // Log database connection parameters for debugging
 console.log('Database connection parameters:');

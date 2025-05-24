@@ -30,7 +30,8 @@ router.get('/', async (req, res) => {
             }
           ]
         }
-      ]
+      ],
+      order: [['createdAt', 'DESC']] // Sort by creation date, newest first
     });
 
     console.log(`Found ${opponents.length} valid opponents`);
@@ -220,14 +221,35 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Check if booking exists
-    const booking = await Booking.findByPk(bookingId);
+    // Check if booking exists and get the match date/time
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        {
+          model: TimeSlot,
+          attributes: ['timeSlotId', 'startTime', 'endTime']
+        }
+      ]
+    });
+
     if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Booking not found'
       });
     }
+
+    // Calculate expireDate based on the actual match date and time
+    const matchDate = new Date(booking.bookingDate);
+    const timeSlot = booking.TimeSlot;
+
+    // Parse the end time (format: "HH:MM:SS")
+    const [hours, minutes] = timeSlot.endTime.split(':').map(Number);
+
+    // Set the expire date to the end time of the match
+    const calculatedExpireDate = new Date(matchDate);
+    calculatedExpireDate.setHours(hours, minutes, 0, 0);
+
+    console.log(`Setting expireDate to match end time: ${calculatedExpireDate} (Match: ${matchDate}, End time: ${timeSlot.endTime})`);
 
     // Create opponent
     const opponent = await Opponent.create({
@@ -239,7 +261,7 @@ router.post('/', async (req, res) => {
       skill_level: skillLevel || 'intermediate',
       player_count: playerCount || 5,
       status: 'searching',
-      expireDate: expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Default to 7 days from now
+      expireDate: calculatedExpireDate
     });
 
     res.status(201).json({

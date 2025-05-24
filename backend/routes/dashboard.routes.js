@@ -18,4 +18,13 @@ router.get('/popular-fields', dashboardController.getPopularFields);
 // Get booking trend
 router.get('/chart/booking-trend', dashboardController.getBookingTrend);
 
+// Get detailed booking history with pagination and filtering
+router.get('/bookings', dashboardController.getBookingHistory);
+
+// Get revenue analysis by time period
+router.get('/revenue-analysis', dashboardController.getRevenueAnalysis);
+
+// Get customer statistics
+router.get('/customer-stats', dashboardController.getCustomerStats);
+
 module.exports = router;

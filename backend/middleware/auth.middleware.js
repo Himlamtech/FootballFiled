@@ -1,5 +1,5 @@
 const { verifyToken } = require('../utils/jwt');
-const { User } = require('../models');
+const { Admin } = require('../models');
 const { AppError } = require('../utils/error');
 
 /**
@@ -29,14 +29,14 @@ exports.authenticate = async (req, res, next) => {
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
 
-    // Find user
-    const user = await User.findByPk(decoded.id);
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+    // Find admin
+    const admin = await Admin.findByPk(decoded.id);
+    if (!admin) {
+      return res.status(401).json({ message: 'Admin not found' });
     }
 
-    // Check if user is active
-    if (!user.isActive) {
+    // Check if admin is active
+    if (!admin.isActive) {
       return res.status(401).json({ message: 'Your account has been disabled' });
     }
 
@@ -81,14 +81,14 @@ exports.protect = async (req, res, next) => {
       return next(new AppError('Invalid token or token expired', 401));
     }
 
-    // 3) Check if user still exists
-    const user = await User.findByPk(decoded.id);
-    if (!user) {
-      return next(new AppError('The user belonging to this token no longer exists.', 401));
+    // 3) Check if admin still exists
+    const admin = await Admin.findByPk(decoded.id);
+    if (!admin) {
+      return next(new AppError('The admin belonging to this token no longer exists.', 401));
     }
 
     // 4) Grant access to protected route
-    req.user = user;
+    req.user = decoded;
     next();
   } catch (error) {
     next(error);

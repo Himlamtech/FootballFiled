@@ -1,5 +1,5 @@
 const { catchAsync } = require('../utils/error');
-const { Booking, Field } = require('../models');
+const { Booking, Field, TimeSlot, Feedback, Opponent } = require('../models');
 const moment = require('moment');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
@@ -10,10 +10,20 @@ exports.getStats = catchAsync(async (_, res) => {
 
   // Get bookings with status 'Đã đặt'
   const bookings = await Booking.findAll({
-    attributes: ['bookingId', 'totalPrice', 'createdAt', 'status'],
+    attributes: ['bookingId', 'totalPrice', 'createdAt', 'status', 'bookingDate', 'fieldId', 'timeSlotId'],
     where: {
       status: 'Đã đặt'
-    }
+    },
+    include: [
+      {
+        model: Field,
+        attributes: ['name', 'size']
+      },
+      {
+        model: TimeSlot,
+        attributes: ['startTime', 'endTime']
+      }
+    ]
   });
 
   console.log(`Found ${bookings.length} bookings matching status 'Đã đặt' in DB query.`);
@@ -73,18 +83,176 @@ exports.getStats = catchAsync(async (_, res) => {
     moment(booking.createdAt).isSame(lastYearStart, 'year')
   ).length;
 
+  // Calculate revenue for each period
+  const todayRevenue = bookings
+    .filter(booking => moment(booking.createdAt).isSame(today, 'day'))
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+
+  const yesterdayRevenue = bookings
+    .filter(booking => moment(booking.createdAt).isSame(yesterday, 'day'))
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+
+  const thisWeekRevenue = bookings
+    .filter(booking => moment(booking.createdAt).isSame(thisWeekStart, 'week'))
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+
+  const lastWeekRevenue = bookings
+    .filter(booking => moment(booking.createdAt).isSame(lastWeekStart, 'week'))
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+
+  const thisMonthRevenue = bookings
+    .filter(booking => moment(booking.createdAt).isSame(thisMonthStart, 'month'))
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+
+  const lastMonthRevenue = bookings
+    .filter(booking => moment(booking.createdAt).isSame(lastMonthStart, 'month'))
+    .reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+
+  // Get additional statistics
+  const [feedbackCount, opponentCount, fieldCount, pendingFeedbackCount] = await Promise.all([
+    Feedback.count(),
+    Opponent.count(),
+    Field.count(),
+    Feedback.count({
+      where: {
+        status: 'new'
+      }
+    })
+  ]);
+
+  // Calculate revenue by field size
+  const revenueByFieldSize = {};
+  bookings.forEach(booking => {
+    const fieldSize = booking.Field?.size || 'Unknown';
+    if (!revenueByFieldSize[fieldSize]) {
+      revenueByFieldSize[fieldSize] = 0;
+    }
+    revenueByFieldSize[fieldSize] += parseFloat(booking.totalPrice) || 0;
+  });
+
+  // Format revenue by field size for frontend
+  const revenueByFieldSizeArray = Object.keys(revenueByFieldSize).map(size => ({
+    fieldSize: size,
+    revenue: revenueByFieldSize[size],
+    percentage: (revenueByFieldSize[size] / totalIncome) * 100
+  }));
+
+  // Calculate revenue by day of week
+  const revenueByDayOfWeek = Array(7).fill(0);
+  bookings.forEach(booking => {
+    const dayOfWeek = moment(booking.bookingDate).day(); // 0 = Sunday, 1 = Monday, etc.
+    revenueByDayOfWeek[dayOfWeek] += parseFloat(booking.totalPrice) || 0;
+  });
+
+  // Format revenue by day of week for frontend
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const revenueByDayOfWeekArray = daysOfWeek.map((day, index) => ({
+    day,
+    revenue: revenueByDayOfWeek[index],
+    percentage: (revenueByDayOfWeek[index] / totalIncome) * 100
+  }));
+
+  // Calculate this year revenue by month
+  const thisYearRevenueByMonth = Array(12).fill(0);
+  const lastYearRevenueByMonth = Array(12).fill(0);
+
+  bookings.forEach(booking => {
+    const bookingDate = moment(booking.bookingDate);
+    const month = bookingDate.month(); // 0-11
+
+    if (bookingDate.isSame(thisYearStart, 'year')) {
+      thisYearRevenueByMonth[month] += parseFloat(booking.totalPrice) || 0;
+    } else if (bookingDate.isSame(lastYearStart, 'year')) {
+      lastYearRevenueByMonth[month] += parseFloat(booking.totalPrice) || 0;
+    }
+  });
+
+  // Format yearly revenue comparison for frontend
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const yearlyRevenueComparison = months.map((month, index) => ({
+    month,
+    thisYear: thisYearRevenueByMonth[index],
+    lastYear: lastYearRevenueByMonth[index],
+    growth: lastYearRevenueByMonth[index] > 0
+      ? ((thisYearRevenueByMonth[index] - lastYearRevenueByMonth[index]) / lastYearRevenueByMonth[index]) * 100
+      : 0
+  }));
+
+  // Get recent bookings for history
+  const recentBookings = bookings
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5)
+    .map(booking => ({
+      id: booking.bookingId,
+      date: moment(booking.bookingDate).format('DD/MM/YYYY'),
+      time: `${booking.TimeSlot?.startTime} - ${booking.TimeSlot?.endTime}`,
+      field: booking.Field?.name || `Sân ${booking.fieldId}`,
+      fieldSize: booking.Field?.size || '',
+      amount: parseFloat(booking.totalPrice) || 0,
+      createdAt: moment(booking.createdAt).format('DD/MM/YYYY HH:mm')
+    }));
+
   console.log(`Booking counts (filtered): Today=${todayBookings}, Yesterday=${yesterdayBookings}, This Week=${thisWeekBookings}, Last Week=${lastWeekBookings}, This Month=${thisMonthBookings}, Last Month=${lastMonthBookings}, This Year=${thisYearBookings}, Last Year=${lastYearBookings}`);
+
+  // Calculate average booking value
+  const avgBookingValue = totalBookings > 0 ? totalIncome / totalBookings : 0;
+
+  // Calculate growth rates
+  const dayGrowthRate = yesterdayRevenue > 0 ? ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100 : 0;
+  const weekGrowthRate = lastWeekRevenue > 0 ? ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100 : 0;
+  const monthGrowthRate = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0;
+
+  // Calculate projected monthly revenue based on current daily average
+  const daysInMonth = moment().daysInMonth();
+  const daysPassed = moment().date();
+  const dailyAverage = thisMonthRevenue / daysPassed;
+  const projectedMonthlyRevenue = dailyAverage * daysInMonth;
 
   res.status(200).json({
     totalBookings,
     totalIncome,
     productSales: 0, // Removed feature
     compareData: {
-      day: { current: todayBookings, previous: yesterdayBookings },
-      week: { current: thisWeekBookings, previous: lastWeekBookings },
-      month: { current: thisMonthBookings, previous: lastMonthBookings },
-      year: { current: thisYearBookings, previous: lastYearBookings }
-    }
+      day: {
+        current: todayBookings,
+        previous: yesterdayBookings,
+        currentRevenue: todayRevenue,
+        previousRevenue: yesterdayRevenue,
+        growthRate: dayGrowthRate
+      },
+      week: {
+        current: thisWeekBookings,
+        previous: lastWeekBookings,
+        currentRevenue: thisWeekRevenue,
+        previousRevenue: lastWeekRevenue,
+        growthRate: weekGrowthRate
+      },
+      month: {
+        current: thisMonthBookings,
+        previous: lastMonthBookings,
+        currentRevenue: thisMonthRevenue,
+        previousRevenue: lastMonthRevenue,
+        growthRate: monthGrowthRate,
+        projected: projectedMonthlyRevenue
+      },
+      year: {
+        current: thisYearBookings,
+        previous: lastYearBookings
+      }
+    },
+    additionalStats: {
+      feedbackCount,
+      pendingFeedbackCount,
+      opponentCount,
+      fieldCount,
+      avgBookingValue
+    },
+    financialSummary: {
+      revenueByFieldSize: revenueByFieldSizeArray,
+      revenueByDayOfWeek: revenueByDayOfWeekArray,
+      yearlyRevenueComparison
+    },
+    recentBookings
   });
 });
 
@@ -300,4 +468,363 @@ exports.getBookingTrend = catchAsync(async (req, res) => {
   console.log('Booking trend data:', data);
 
   res.status(200).json(data);
+});
+
+// Get revenue analysis by time period
+exports.getRevenueAnalysis = catchAsync(async (req, res) => {
+  const { period = 'month', startDate, endDate } = req.query;
+
+  // Set default date range if not provided
+  let start, end;
+  if (startDate && endDate) {
+    start = moment(startDate).startOf('day');
+    end = moment(endDate).endOf('day');
+  } else {
+    // Default to last 12 months, last 12 weeks, or last 30 days depending on period
+    end = moment().endOf('day');
+
+    switch (period) {
+      case 'day':
+        start = moment().subtract(30, 'days').startOf('day');
+        break;
+      case 'week':
+        start = moment().subtract(12, 'weeks').startOf('week');
+        break;
+      case 'month':
+      default:
+        start = moment().subtract(12, 'months').startOf('month');
+        break;
+    }
+  }
+
+  // Get all bookings within the date range
+  const bookings = await Booking.findAll({
+    attributes: ['bookingId', 'totalPrice', 'bookingDate', 'status', 'createdAt'],
+    where: {
+      status: 'Đã đặt',
+      bookingDate: {
+        [Op.between]: [start.toDate(), end.toDate()]
+      }
+    }
+  });
+
+  // Initialize result array based on period
+  let results = [];
+  let currentDate = moment(start);
+
+  while (currentDate.isSameOrBefore(end, period)) {
+    let periodLabel;
+    let nextDate;
+
+    switch (period) {
+      case 'day':
+        periodLabel = currentDate.format('DD/MM/YYYY');
+        nextDate = moment(currentDate).add(1, 'day');
+        break;
+      case 'week':
+        periodLabel = `${currentDate.format('DD/MM/YYYY')} - ${moment(currentDate).endOf('week').format('DD/MM/YYYY')}`;
+        nextDate = moment(currentDate).add(1, 'week');
+        break;
+      case 'month':
+      default:
+        periodLabel = currentDate.format('MM/YYYY');
+        nextDate = moment(currentDate).add(1, 'month');
+        break;
+    }
+
+    results.push({
+      period: periodLabel,
+      revenue: 0,
+      bookingCount: 0,
+      avgBookingValue: 0
+    });
+
+    currentDate = nextDate;
+  }
+
+  // Aggregate booking data
+  bookings.forEach(booking => {
+    const bookingDate = moment(booking.bookingDate);
+    let index = 0;
+
+    switch (period) {
+      case 'day':
+        index = bookingDate.diff(start, 'days');
+        break;
+      case 'week':
+        index = Math.floor(bookingDate.diff(start, 'days') / 7);
+        break;
+      case 'month':
+      default:
+        index = bookingDate.diff(start, 'months');
+        break;
+    }
+
+    if (index >= 0 && index < results.length) {
+      results[index].revenue += parseFloat(booking.totalPrice) || 0;
+      results[index].bookingCount += 1;
+    }
+  });
+
+  // Calculate average booking value
+  results.forEach(result => {
+    result.avgBookingValue = result.bookingCount > 0 ? result.revenue / result.bookingCount : 0;
+  });
+
+  // Calculate growth rates
+  for (let i = 1; i < results.length; i++) {
+    const prevRevenue = results[i-1].revenue;
+    const currentRevenue = results[i].revenue;
+
+    results[i].growthRate = prevRevenue > 0
+      ? ((currentRevenue - prevRevenue) / prevRevenue) * 100
+      : 0;
+  }
+
+  // First period has no previous period to compare with
+  results[0].growthRate = 0;
+
+  // Calculate total and average values
+  const totalRevenue = results.reduce((sum, item) => sum + item.revenue, 0);
+  const totalBookings = results.reduce((sum, item) => sum + item.bookingCount, 0);
+  const avgRevenue = results.length > 0 ? totalRevenue / results.length : 0;
+  const avgBookings = results.length > 0 ? totalBookings / results.length : 0;
+
+  res.status(200).json({
+    period,
+    startDate: start.format('YYYY-MM-DD'),
+    endDate: end.format('YYYY-MM-DD'),
+    data: results,
+    summary: {
+      totalRevenue,
+      totalBookings,
+      avgRevenue,
+      avgBookings,
+      avgBookingValue: totalBookings > 0 ? totalRevenue / totalBookings : 0
+    }
+  });
+});
+
+// Get detailed booking history with pagination and filtering
+exports.getBookingHistory = catchAsync(async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    startDate,
+    endDate,
+    fieldId,
+    status,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = req.query;
+
+  // Build filter conditions
+  const whereConditions = {};
+
+  if (startDate && endDate) {
+    whereConditions.bookingDate = {
+      [Op.between]: [
+        moment(startDate).startOf('day').toDate(),
+        moment(endDate).endOf('day').toDate()
+      ]
+    };
+  } else if (startDate) {
+    whereConditions.bookingDate = {
+      [Op.gte]: moment(startDate).startOf('day').toDate()
+    };
+  } else if (endDate) {
+    whereConditions.bookingDate = {
+      [Op.lte]: moment(endDate).endOf('day').toDate()
+    };
+  }
+
+  if (fieldId) {
+    whereConditions.fieldId = fieldId;
+  }
+
+  if (status) {
+    whereConditions.status = status;
+  }
+
+  // Calculate pagination
+  const offset = (page - 1) * limit;
+
+  // Determine sort order
+  const order = [[sortBy, sortOrder.toUpperCase()]];
+
+  // Get total count for pagination
+  const totalCount = await Booking.count({ where: whereConditions });
+
+  // Get bookings with pagination and sorting
+  const bookings = await Booking.findAll({
+    where: whereConditions,
+    include: [
+      {
+        model: Field,
+        attributes: ['name', 'size']
+      },
+      {
+        model: TimeSlot,
+        attributes: ['startTime', 'endTime']
+      }
+    ],
+    order,
+    limit: parseInt(limit),
+    offset: parseInt(offset)
+  });
+
+  // Format bookings for response
+  const formattedBookings = bookings.map(booking => ({
+    id: booking.bookingId,
+    date: moment(booking.bookingDate).format('DD/MM/YYYY'),
+    time: `${booking.TimeSlot?.startTime} - ${booking.TimeSlot?.endTime}`,
+    field: booking.Field?.name || `Sân ${booking.fieldId}`,
+    fieldSize: booking.Field?.size || '',
+    amount: parseFloat(booking.totalPrice) || 0,
+    status: booking.status,
+    customerName: booking.customerName,
+    customerPhone: booking.customerPhone,
+    customerEmail: booking.customerEmail,
+    notes: booking.notes,
+    createdAt: moment(booking.createdAt).format('DD/MM/YYYY HH:mm')
+  }));
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalCount / limit);
+
+  // Calculate summary statistics for the filtered bookings
+  const totalAmount = bookings.reduce((sum, booking) => sum + (parseFloat(booking.totalPrice) || 0), 0);
+  const avgAmount = bookings.length > 0 ? totalAmount / bookings.length : 0;
+
+  res.status(200).json({
+    bookings: formattedBookings,
+    pagination: {
+      total: totalCount,
+      totalPages,
+      currentPage: parseInt(page),
+      limit: parseInt(limit)
+    },
+    summary: {
+      totalAmount,
+      avgAmount,
+      count: bookings.length
+    }
+  });
+});
+
+// Get customer statistics
+exports.getCustomerStats = catchAsync(async (req, res) => {
+  // Get all bookings with customer information
+  const bookings = await Booking.findAll({
+    attributes: ['bookingId', 'customerName', 'customerEmail', 'customerPhone', 'totalPrice', 'createdAt'],
+    where: {
+      status: 'Đã đặt'
+    }
+  });
+
+  // Group bookings by customer (using email as unique identifier)
+  const customerMap = {};
+
+  bookings.forEach(booking => {
+    const customerEmail = booking.customerEmail || 'unknown';
+    const customerName = booking.customerName || 'Unknown';
+    const customerPhone = booking.customerPhone || 'Unknown';
+    const bookingAmount = parseFloat(booking.totalPrice) || 0;
+    const bookingDate = moment(booking.createdAt);
+
+    if (!customerMap[customerEmail]) {
+      customerMap[customerEmail] = {
+        email: customerEmail,
+        name: customerName,
+        phone: customerPhone,
+        totalSpent: 0,
+        bookingCount: 0,
+        firstBooking: bookingDate,
+        lastBooking: bookingDate,
+        bookings: []
+      };
+    }
+
+    const customer = customerMap[customerEmail];
+    customer.totalSpent += bookingAmount;
+    customer.bookingCount += 1;
+
+    // Update first and last booking dates
+    if (bookingDate.isBefore(customer.firstBooking)) {
+      customer.firstBooking = bookingDate;
+    }
+    if (bookingDate.isAfter(customer.lastBooking)) {
+      customer.lastBooking = bookingDate;
+    }
+
+    // Add booking to customer's booking list
+    customer.bookings.push({
+      id: booking.bookingId,
+      amount: bookingAmount,
+      date: bookingDate.format('DD/MM/YYYY')
+    });
+  });
+
+  // Convert map to array and calculate additional metrics
+  const customers = Object.values(customerMap).map(customer => {
+    // Calculate average booking value
+    customer.avgBookingValue = customer.bookingCount > 0 ? customer.totalSpent / customer.bookingCount : 0;
+
+    // Calculate days since last booking
+    customer.daysSinceLastBooking = moment().diff(customer.lastBooking, 'days');
+
+    // Calculate customer lifetime (days between first and last booking)
+    customer.customerLifetime = customer.lastBooking.diff(customer.firstBooking, 'days');
+
+    // Format dates
+    customer.firstBooking = customer.firstBooking.format('DD/MM/YYYY');
+    customer.lastBooking = customer.lastBooking.format('DD/MM/YYYY');
+
+    return customer;
+  });
+
+  // Sort customers by total spent (descending)
+  customers.sort((a, b) => b.totalSpent - a.totalSpent);
+
+  // Calculate top customers (top 10)
+  const topCustomers = customers.slice(0, 10).map(customer => ({
+    name: customer.name,
+    email: customer.email,
+    phone: customer.phone,
+    totalSpent: customer.totalSpent,
+    bookingCount: customer.bookingCount,
+    avgBookingValue: customer.avgBookingValue
+  }));
+
+  // Calculate summary statistics
+  const totalCustomers = customers.length;
+  const totalRevenue = customers.reduce((sum, customer) => sum + customer.totalSpent, 0);
+  const totalBookings = customers.reduce((sum, customer) => sum + customer.bookingCount, 0);
+  const avgRevenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
+  const avgBookingsPerCustomer = totalCustomers > 0 ? totalBookings / totalCustomers : 0;
+
+  // Calculate customer segments based on booking frequency
+  const oneTimeCustomers = customers.filter(customer => customer.bookingCount === 1).length;
+  const regularCustomers = customers.filter(customer => customer.bookingCount >= 2 && customer.bookingCount <= 5).length;
+  const loyalCustomers = customers.filter(customer => customer.bookingCount > 5).length;
+
+  res.status(200).json({
+    summary: {
+      totalCustomers,
+      totalRevenue,
+      totalBookings,
+      avgRevenuePerCustomer,
+      avgBookingsPerCustomer,
+      avgBookingValue: totalBookings > 0 ? totalRevenue / totalBookings : 0
+    },
+    segments: {
+      oneTimeCustomers,
+      regularCustomers,
+      loyalCustomers,
+      oneTimePercentage: totalCustomers > 0 ? (oneTimeCustomers / totalCustomers) * 100 : 0,
+      regularPercentage: totalCustomers > 0 ? (regularCustomers / totalCustomers) * 100 : 0,
+      loyalPercentage: totalCustomers > 0 ? (loyalCustomers / totalCustomers) * 100 : 0
+    },
+    topCustomers
+  });
 });

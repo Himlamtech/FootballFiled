@@ -27,9 +27,9 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
     });
   }
 
-  // Get all time slots
+  // Get all time slots for the field (including locked ones for display)
   const timeSlots = await TimeSlot.findAll({
-    where: { isActive: true },
+    where: { fieldId: fieldId },
     order: [['startTime', 'ASC']]
   });
 
@@ -49,6 +49,8 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
   const timeSlotsWithAvailability = timeSlots.map(timeSlot => {
     const booking = bookings.find(b => b.timeSlotId === timeSlot.timeSlotId);
     const isBooked = !!booking;
+    const isLocked = !timeSlot.isActive; // Time slot is locked if isActive is false
+    const lockReason = isLocked ? 'Locked by admin' : null;
 
     // Determine if it's a weekend to set the correct price
     const bookingDate = new Date(date);
@@ -59,8 +61,10 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
       start_time: timeSlot.startTime,
       end_time: timeSlot.endTime,
       price: isWeekend ? timeSlot.weekendPrice : timeSlot.weekdayPrice,
-      available: !isBooked,
+      available: !isBooked && !isLocked,
       isBooked: isBooked,
+      isLocked: isLocked,
+      lockReason: lockReason,
       customer: isBooked ? {
         name: booking.customerName || '',
         phone: booking.customerPhone || ''
@@ -71,24 +75,24 @@ exports.getAvailableTimeSlots = catchAsync(async (req, res) => {
   res.status(200).json(timeSlotsWithAvailability);
 });
 
-// Create a new time slot (admin only)
-exports.createTimeSlot = catchAsync(async (req, res) => {
-  const { startTime, endTime, weekdayPrice, weekendPrice, fieldId } = req.body;
-
-  const timeSlot = await TimeSlot.create({
-    startTime,
-    endTime,
-    weekdayPrice,
-    weekendPrice,
-    fieldId,
-    isActive: true
-  });
-
-  res.status(201).json({
-    success: true,
-    data: timeSlot
-  });
-});
+// Create a new time slot (admin only) - UNUSED as we're using fixed time slots
+// exports.createTimeSlot = catchAsync(async (req, res) => {
+//   const { startTime, endTime, weekdayPrice, weekendPrice, fieldId } = req.body;
+//
+//   const timeSlot = await TimeSlot.create({
+//     startTime,
+//     endTime,
+//     weekdayPrice,
+//     weekendPrice,
+//     fieldId,
+//     isActive: true
+//   });
+//
+//   res.status(201).json({
+//     success: true,
+//     data: timeSlot
+//   });
+// });
 
 // Update time slot (admin only)
 exports.updateTimeSlot = catchAsync(async (req, res, next) => {
@@ -115,18 +119,18 @@ exports.updateTimeSlot = catchAsync(async (req, res, next) => {
   });
 });
 
-// Delete time slot (admin only)
-exports.deleteTimeSlot = catchAsync(async (req, res, next) => {
-  const timeSlot = await TimeSlot.findByPk(req.params.id);
-
-  if (!timeSlot) {
-    return next(new AppError('Time slot not found', 404));
-  }
-
-  await timeSlot.destroy();
-
-  res.status(200).json({
-    success: true,
-    message: 'Time slot deleted successfully'
-  });
-});
+// Delete time slot (admin only) - UNUSED as we're using fixed time slots
+// exports.deleteTimeSlot = catchAsync(async (req, res, next) => {
+//   const timeSlot = await TimeSlot.findByPk(req.params.id);
+//
+//   if (!timeSlot) {
+//     return next(new AppError('Time slot not found', 404));
+//   }
+//
+//   await timeSlot.destroy();
+//
+//   res.status(200).json({
+//     success: true,
+//     message: 'Time slot deleted successfully'
+//   });
+// });

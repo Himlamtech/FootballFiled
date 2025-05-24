@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Use absolute URL to connect to backend
-const API_URL = 'http://localhost:9003/api';
+const API_URL = 'http://localhost:9002/api';
 
 // Create axios instance with base URL
 const api = axios.create({
@@ -58,8 +58,12 @@ export const fieldManagementAPI = {
     api.get('/field-management/status', { params: { fieldId, date } }),
   lockTimeSlot: (fieldId: number, data: any) =>
     api.post(`/field-management/${fieldId}/lock`, data),
+  unlockTimeSlot: (fieldId: number, data: any) =>
+    api.post(`/field-management/${fieldId}/unlock`, data),
   lockAllTimeSlots: (fieldId: number, data: any) =>
     api.post(`/field-management/${fieldId}/lock-all`, data),
+  unlockAllTimeSlots: (fieldId: number, data: any) =>
+    api.post(`/field-management/${fieldId}/unlock-all`, data),
 };
 
 // Booking API
@@ -92,6 +96,9 @@ export const dashboardAPI = {
   getStats: () => api.get('/dashboard/stats'),
   getChartData: (params?: any) => api.get('/dashboard/chart', { params }),
   getBookingTrend: () => api.get('/dashboard/chart/booking-trend'),
+  getBookingHistory: (params?: any) => api.get('/dashboard/bookings', { params }),
+  getRevenueAnalysis: (params?: any) => api.get('/dashboard/revenue-analysis', { params }),
+  getCustomerStats: () => api.get('/dashboard/customer-stats'),
 };
 
 // Feedback API

@@ -8,11 +8,11 @@ const Feedback = sequelize.define('Feedback', {
     autoIncrement: true
   },
   name: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false
   },
   email: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false
   },
   content: {
@@ -27,13 +27,35 @@ const Feedback = sequelize.define('Feedback', {
     type: DataTypes.TEXT,
     allowNull: true
   },
-  user_id: {
+  adminId: {
     type: DataTypes.INTEGER,
-    allowNull: true
+    allowNull: true,
+    references: {
+      model: 'Admin',
+      key: 'adminId'
+    }
+  },
+  priority: {
+    type: DataTypes.ENUM('low', 'medium', 'high'),
+    defaultValue: 'medium'
   }
 }, {
   timestamps: true,
-  tableName: 'Feedback'
+  tableName: 'Feedback',
+  indexes: [
+    {
+      fields: ['status'],
+      name: 'idx_feedback_status'
+    },
+    {
+      fields: ['priority'],
+      name: 'idx_feedback_priority'
+    },
+    {
+      fields: ['adminId'],
+      name: 'idx_feedback_admin'
+    }
+  ]
 });
 
 module.exports = Feedback;

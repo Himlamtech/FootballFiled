@@ -1,4 +1,4 @@
-const { Field, TimeSlot, Review } = require('../models');
+const { Field, TimeSlot } = require('../models');
 const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
 
@@ -80,13 +80,6 @@ exports.getFieldById = async (req, res) => {
           model: TimeSlot,
           as: 'timeSlots',
           required: false
-        },
-        {
-          model: Review,
-          as: 'reviews',
-          required: false,
-          limit: 5,
-          order: [['createdAt', 'DESC']]
         }
       ]
     });
@@ -99,31 +92,8 @@ exports.getFieldById = async (req, res) => {
       });
     }
 
-    // Calculate average rating
-    let averageRating = 0;
-    let reviewCount = 0;
-
-    try {
-      const avgRating = await Review.findOne({
-        attributes: [
-          [sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
-          [sequelize.fn('COUNT', sequelize.col('reviewId')), 'reviewCount']
-        ],
-        where: { fieldId }
-      });
-
-      if (avgRating) {
-        averageRating = avgRating.getDataValue('averageRating') || 0;
-        reviewCount = avgRating.getDataValue('reviewCount') || 0;
-      }
-    } catch (error) {
-      console.error('Error calculating average rating:', error);
-      // Continue with default values
-    }
-
+    // Note: Reviews functionality removed in optimized schema
     const fieldData = field.toJSON();
-    fieldData.averageRating = averageRating;
-    fieldData.reviewCount = reviewCount;
 
     // Add id alias for fieldId for frontend compatibility
     fieldData.id = fieldData.fieldId;

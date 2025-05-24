@@ -4,11 +4,14 @@ const morgan = require('morgan');
 const path = require('path');
 const dotenv = require('dotenv');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from root directory
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 // Import database configuration
 const { sequelize, testConnection } = require('./config/database');
+
+// Import cleanup utility
+const cleanupExpiredOpponents = require('./utils/cleanupExpiredOpponents');
 
 // Initialize Express app
 const app = express();
@@ -34,8 +37,8 @@ app.use('/api/auth', require('./routes/auth.routes'));
 
 // Field management routes
 app.use('/api/fields', require('./routes/field.routes'));
+app.use('/api/field-management', require('./routes/field-management.routes'));
 app.use('/api/timeslots', require('./routes/timeslots.routes'));
-app.use('/api/field-management', require('./routes/fieldManagement.routes'));
 
 // Booking management routes
 app.use('/api/bookings', require('./routes/booking.routes'));
@@ -76,6 +79,9 @@ testConnection()
     if (connected) {
       app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
+
+        // Start automatic cleanup scheduler
+        startCleanupScheduler();
       });
     } else {
       console.error('Database connection failed');
@@ -86,5 +92,36 @@ testConnection()
     console.error('Database connection error:', err);
     process.exit(1);
   });
+
+/**
+ * Start the automatic cleanup scheduler for expired opponent posts
+ * Runs every hour to check for and remove expired posts
+ */
+function startCleanupScheduler() {
+  console.log('Starting automatic cleanup scheduler for expired opponent posts...');
+
+  // Run cleanup immediately on startup
+  cleanupExpiredOpponents()
+    .then(deletedCount => {
+      console.log(`Initial cleanup completed. Deleted ${deletedCount} expired posts.`);
+    })
+    .catch(error => {
+      console.error('Initial cleanup failed:', error);
+    });
+
+  // Schedule cleanup to run every hour (3600000 ms)
+  setInterval(async () => {
+    try {
+      const deletedCount = await cleanupExpiredOpponents();
+      if (deletedCount > 0) {
+        console.log(`Scheduled cleanup completed. Deleted ${deletedCount} expired posts.`);
+      }
+    } catch (error) {
+      console.error('Scheduled cleanup failed:', error);
+    }
+  }, 3600000); // Run every hour
+
+  console.log('Cleanup scheduler started. Will run every hour.');
+}
 
 module.exports = app;

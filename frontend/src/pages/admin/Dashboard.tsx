@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, CalendarIcon, ShoppingCartIcon, ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon, Loader2 } from "lucide-react";
+import { BarChart, CalendarIcon, ShoppingCartIcon, ArrowUpIcon, ArrowDownIcon, ChevronLeftIcon, ChevronRightIcon, Loader2, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -47,15 +47,59 @@ const Dashboard = () => {
     totalIncome: 0,
     productSales: 0,
     compareData: {
-      day: { current: 0, previous: 0 },
-      week: { current: 0, previous: 0 },
-      month: { current: 0, previous: 0 },
+      day: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0 },
+      week: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0 },
+      month: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0, projected: 0 },
       year: { current: 0, previous: 0 }
-    }
+    },
+    additionalStats: {
+      feedbackCount: 0,
+      pendingFeedbackCount: 0,
+      opponentCount: 0,
+      fieldCount: 0,
+      avgBookingValue: 0
+    },
+    financialSummary: {
+      revenueByFieldSize: [],
+      revenueByDayOfWeek: [],
+      yearlyRevenueComparison: []
+    },
+    recentBookings: []
   });
   const [chartData, setChartData] = useState<any[]>([]);
   const [revenueByQuarterData, setRevenueByQuarterData] = useState<any[]>([]);
   const [bookingTrendData, setBookingTrendData] = useState<any[]>([]);
+  const [bookingHistory, setBookingHistory] = useState({
+    bookings: [],
+    pagination: { total: 0, totalPages: 0, currentPage: 1, limit: 10 },
+    summary: { totalAmount: 0, avgAmount: 0, count: 0 }
+  });
+  const [revenueAnalysis, setRevenueAnalysis] = useState({
+    period: 'month',
+    startDate: '',
+    endDate: '',
+    data: [],
+    summary: { totalRevenue: 0, totalBookings: 0, avgRevenue: 0, avgBookings: 0, avgBookingValue: 0 }
+  });
+  const [customerStats, setCustomerStats] = useState({
+    summary: {
+      totalCustomers: 0,
+      totalRevenue: 0,
+      totalBookings: 0,
+      avgRevenuePerCustomer: 0,
+      avgBookingsPerCustomer: 0,
+      avgBookingValue: 0
+    },
+    segments: {
+      oneTimeCustomers: 0,
+      regularCustomers: 0,
+      loyalCustomers: 0,
+      oneTimePercentage: 0,
+      regularPercentage: 0,
+      loyalPercentage: 0
+    },
+    topCustomers: []
+  });
 
   const { toast } = useToast();
 
@@ -74,11 +118,24 @@ const Dashboard = () => {
             totalIncome: data.totalIncome || 0,
             productSales: data.productSales || 0,
             compareData: data.compareData || {
-              day: { current: 0, previous: 0 },
-              week: { current: 0, previous: 0 },
-              month: { current: 0, previous: 0 },
+              day: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0 },
+              week: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0 },
+              month: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0, projected: 0 },
               year: { current: 0, previous: 0 }
-            }
+            },
+            additionalStats: data.additionalStats || {
+              feedbackCount: 0,
+              pendingFeedbackCount: 0,
+              opponentCount: 0,
+              fieldCount: 0,
+              avgBookingValue: 0
+            },
+            financialSummary: data.financialSummary || {
+              revenueByFieldSize: [],
+              revenueByDayOfWeek: [],
+              yearlyRevenueComparison: []
+            },
+            recentBookings: data.recentBookings || []
           });
         }
       } catch (error) {
@@ -95,11 +152,24 @@ const Dashboard = () => {
           totalIncome: 0,
           productSales: 0,
           compareData: {
-            day: { current: 0, previous: 0 },
-            week: { current: 0, previous: 0 },
-            month: { current: 0, previous: 0 },
+            day: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0 },
+            week: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0 },
+            month: { current: 0, previous: 0, currentRevenue: 0, previousRevenue: 0, growthRate: 0, projected: 0 },
             year: { current: 0, previous: 0 }
-          }
+          },
+          additionalStats: {
+            feedbackCount: 0,
+            pendingFeedbackCount: 0,
+            opponentCount: 0,
+            fieldCount: 0,
+            avgBookingValue: 0
+          },
+          financialSummary: {
+            revenueByFieldSize: [],
+            revenueByDayOfWeek: [],
+            yearlyRevenueComparison: []
+          },
+          recentBookings: []
         });
       } finally {
         setLoading(false);
@@ -183,6 +253,88 @@ const Dashboard = () => {
     };
     fetchBookingTrend();
   }, [periodType]);
+
+  // Fetch booking history data
+  useEffect(() => {
+    const fetchBookingHistory = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardAPI.getBookingHistory({
+          page: 1,
+          limit: 10,
+          sortBy: 'createdAt',
+          sortOrder: 'desc'
+        });
+
+        if (response.data) {
+          setBookingHistory(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching booking history:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load booking history",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookingHistory();
+  }, []);
+
+  // Fetch revenue analysis data
+  useEffect(() => {
+    const fetchRevenueAnalysis = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardAPI.getRevenueAnalysis({
+          period: 'month'
+        });
+
+        if (response.data) {
+          setRevenueAnalysis(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching revenue analysis:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load revenue analysis",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRevenueAnalysis();
+  }, []);
+
+  // Fetch customer statistics
+  useEffect(() => {
+    const fetchCustomerStats = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardAPI.getCustomerStats();
+
+        if (response.data) {
+          setCustomerStats(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching customer statistics:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not load customer statistics",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomerStats();
+  }, []);
 
   // Generate sample chart data for testing
   const generateSampleChartData = (period: string, date: Date) => {
@@ -353,7 +505,7 @@ const Dashboard = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="p-6">
               <div className="flex items-start">
                 <div className="p-2 rounded-md bg-blue-100">
@@ -383,10 +535,46 @@ const Dashboard = () => {
                       ? statsData.totalIncome
                       : parseFloat(String(statsData.totalIncome || 0).replace(/[^\d.-]/g, '')))}
                   </h3>
-                  <p className="text-xs text-green-600 mt-1">
-                    {compareData.previous > 0 ?
-                      `${(((compareData.current - compareData.previous) / compareData.previous) * 100).toFixed(1)}% so với kỳ trước` :
+                  <p className={`text-xs ${compareData.currentRevenue >= compareData.previousRevenue ? 'text-green-600' : 'text-red-600'} mt-1`}>
+                    {compareData.previousRevenue > 0 ?
+                      `${compareData.growthRate.toFixed(1)}% so với kỳ trước` :
                       "Chưa có dữ liệu so sánh"}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-start">
+                <div className="p-2 rounded-md bg-purple-100">
+                  <FileText className="w-7 h-7 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm text-muted-foreground">Phản hồi</p>
+                  <h3 className="text-2xl font-bold">{statsData.additionalStats.feedbackCount}</h3>
+                  <p className="text-xs text-purple-600 mt-1">
+                    {statsData.additionalStats.pendingFeedbackCount > 0 ?
+                      `${statsData.additionalStats.pendingFeedbackCount} phản hồi chưa xử lý` :
+                      "Không có phản hồi mới"}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-start">
+                <div className="p-2 rounded-md bg-amber-100">
+                  <Users className="w-7 h-7 text-amber-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm text-muted-foreground">Giá trị đặt sân TB</p>
+                  <h3 className="text-2xl font-bold">
+                    {formatIncome(statsData.additionalStats.avgBookingValue)}
+                  </h3>
+                  <p className="text-xs text-amber-600 mt-1">
+                    {statsData.totalBookings > 0 ?
+                      `Dựa trên ${statsData.totalBookings} lượt đặt sân` :
+                      "Chưa có dữ liệu"}
                   </p>
                 </div>
               </div>
@@ -394,6 +582,48 @@ const Dashboard = () => {
           </div>
         </>
       )}
+
+      {/* Recent Bookings */}
+      <Card className="p-6 mb-8">
+        <h2 className="text-lg font-semibold mb-4">Lịch sử đặt sân gần đây</h2>
+        {loading ? (
+          <div className="h-60 flex justify-center items-center">
+            <Loader2 className="w-8 h-8 animate-spin text-field-600 mr-2" />
+            <span>Đang tải dữ liệu...</span>
+          </div>
+        ) : statsData.recentBookings.length === 0 ? (
+          <div className="h-60 flex justify-center items-center bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Chưa có lịch sử đặt sân</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Ngày đặt</TableHead>
+                  <TableHead>Thời gian</TableHead>
+                  <TableHead>Sân</TableHead>
+                  <TableHead>Kích thước</TableHead>
+                  <TableHead className="text-right">Số tiền</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {statsData.recentBookings.map((booking: any) => (
+                  <TableRow key={booking.id}>
+                    <TableCell className="font-medium">#{booking.id}</TableCell>
+                    <TableCell>{booking.date}</TableCell>
+                    <TableCell>{booking.time}</TableCell>
+                    <TableCell>{booking.field}</TableCell>
+                    <TableCell>{booking.fieldSize}</TableCell>
+                    <TableCell className="text-right">{formatIncome(booking.amount)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 mb-8">
         {/* Chart with Period Selection */}
@@ -552,49 +782,35 @@ const Dashboard = () => {
 
         {/* Revenue Distribution Chart */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Phân bố doanh thu</h2>
+          <h2 className="text-lg font-semibold mb-4">Phân bố doanh thu theo loại sân</h2>
           {loading ? (
             <div className="h-60 flex justify-center items-center">
               <Loader2 className="w-8 h-8 animate-spin text-field-600 mr-2" />
               <span>Đang tải dữ liệu...</span>
             </div>
+          ) : statsData.financialSummary.revenueByFieldSize.length === 0 ? (
+            <div className="h-60 flex justify-center items-center bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Không có dữ liệu phân bố doanh thu</p>
+            </div>
           ) : (
             <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  {periodType === 'year' && revenueByQuarterData && revenueByQuarterData.length > 0 ? (
-                    <Pie
-                      data={revenueByQuarterData}
-                      dataKey="value"
-                      nameKey="quarter"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      label={({ quarter, percent }) => `${quarter}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      <Cell fill="#10b981" />
-                      <Cell fill="#3b82f6" />
-                      <Cell fill="#f59e0b" />
-                      <Cell fill="#ef4444" />
-                    </Pie>
-                  ) : (
-                    <Pie
-                      data={[
-                        { name: 'Đặt sân', value: statsData.totalIncome }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                      label={({ name, percent }) => `${name}: 100%`}
-                    >
-                      <Cell fill="#10b981" />
-                    </Pie>
-                  )}
+                  <Pie
+                    data={statsData.financialSummary.revenueByFieldSize}
+                    dataKey="revenue"
+                    nameKey="fieldSize"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    label={({ fieldSize, percentage }) => `${fieldSize}: ${percentage.toFixed(0)}%`}
+                  >
+                    {statsData.financialSummary.revenueByFieldSize.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#f59e0b', '#ef4444'][index % 4]} />
+                    ))}
+                  </Pie>
                   <Tooltip
                     formatter={(value) => formatIncome(Number(value))}
                   />
@@ -604,6 +820,140 @@ const Dashboard = () => {
           )}
         </Card>
       </div>
+
+      {/* Customer Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Customer Segments */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Phân loại khách hàng</h2>
+          {loading ? (
+            <div className="h-60 flex justify-center items-center">
+              <Loader2 className="w-8 h-8 animate-spin text-field-600 mr-2" />
+              <span>Đang tải dữ liệu...</span>
+            </div>
+          ) : (
+            <div className="h-60">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Một lần', value: customerStats.segments.oneTimeCustomers, percentage: customerStats.segments.oneTimePercentage },
+                      { name: 'Thường xuyên', value: customerStats.segments.regularCustomers, percentage: customerStats.segments.regularPercentage },
+                      { name: 'Trung thành', value: customerStats.segments.loyalCustomers, percentage: customerStats.segments.loyalPercentage }
+                    ]}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    label={({ name, percentage }) => `${name}: ${percentage}%`}
+                  >
+                    <Cell fill="#3b82f6" />
+                    <Cell fill="#10b981" />
+                    <Cell fill="#f59e0b" />
+                  </Pie>
+                  <Tooltip
+                    formatter={(value, name) => [`${value} khách hàng`, name]}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Card>
+
+        {/* Top Customers */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold mb-4">Khách hàng hàng đầu</h2>
+          {loading ? (
+            <div className="h-60 flex justify-center items-center">
+              <Loader2 className="w-8 h-8 animate-spin text-field-600 mr-2" />
+              <span>Đang tải dữ liệu...</span>
+            </div>
+          ) : customerStats.topCustomers.length === 0 ? (
+            <div className="h-60 flex justify-center items-center bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Không có dữ liệu khách hàng</p>
+            </div>
+          ) : (
+            <div className="h-60 overflow-y-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Khách hàng</TableHead>
+                    <TableHead>Số lần đặt</TableHead>
+                    <TableHead className="text-right">Tổng chi tiêu</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerStats.topCustomers.slice(0, 5).map((customer: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell>{customer.bookingCount}</TableCell>
+                      <TableCell className="text-right">{formatIncome(customer.totalSpent)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Revenue Analysis by Month */}
+      <Card className="p-6 mb-8">
+        <h2 className="text-lg font-semibold mb-4">Phân tích doanh thu theo tháng</h2>
+        {loading ? (
+          <div className="h-80 flex justify-center items-center">
+            <Loader2 className="w-8 h-8 animate-spin text-field-600 mr-2" />
+            <span>Đang tải dữ liệu...</span>
+          </div>
+        ) : revenueAnalysis.data.length === 0 ? (
+          <div className="h-80 flex justify-center items-center bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Không có dữ liệu phân tích doanh thu</p>
+          </div>
+        ) : (
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart
+                data={revenueAnalysis.data}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="period"
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => `${(value/1000000).toFixed(1)}tr`}
+                />
+                <Tooltip
+                  formatter={(value) => [formatIncome(Number(value)), "Doanh thu"]}
+                  labelFormatter={(label) => `Tháng ${label}`}
+                />
+                <Legend />
+                <Bar
+                  name="Doanh thu"
+                  dataKey="revenue"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={60}
+                />
+                <Bar
+                  name="Tăng trưởng"
+                  dataKey="growthRate"
+                  fill="#3b82f6"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={30}
+                />
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </Card>
     </div>
   );
 };

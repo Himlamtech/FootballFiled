@@ -16,9 +16,10 @@ import {
 } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Lock } from "lucide-react";
 import { vi } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { validateBookingInfo } from "@/components/validation/BookingValidation";
 import QRCodePayment from "@/components/payment/QRCodePayment";
@@ -31,6 +32,8 @@ interface TimeSlot {
   end: string;
   price: number;
   available: boolean;
+  isLocked?: boolean;
+  lockReason?: string;
 }
 
 interface Field {
@@ -69,7 +72,7 @@ const BookingField = () => {
       try {
         setLoading(true);
         // Fetch fields from API
-        const response = await fetch('http://localhost:9003/api/fields');
+        const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
 
         if (data) {
@@ -93,7 +96,7 @@ const BookingField = () => {
             name: field.name,
             size: field.size || field.capacity ? `${field.capacity || field.size}` : "Không xác định",
             image: field.imageUrl
-              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9003${field.imageUrl}`)
+              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9002${field.imageUrl}`)
               : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
             description: field.description || "Sân bóng đá"
           }));
@@ -136,7 +139,7 @@ const BookingField = () => {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
 
         // Fetch time slots from API
-        const response = await fetch(`http://localhost:9003/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
+        const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
         const data = await response.json();
 
         let timeSlotData = [];
@@ -172,12 +175,18 @@ const BookingField = () => {
                 : (slot.weekdayPrice || slot.weekday_price || 0);
             }
 
+            // Check if the time slot is locked by admin
+            const isLocked = slot.isLocked === true;
+            const lockReason = slot.lockReason || 'Locked by admin';
+
             return {
               id: slotId,
               start: startTime ? startTime.substring(0, 5) : "00:00",
               end: endTime ? endTime.substring(0, 5) : "00:00",
               price: parseFloat(price) || 0,
-              available: slot.available !== false // Default to available unless explicitly set to false
+              available: slot.available !== false && !isLocked, // Not available if locked or explicitly set to false
+              isLocked: isLocked,
+              lockReason: isLocked ? lockReason : undefined
             };
           });
 
@@ -405,20 +414,30 @@ const BookingField = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {timeSlots.map((slot) => (
-                        <Button
-                          key={slot.id}
-                          variant={selectedTimeSlot?.id === slot.id ? "default" : "outline"}
-                          className={cn(
-                            "justify-center text-sm",
-                            !slot.available && "opacity-50 cursor-not-allowed"
-                          )}
-                          disabled={!slot.available}
-                          onClick={() => setSelectedTimeSlot(slot)}
-                        >
-                          {slot.start} - {slot.end}
-                        </Button>
-                      ))}
+                      <TooltipProvider>
+                        {timeSlots.map((slot) => (
+                          <Tooltip key={slot.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={selectedTimeSlot?.id === slot.id ? "default" : "outline"}
+                                className={cn(
+                                  "justify-center text-sm",
+                                  !slot.available && "opacity-50 cursor-not-allowed",
+                                  slot.isLocked && "bg-red-100 border-red-300 text-red-700 hover:bg-red-200 hover:text-red-800"
+                                )}
+                                disabled={!slot.available}
+                                onClick={() => setSelectedTimeSlot(slot)}
+                              >
+                                {slot.start} - {slot.end}
+                                {slot.isLocked && <Lock className="ml-1 h-3 w-3" />}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {slot.isLocked ? `Đã khóa: ${slot.lockReason}` : slot.available ? "Khả dụng" : "Đã đặt"}
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </TooltipProvider>
                     </div>
                   )}
 

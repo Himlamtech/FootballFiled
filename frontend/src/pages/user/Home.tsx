@@ -91,7 +91,7 @@ const Home = () => {
     const fetchFields = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:9003/api/fields');
+        const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
 
         // Process the field data based on the actual API response structure
@@ -118,9 +118,9 @@ const Home = () => {
             name: field.name,
             size: field.size || "Không xác định",
             img: field.imageUrl
-              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9003${field.imageUrl}`)
+              ? (field.imageUrl.startsWith('http') ? field.imageUrl : `http://localhost:9002${field.imageUrl}`)
               : field.image
-                ? (field.image.startsWith('http') ? field.image : `http://localhost:9003${field.image}`)
+                ? (field.image.startsWith('http') ? field.image : `http://localhost:9002${field.image}`)
                 : `https://placehold.co/600x400?text=${encodeURIComponent(field.name || 'Football Field')}`,
             description: field.description || "Sân bóng đá"
           }));

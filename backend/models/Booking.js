@@ -36,21 +36,22 @@ const Booking = sequelize.define('Booking', {
     }
   },
   status: {
-    type: DataTypes.STRING,
-    allowNull: false
+    type: DataTypes.ENUM('Đã đặt', 'Đã hủy', 'Hoàn thành'),
+    allowNull: false,
+    defaultValue: 'Đã đặt'
   },
-  // paymentStatus: {
-  //   type: DataTypes.STRING, // e.g., 'pending', 'paid', 'failed', 'refunded'
-  //   allowNull: false,
-  //   defaultValue: 'pending'
-  // },
+  paymentStatus: {
+    type: DataTypes.ENUM('pending', 'paid', 'failed', 'refunded'),
+    allowNull: false,
+    defaultValue: 'pending'
+  },
   customerName: {
     type: DataTypes.STRING(100),
-    allowNull: true
+    allowNull: false
   },
   customerPhone: {
     type: DataTypes.STRING(20),
-    allowNull: true
+    allowNull: false
   },
   customerEmail: {
     type: DataTypes.STRING(100),
@@ -61,7 +62,7 @@ const Booking = sequelize.define('Booking', {
     allowNull: true
   },
   paymentMethod: {
-    type: DataTypes.STRING(50),
+    type: DataTypes.ENUM('vietqr', 'cash', 'transfer'),
     allowNull: true,
     defaultValue: 'vietqr'
   },
