@@ -32,9 +32,6 @@ app.use('/images', express.static(path.join(__dirname, 'public/images')));
 // Authentication routes
 app.use('/api/auth', require('./routes/auth.routes'));
 
-// User management routes
-// app.use('/api/users', require('./routes/user.routes'));
-
 // Field management routes
 app.use('/api/fields', require('./routes/field.routes'));
 app.use('/api/field-management', require('./routes/field-management.routes'));

@@ -1,5 +1,5 @@
 const { Feedback, Admin } = require('../models');
-const { sendFeedbackNotification, sendFeedbackResponse } = require('../utils/emailServiceFactory');
+const { sendFeedbackNotification, sendFeedbackResponse } = require('../utils/emailService');
 
 /**
  * Get all feedback

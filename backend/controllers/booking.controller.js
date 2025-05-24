@@ -5,7 +5,7 @@ const {
 } = require('../models');
 const { sequelize } = require('../config/database');
 const { Op } = require('sequelize');
-const { sendBookingConfirmation } = require('../utils/emailServiceFactory');
+const { sendBookingConfirmation } = require('../utils/emailService');
 
 /**
  * Get booking by ID

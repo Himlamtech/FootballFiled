@@ -211,7 +211,6 @@ exports.getStats = catchAsync(async (_, res) => {
   res.status(200).json({
     totalBookings,
     totalIncome,
-    productSales: 0, // Removed feature
     compareData: {
       day: {
         current: todayBookings,
