@@ -1,185 +1,124 @@
 @echo off
 setlocal enabledelayedexpansion
 
-echo ===================================================
-echo    Football Field Management System
-echo ===================================================
-echo.
+REM Football Field Management System - Windows Startup Script
+REM This script provides a simple interface to start the application
 
-REM Parse command line arguments
-set RUN_TESTS=false
-set RESET_DB=false
+REM Check for help flag first
+if "%1"=="--help" goto show_help
+if "%1"=="-h" goto show_help
 
-:parse_args
-if "%~1"=="" goto :end_parse_args
-if /i "%~1"=="-h" goto :show_help
-if /i "%~1"=="--help" goto :show_help
-if /i "%~1"=="-t" (
-  set RUN_TESTS=true
-  shift
-  goto :parse_args
-)
-if /i "%~1"=="--test" (
-  set RUN_TESTS=true
-  shift
-  goto :parse_args
-)
-if /i "%~1"=="-r" (
-  set RESET_DB=true
-  shift
-  goto :parse_args
-)
-if /i "%~1"=="--reset" (
-  set RESET_DB=true
-  shift
-  goto :parse_args
-)
-echo Unknown option: %~1
-goto :show_help
+REM Print header
+call :print_header "Football Field Management System"
 
-:show_help
-echo Football Field Management System
-echo Usage: app.bat [options]
-echo.
-echo Options:
-echo   -h, --help     Show this help message
-echo   -t, --test     Run tests only
-echo   -r, --reset    Reset database and start application
-echo.
-echo Without options, the script will start the application normally.
-exit /b 0
+REM Check prerequisites
+call :check_nodejs
 
-:end_parse_args
+REM Install dependencies
+call :install_dependencies
 
-REM If running tests only
-if "%RUN_TESTS%"=="true" (
-  echo Running tests...
-  cd backend && npm test
-  exit /b %errorlevel%
+REM Handle different startup options
+if "%1"=="--reset-db" (
+    call :print_status "Resetting database and starting application..."
+    npm run db:reset && npm start
+) else if "%1"=="--backend-only" (
+    call :print_status "Starting backend only..."
+    npm run start:backend
+) else if "%1"=="--frontend-only" (
+    call :print_status "Starting frontend only..."
+    npm run start:frontend
+) else (
+    call :print_status "Starting application..."
+    npm start
 )
 
-REM Check if .env file exists, create it if not
-IF NOT EXIST .env (
-  echo Creating .env file...
-  (
-    echo PORT=9002
-    echo NODE_ENV=development
-    echo DB_HOST=localhost
-    echo DB_PORT=3306
-    echo DB_NAME=FootballField
-    echo DB_USER=root
-    echo DB_PASSWORD=Himlam04@
-    echo JWT_SECRET=football_field_management_jwt_secret_key
-    echo JWT_EXPIRES_IN=24h
-    echo CORS_ORIGIN=http://localhost:9001
-  ) > .env
-  echo .env file created. Please update with your database credentials if needed.
-  echo.
+goto end
+
+REM Function to print header
+:print_header
+echo ========================================
+echo   %~1
+echo ========================================
+goto :eof
+
+REM Function to print status messages
+:print_status
+echo [INFO] %~1
+goto :eof
+
+REM Function to print success messages
+:print_success
+echo [SUCCESS] %~1
+goto :eof
+
+REM Function to print error messages
+:print_error
+echo [ERROR] %~1
+goto :eof
+
+REM Function to check Node.js installation
+:check_nodejs
+node --version >nul 2>&1
+if errorlevel 1 (
+    call :print_error "Node.js is not installed. Please install Node.js first."
+    pause
+    exit /b 1
 )
 
-REM Check if MySQL is running
-echo Checking if MySQL is running...
-tasklist /FI "IMAGENAME eq mysqld.exe" | find "mysqld.exe" > nul
-IF %ERRORLEVEL% NEQ 0 (
-  echo MySQL is not running. Please start MySQL and try again.
-  echo.
-  pause
-  exit /b 1
+npm --version >nul 2>&1
+if errorlevel 1 (
+    call :print_error "npm is not installed. Please install npm first."
+    pause
+    exit /b 1
 )
-echo MySQL is running.
-echo.
 
-REM Install dependencies if node_modules doesn't exist
-IF NOT EXIST node_modules (
-  echo Installing root dependencies...
-  call npm install
-  echo.
+call :print_success "Node.js and npm are installed"
+goto :eof
+
+REM Function to install dependencies
+:install_dependencies
+call :print_status "Checking dependencies..."
+
+REM Install root dependencies if node_modules doesn't exist
+if not exist node_modules (
+    call :print_status "Installing root dependencies..."
+    npm install
 )
 
 REM Install backend dependencies if they don't exist
-IF NOT EXIST backend\node_modules (
-  echo Installing backend dependencies...
-  cd backend && call npm install && cd ..
-  echo.
+if not exist backend\node_modules (
+    call :print_status "Installing backend dependencies..."
+    cd backend && npm install && cd ..
 )
 
-REM Check if frontend dependencies are installed
-IF NOT EXIST frontend\node_modules (
-  echo Installing frontend dependencies...
-  cd frontend && call npm install && cd ..
-  echo.
+REM Install frontend dependencies if they don't exist
+if not exist frontend\node_modules (
+    call :print_status "Installing frontend dependencies..."
+    cd frontend && npm install && cd ..
 )
 
-REM Initialize database
-echo Initializing database...
-if exist backend\database\.db_initialized (
-  if "%RESET_DB%"=="false" (
-    echo Database already initialized. To reinitialize, use the --reset flag or delete the file:
-    echo backend\database\.db_initialized
-    echo Example: app.bat --reset
-    echo.
-  )
-)
+call :print_success "Dependencies ready!"
+goto :eof
 
-REM Reinitialize database if needed
-if "%RESET_DB%"=="true" (
-  if exist backend\database\.db_initialized (
-    echo Removing database flag file...
-    del /f backend\database\.db_initialized
-  )
-
-  echo Running database initialization script...
-  cd backend\database && node init-database.js
-  if %errorlevel% neq 0 (
-    echo Database initialization failed. Please check the error messages above.
-    pause
-    exit /b 1
-  )
-  cd ..\..
-  echo.
-) else (
-  if not exist backend\database\.db_initialized (
-    echo Running database initialization script...
-    cd backend\database && node init-database.js
-    if %errorlevel% neq 0 (
-      echo Database initialization failed. Please check the error messages above.
-      pause
-      exit /b 1
-    )
-    cd ..\..
-    echo.
-  )
-)
-
-REM Kill any existing processes on ports 9001 and 9002
-echo Checking for existing processes on ports 9001 and 9002...
-for /f "tokens=5" %%a in ('netstat -ano ^| find ":9001" ^| find "LISTENING"') do (
-  echo Killing process on port 9001 (PID: %%a)
-  taskkill /F /PID %%a 2>nul
-)
-for /f "tokens=5" %%a in ('netstat -ano ^| find ":9002" ^| find "LISTENING"') do (
-  echo Killing process on port 9002 (PID: %%a)
-  taskkill /F /PID %%a 2>nul
-)
+REM Show usage information
+:show_help
+echo Football Field Management System - Windows Startup Script
 echo.
+echo Usage: app.bat [options]
+echo.
+echo Options:
+echo   --reset-db      Reset database before starting
+echo   --backend-only  Start only backend server
+echo   --frontend-only Start only frontend server
+echo   --help          Show this help message
+echo.
+echo Examples:
+echo   app.bat                    # Normal startup
+echo   app.bat --reset-db         # Reset DB and start
+echo   app.bat --backend-only     # Start backend only
+echo.
+pause
+exit /b 0
 
-echo Starting backend server...
-start cmd /k "title Football Field Backend && cd backend && node server.js"
-
-echo Starting frontend server...
-start cmd /k "title Football Field Frontend && cd frontend && npm start"
-
-echo.
-echo ===================================================
-echo    Football Field Management System is running!
-echo ===================================================
-echo.
-echo Backend: http://localhost:9002
-echo Frontend: http://localhost:9001
-echo.
-echo Admin credentials:
-echo Username: admin
-echo Password: admin
-echo.
-echo Please close the terminal windows manually when you're done.
-echo Press any key to exit this window...
+:end
+pause

@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const { Admin } = require('../models');
 const { generateToken } = require('../utils/jwt');
 const { Op } = require('sequelize');

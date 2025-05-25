@@ -13,13 +13,13 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "test": "cd backend && npm test && cd ../frontend && npm test",
     "build": "cd frontend && npm run build",
-    "cleanup": "cd backend && npm run cleanup"
+    "db:init": "cd backend && node database/setup-database.js init",
+    "db:reset": "cd backend && node database/setup-database.js reset",
+    "db:seed": "cd backend && node database/setup-database.js seed",
+    "db:status": "cd backend && node database/setup-database.js status"
   },
   "dependencies": {
     "concurrently": "^8.2.2"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.52.0"
   },
   "engines": {
     "node": ">=18.0.0",
