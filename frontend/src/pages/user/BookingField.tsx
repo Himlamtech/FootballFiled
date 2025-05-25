@@ -16,9 +16,10 @@ import {
 } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Lock } from "lucide-react";
 import { vi } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { validateBookingInfo } from "@/components/validation/BookingValidation";
 import QRCodePayment from "@/components/payment/QRCodePayment";
@@ -31,6 +32,8 @@ interface TimeSlot {
   end: string;
   price: number;
   available: boolean;
+  isLocked?: boolean;
+  lockReason?: string;
 }
 
 interface Field {
@@ -68,9 +71,9 @@ const BookingField = () => {
     const fetchFields = async () => {
       try {
         setLoading(true);
+        // Fetch fields from API
         const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
-        console.log("Fields API response:", data);
 
         if (data) {
           let fieldsData = [];
@@ -87,8 +90,7 @@ const BookingField = () => {
             fieldsData = data.data;
           }
 
-          console.log("Fields data to process:", fieldsData);
-
+          // Map API response to our Field interface
           const mappedFields = fieldsData.map((field: any) => ({
             id: field.fieldId || field.id,
             name: field.name,
@@ -99,7 +101,7 @@ const BookingField = () => {
             description: field.description || "Sân bóng đá"
           }));
 
-          console.log("Mapped fields:", mappedFields);
+          // Update state with mapped fields
           setFields(mappedFields);
 
           // Set default selected field
@@ -132,13 +134,13 @@ const BookingField = () => {
       if (!selectedField) return;
 
       try {
+        // Set loading state while fetching time slots
         setLoadingTimeSlots(true);
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        console.log(`Fetching time slots for field ${selectedField.id} on ${formattedDate}`);
 
+        // Fetch time slots from API
         const response = await fetch(`http://localhost:9002/api/timeslots?field_id=${selectedField.id}&date=${formattedDate}`);
         const data = await response.json();
-        console.log("Time slots API response:", data);
 
         let timeSlotData = [];
 
@@ -151,8 +153,8 @@ const BookingField = () => {
           timeSlotData = data.data;
         }
 
+        // Process time slot data if available
         if (timeSlotData.length > 0) {
-          console.log("Time slots data to process:", timeSlotData);
 
           // Convert API data to the format needed for frontend
           const formattedTimeSlots = timeSlotData.map(slot => {
@@ -173,12 +175,18 @@ const BookingField = () => {
                 : (slot.weekdayPrice || slot.weekday_price || 0);
             }
 
+            // Check if the time slot is locked by admin
+            const isLocked = slot.isLocked === true;
+            const lockReason = slot.lockReason || 'Locked by admin';
+
             return {
               id: slotId,
               start: startTime ? startTime.substring(0, 5) : "00:00",
               end: endTime ? endTime.substring(0, 5) : "00:00",
               price: parseFloat(price) || 0,
-              available: slot.available !== false // Default to available unless explicitly set to false
+              available: slot.available !== false && !isLocked, // Not available if locked or explicitly set to false
+              isLocked: isLocked,
+              lockReason: isLocked ? lockReason : undefined
             };
           });
 
@@ -187,7 +195,7 @@ const BookingField = () => {
             new Map(formattedTimeSlots.map(slot => [slot.start + slot.end, slot])).values()
           );
 
-          console.log("Formatted time slots (unique):", uniqueTimeSlots);
+          // Update state with unique time slots
           setTimeSlots(uniqueTimeSlots);
         } else {
           console.error("API returned no time slots");
@@ -256,12 +264,8 @@ const BookingField = () => {
         // status will default to 'Đã đặt' on backend
       };
 
-      console.log("Creating booking with data:", bookingData);
-
       // Use apiService to create booking
       const response = await apiService.createBooking(bookingData);
-
-      console.log("Booking API response:", response);
 
       // Check if booking was successful (apiService throws error on failure)
       handleBookingSuccess();
@@ -410,20 +414,30 @@ const BookingField = () => {
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {timeSlots.map((slot) => (
-                        <Button
-                          key={slot.id}
-                          variant={selectedTimeSlot?.id === slot.id ? "default" : "outline"}
-                          className={cn(
-                            "justify-center text-sm",
-                            !slot.available && "opacity-50 cursor-not-allowed"
-                          )}
-                          disabled={!slot.available}
-                          onClick={() => setSelectedTimeSlot(slot)}
-                        >
-                          {slot.start} - {slot.end}
-                        </Button>
-                      ))}
+                      <TooltipProvider>
+                        {timeSlots.map((slot) => (
+                          <Tooltip key={slot.id}>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant={selectedTimeSlot?.id === slot.id ? "default" : "outline"}
+                                className={cn(
+                                  "justify-center text-sm",
+                                  !slot.available && "opacity-50 cursor-not-allowed",
+                                  slot.isLocked && "bg-red-100 border-red-300 text-red-700 hover:bg-red-200 hover:text-red-800"
+                                )}
+                                disabled={!slot.available}
+                                onClick={() => setSelectedTimeSlot(slot)}
+                              >
+                                {slot.start} - {slot.end}
+                                {slot.isLocked && <Lock className="ml-1 h-3 w-3" />}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {slot.isLocked ? `Đã khóa: ${slot.lockReason}` : slot.available ? "Khả dụng" : "Đã đặt"}
+                            </TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </TooltipProvider>
                     </div>
                   )}
 

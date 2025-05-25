@@ -1,10 +1,19 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+// Note: dotenv is already configured in server.js
+
+// Log database connection parameters for debugging
+console.log('Database connection parameters:');
+console.log(`DB_NAME: ${process.env.DB_NAME || 'FootballField'}`);
+console.log(`DB_USER: ${process.env.DB_USER || 'root'}`);
+console.log(`DB_HOST: ${process.env.DB_HOST || 'localhost'}`);
+console.log(`DB_PORT: ${process.env.DB_PORT || 3306}`);
+// Don't log the actual password for security reasons
+console.log(`DB_PASSWORD: ${process.env.DB_PASSWORD ? '[PROVIDED]' : '[DEFAULT]'}`);
 
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'FootballField',
   process.env.DB_USER || 'root',
-  process.env.DB_PASSWORD || '2123',
+  process.env.DB_PASSWORD || 'Himlam04@',
   {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,

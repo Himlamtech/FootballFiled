@@ -88,7 +88,7 @@ exports.bookingValidationRules = [
     .withMessage('Customer phone is required'),
 
   body('customerEmail')
-    .optional()
+    .optional({ checkFalsy: true })
     .isEmail()
     .withMessage('Please provide a valid email')
 ];

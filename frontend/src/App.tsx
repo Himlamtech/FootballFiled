@@ -1,3 +1,7 @@
+/**
+ * Main application component
+ * Defines the routing structure and global providers
+ */
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -22,7 +26,6 @@ import Feedback from "@/pages/admin/Feedback";
 
 // Other Pages
 import NotFound from "@/pages/NotFound";
-import ApiTest from "@/pages/ApiTest";
 
 // Auth Provider
 import { AuthProvider } from "@/hooks/useAuth";
@@ -49,7 +52,6 @@ const router = createBrowserRouter([
       { path: "feedback", element: <Feedback /> }
     ]
   },
-  { path: "/api-test", element: <ApiTest /> },
   { path: "*", element: <NotFound /> }
 ], {
   future: {

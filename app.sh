@@ -1,108 +1,128 @@
 #!/bin/bash
 
-# Colors for console output
+# Football Field Management System - Startup Script
+# This script provides a simple interface to the new startup system
+
+# Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}${BOLD}Starting Football Field Management System...${NC}"
-
-# Check if .env file exists, create it if not
-if [ ! -f .env ]; then
-  echo -e "${YELLOW}Creating .env file...${NC}"
-  cat > .env << EOF
-PORT=9002
-NODE_ENV=development
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=FootballField
-DB_USER=root
-DB_PASSWORD=2123
-JWT_SECRET=football_field_management_jwt_secret_key
-JWT_EXPIRES_IN=24h
-CORS_ORIGIN=http://localhost:9001
-EOF
-  echo -e "${GREEN}.env file created. Please update with your database credentials if needed.${NC}"
-fi
-
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-  echo -e "${YELLOW}Installing backend dependencies...${NC}"
-  npm install
-fi
-
-# Check if frontend dependencies are installed
-if [ ! -d "frontend/node_modules" ]; then
-  echo -e "${YELLOW}Installing frontend dependencies...${NC}"
-  cd frontend && npm install && cd ..
-fi
-
-# Initialize database
-echo -e "${BLUE}${BOLD}Initializing database...${NC}"
-if [ -f "backend/database/.db_initialized" ]; then
-  echo -e "${YELLOW}Database already initialized. To reinitialize, delete the file:${NC}"
-  echo -e "${YELLOW}backend/database/.db_initialized${NC}"
-
-  # Ask if user wants to reinitialize
-  read -p "Do you want to reinitialize the database? (y/n): " answer
-  if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
-    echo -e "${YELLOW}Removing database flag file...${NC}"
-    rm -f backend/database/.db_initialized
-    echo -e "${BLUE}Running database initialization script...${NC}"
-    cd backend/database && node init-database.js
-    if [ $? -ne 0 ]; then
-      echo -e "${RED}${BOLD}Database initialization failed. Please check the error messages above.${NC}"
-      exit 1
-    fi
-    cd ../..
-  fi
-else
-  echo -e "${BLUE}Running database initialization script...${NC}"
-  cd backend/database && node init-database.js
-  if [ $? -ne 0 ]; then
-    echo -e "${RED}${BOLD}Database initialization failed. Please check the error messages above.${NC}"
-    exit 1
-  fi
-  cd ../..
-fi
-
-# Start backend and frontend servers in parallel
-echo -e "${GREEN}${BOLD}Starting backend server...${NC}"
-cd backend && npm run dev &
-BACKEND_PID=$!
-
-echo -e "${GREEN}${BOLD}Starting frontend server...${NC}"
-cd frontend && npm start &
-FRONTEND_PID=$!
-
-# Function to handle script termination
-function cleanup {
-  echo -e "\n${YELLOW}${BOLD}Shutting down servers...${NC}"
-  kill $BACKEND_PID
-  kill $FRONTEND_PID
-  echo -e "${GREEN}${BOLD}Servers stopped successfully.${NC}"
-  exit 0
+# Function to print colored output
+print_header() {
+    echo -e "${CYAN}========================================${NC}"
+    echo -e "${CYAN}  $1${NC}"
+    echo -e "${CYAN}========================================${NC}"
 }
 
-# Register the cleanup function for when script receives SIGINT, SIGTERM
-trap cleanup SIGINT SIGTERM
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
 
-echo -e "\n${GREEN}${BOLD}====================================================${NC}"
-echo -e "${GREEN}${BOLD}    Football Field Management System is running!${NC}"
-echo -e "${GREEN}${BOLD}====================================================${NC}\n"
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
 
-echo -e "${CYAN}${BOLD}Backend:${NC} http://localhost:9002"
-echo -e "${CYAN}${BOLD}Frontend:${NC} http://localhost:9001\n"
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
 
-echo -e "${YELLOW}${BOLD}Admin credentials:${NC}"
-echo -e "${YELLOW}Username:${NC} admin"
-echo -e "${YELLOW}Password:${NC} admin\n"
+# Check if Node.js is installed
+check_nodejs() {
+    if ! command -v node &> /dev/null; then
+        print_error "Node.js is not installed. Please install Node.js first."
+        exit 1
+    fi
 
-echo -e "${BLUE}${BOLD}Press Ctrl+C to stop both servers${NC}"
+    if ! command -v npm &> /dev/null; then
+        print_error "npm is not installed. Please install npm first."
+        exit 1
+    fi
 
-# Keep the script running
-wait
+    print_success "Node.js and npm are installed"
+}
+
+# Show usage information
+show_usage() {
+    echo -e "${YELLOW}Football Field Management System - Startup Script${NC}"
+    echo ""
+    echo "Usage: ./app.sh [options]"
+    echo ""
+    echo "Options:"
+    echo "  --reset-db      Reset database before starting"
+    echo "  --backend-only  Start only backend server"
+    echo "  --frontend-only Start only frontend server"
+    echo "  --help          Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  ./app.sh                    # Normal startup"
+    echo "  ./app.sh --reset-db         # Reset DB and start"
+    echo "  ./app.sh --backend-only     # Start backend only"
+    echo ""
+}
+
+# Install dependencies if needed
+install_dependencies() {
+    print_status "Checking dependencies..."
+
+    # Install root dependencies if node_modules doesn't exist
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing root dependencies..."
+        npm install
+    fi
+
+    # Install backend dependencies if they don't exist
+    if [ ! -d "backend/node_modules" ]; then
+        print_status "Installing backend dependencies..."
+        cd backend && npm install && cd ..
+    fi
+
+    # Install frontend dependencies if they don't exist
+    if [ ! -d "frontend/node_modules" ]; then
+        print_status "Installing frontend dependencies..."
+        cd frontend && npm install && cd ..
+    fi
+
+    print_success "Dependencies ready!"
+}
+
+# Main execution
+main() {
+    # Check for help flag
+    if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+        show_usage
+        exit 0
+    fi
+
+    print_header "Football Field Management System"
+
+    # Check prerequisites
+    check_nodejs
+
+    # Install dependencies
+    install_dependencies
+
+    # Handle different startup options
+    if [[ "$1" == "--reset-db" ]]; then
+        print_status "Resetting database and starting application..."
+        npm run db:reset && npm start
+    elif [[ "$1" == "--backend-only" ]]; then
+        print_status "Starting backend only..."
+        npm run start:backend
+    elif [[ "$1" == "--frontend-only" ]]; then
+        print_status "Starting frontend only..."
+        npm run start:frontend
+    else
+        print_status "Starting application..."
+        npm start
+    fi
+}
+
+# Handle script interruption
+trap 'echo -e "\n${YELLOW}Script interrupted. Exiting...${NC}"; exit 1' INT
+
+# Run main function with all arguments
+main "$@"

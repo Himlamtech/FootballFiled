@@ -23,8 +23,6 @@ const Home = () => {
 
   const onSubmit = async (data: any) => {
     try {
-      console.log("Sending feedback:", data);
-
       // Gửi phản hồi lên API
       const response = await fetch('/api/feedback', {
         method: 'POST',
@@ -95,7 +93,6 @@ const Home = () => {
         setLoading(true);
         const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
-        console.log("Fields API response:", data);
 
         // Process the field data based on the actual API response structure
         let fieldsData = [];
@@ -115,8 +112,6 @@ const Home = () => {
           fieldsData = data.fields;
         }
 
-        console.log("Fields data to process:", fieldsData);
-
         if (fieldsData && fieldsData.length > 0) {
           const mappedFields = fieldsData.map((field: any) => ({
             id: field.fieldId || field.id,
@@ -130,7 +125,6 @@ const Home = () => {
             description: field.description || "Sân bóng đá"
           }));
 
-          console.log("Mapped fields:", mappedFields);
           setFields(mappedFields);
         } else {
           console.error("API returned no fields");

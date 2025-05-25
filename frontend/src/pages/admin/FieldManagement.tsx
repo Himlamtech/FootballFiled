@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays, startOfDay } from "date-fns";
 import { vi } from "date-fns/locale";
-import { CalendarIcon, Pencil, Lock } from "lucide-react";
+import { CalendarIcon, Pencil, Lock, Unlock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
@@ -46,6 +46,7 @@ interface FieldStatus {
     time: string;
     isBooked: boolean;
     isLocked: boolean;
+    lockReason?: string;
     customer?: {
       name: string;
       phone: string;
@@ -65,21 +66,20 @@ interface Booking {
 }
 
 const FieldManagement = () => {
-  console.log("FieldManagement component rendering...");
+  // Component for managing football fields
 
   const [fields, setFields] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<string>(""); 
+  const [activeTab, setActiveTab] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fieldStatuses, setFieldStatuses] = useState<FieldStatus[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
-  console.log("Initial state setup");
+  // Initialize state variables
   const [editingTimeSlot, setEditingTimeSlot] = useState<TimeSlot | null>(null);
   const [weekdayPrice, setWeekdayPrice] = useState<string>("");
   const [weekendPrice, setWeekendPrice] = useState<string>("");
   const [showLockDialog, setShowLockDialog] = useState(false);
-  const [lockReason, setLockReason] = useState("");
   const [lockingSlot, setLockingSlot] = useState<{ fieldId: number, slotId: number } | null>(null);
   const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState<number[]>([]);
@@ -94,13 +94,12 @@ const FieldManagement = () => {
   useEffect(() => {
     const fetchFields = async () => {
       try {
-        console.log("Fetching fields from API...");
+        // Set loading state while fetching data
         setLoading(true);
 
         // Try using the API service first
         try {
           const response = await fieldAPI.getAllFields();
-          console.log("Fields API response:", response.data);
 
           // Process the field data based on the actual API response structure
           let fieldsData = [];
@@ -131,8 +130,7 @@ const FieldManagement = () => {
             isActive: field.isActive !== undefined ? field.isActive : true
           }));
 
-          console.log("Processed fields data:", mappedFields);
-
+          // Set fields data and active tab if fields are found
           if (mappedFields.length > 0) {
             setFields(mappedFields);
             setActiveTab(mappedFields[0].id.toString());
@@ -145,7 +143,6 @@ const FieldManagement = () => {
         // Fallback to direct fetch if API service fails
         const response = await fetch('http://localhost:9002/api/fields');
         const data = await response.json();
-        console.log("Direct fetch fields response:", data);
 
         // Process the field data based on the actual API response structure
         let fieldsData = [];
@@ -175,7 +172,7 @@ const FieldManagement = () => {
           isActive: field.isActive !== undefined ? field.isActive : true
         }));
 
-        console.log("Processed fields data from direct fetch:", mappedFields);
+        // Process fields data from direct fetch
 
         if (mappedFields.length > 0) {
           setFields(mappedFields);
@@ -211,33 +208,21 @@ const FieldManagement = () => {
       }
 
       try {
-        console.log("Fetching time slots from API...");
+        // Set loading state while fetching time slots
         setLoading(true);
 
+        // Get field ID and format date
         const fieldId = parseInt(activeTab);
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-
-        console.log(`Fetching time slots for field ${fieldId} on ${formattedDate}`);
 
         // First try to get time slots from the fields API which includes weekday/weekend prices
         try {
           const fieldsResponse = await fieldAPI.getFieldById(fieldId);
-          console.log("Field API response with time slots:", fieldsResponse.data);
-
           // Check if the response has timeSlots property
           if (fieldsResponse.data && fieldsResponse.data.timeSlots && Array.isArray(fieldsResponse.data.timeSlots)) {
-            // Loại trùng startTime-endTime (KHÔNG filter fieldId)
-            const uniqueSlots = Array.from(
-              new Map(
-                fieldsResponse.data.timeSlots
-                  .map((slot: any) => [
-                    `${slot.startTime}-${slot.endTime}`,
-                    slot
-                  ])
-              ).values()
-            );
-            const formattedTimeSlots = uniqueSlots.map((slot: any) => ({
-              id: slot.timeSlotId,
+            // Use field-specific time slots with their actual timeSlotId (NO deduplication)
+            const formattedTimeSlots = fieldsResponse.data.timeSlots.map((slot: any) => ({
+              id: slot.timeSlotId, // Use the actual timeSlotId from database
               time: `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`,
               weekdayPrice: parseFloat(slot.weekdayPrice || slot.price || 0),
               weekendPrice: parseFloat(slot.weekendPrice || slot.price || 0)
@@ -249,24 +234,16 @@ const FieldManagement = () => {
 
           // If the response has TimeSlots property (different casing)
           if (fieldsResponse.data && fieldsResponse.data.TimeSlots && Array.isArray(fieldsResponse.data.TimeSlots)) {
-            const uniqueSlots = Array.from(
-              new Map(
-                fieldsResponse.data.TimeSlots
-                  .map((slot: any) => [
-                    `${slot.startTime}-${slot.endTime}`,
-                    slot
-                  ])
-              ).values()
-            );
-            const formattedTimeSlots = uniqueSlots.map((slot: any) => ({
-              id: slot.timeSlotId,
+            // Use field-specific time slots with their actual timeSlotId (NO deduplication)
+            const formattedTimeSlots = fieldsResponse.data.TimeSlots.map((slot: any) => ({
+              id: slot.timeSlotId, // Use the actual timeSlotId from database
               time: `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(0, 5)}`,
               weekdayPrice: parseFloat(slot.weekdayPrice || slot.price || 0),
               weekendPrice: parseFloat(slot.weekendPrice || slot.price || 0)
             }));
-            console.log("Formatted time slots from field API (TimeSlots property):", formattedTimeSlots);
+            // Set time slots and exit early if we got the data
             setTimeSlots(formattedTimeSlots);
-            return; // Exit early if we got the data
+            return;
           }
         } catch (error) {
           console.error("Error fetching time slots from fields API:", error);
@@ -287,18 +264,9 @@ const FieldManagement = () => {
         }
 
         if (timeSlotData.length > 0) {
-          // Loại trùng start-end (KHÔNG filter fieldId)
-          const uniqueSlots = Array.from(
-            new Map(
-              timeSlotData
-                .map((slot: any) => [
-                  `${slot.start_time || slot.startTime}-${slot.end_time || slot.endTime}`,
-                  slot
-                ])
-            ).values()
-          );
-          const formattedTimeSlots = uniqueSlots.map((slot: any) => ({
-            id: slot.id || slot.timeSlotId,
+          // Use field-specific time slots with their actual IDs (NO deduplication)
+          const formattedTimeSlots = timeSlotData.map((slot: any) => ({
+            id: slot.id || slot.timeSlotId, // Use the actual timeSlotId from database
             time: `${(slot.start_time || slot.startTime).substring(0, 5)} - ${(slot.end_time || slot.endTime).substring(0, 5)}`,
             weekdayPrice: parseFloat(slot.weekday_price || slot.weekdayPrice || slot.price || 0),
             weekendPrice: parseFloat(slot.weekend_price || slot.weekendPrice || slot.price || 0)
@@ -323,19 +291,26 @@ const FieldManagement = () => {
     fetchTimeSlots();
   }, [activeTab, selectedDate]);
 
-  // Fetch bookings for the selected field and date
+  // Fetch bookings and field status for the selected field and date
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchBookingsAndStatus = async () => {
       if (!activeTab) {
         setLoading(false);
         return;
       }
 
+      // Wait for time slots to be loaded before proceeding
+      if (timeSlots.length === 0) {
+        console.log("Time slots not loaded yet, skipping field status generation");
+        return;
+      }
+
+      // Set loading state while fetching data
       setLoading(true);
       try {
         const formattedDate = format(selectedDate, "yyyy-MM-dd");
-        console.log("Fetching bookings for field:", activeTab, "date:", formattedDate);
 
+        // Validate field ID
         const fieldId = parseInt(activeTab);
         if (isNaN(fieldId)) {
           console.error("Invalid field ID:", activeTab);
@@ -345,17 +320,104 @@ const FieldManagement = () => {
           return;
         }
 
-        const response = await fetch(`http://localhost:9002/api/bookings/field/${fieldId}?date=${formattedDate}`, {
+        // Fetch bookings for the selected field and date
+        const bookingsResponse = await fetch(`http://localhost:9002/api/bookings/field/${fieldId}?date=${formattedDate}`, {
           headers: { 'Cache-Control': 'no-cache' }
         });
-        const data = await response.json();
-        console.log("Bookings API response:", data);
-        if (data.bookings && Array.isArray(data.bookings)) {
-          setBookings(data.bookings);
-          generateFieldStatus(data.bookings);
-        } else {
-          const emptyStatus = createEmptyFieldStatus();
-          setFieldStatuses(emptyStatus);
+        const bookingsData = await bookingsResponse.json();
+
+        // Process booking data
+        let bookings = [];
+        if (bookingsData.bookings && Array.isArray(bookingsData.bookings)) {
+          bookings = bookingsData.bookings;
+          setBookings(bookings);
+        }
+
+        // Fetch field management status
+        try {
+          // Get admin token
+          let adminToken = localStorage.getItem('admin_token');
+          console.log("Using admin token for field status:", adminToken ? "Token exists" : "No token");
+
+          // If no token, try to get a fresh one
+          if (!adminToken) {
+            console.log("No admin token found, attempting to get fresh token...");
+            try {
+              const loginResponse = await axios.post('http://localhost:9002/api/auth/admin/login', {
+                username: 'admin',
+                password: 'admin'
+              });
+
+              if (loginResponse.data.token) {
+                adminToken = loginResponse.data.token;
+                localStorage.setItem('admin_token', adminToken);
+                console.log("Fresh admin token obtained");
+              }
+            } catch (loginError) {
+              console.error("Failed to get fresh admin token:", loginError);
+            }
+          }
+
+          // Use axios directly with auth header
+          const statusResponse = await axios.get(`http://localhost:9002/api/field-management/status`, {
+            params: { fieldId, date: formattedDate },
+            headers: {
+              'Authorization': `Bearer ${adminToken}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          const fieldStatusData = statusResponse.data;
+
+          if (fieldStatusData && fieldStatusData.fieldStatus && Array.isArray(fieldStatusData.fieldStatus)) {
+            console.log("Field status data received:", fieldStatusData);
+            // Create field status with both booking and lock information
+            generateFieldStatusWithLocks(bookings, fieldStatusData.fieldStatus);
+          } else {
+            console.log("No field status data in expected format:", fieldStatusData);
+            // If no field status data, just use bookings
+            generateFieldStatus(bookings);
+          }
+        } catch (statusError) {
+          console.error("Error fetching field status:", statusError);
+
+          // If 401 error, try to refresh token and retry once
+          if (statusError.response && statusError.response.status === 401) {
+            console.log("401 error, attempting to refresh token and retry...");
+            try {
+              const loginResponse = await axios.post('http://localhost:9002/api/auth/admin/login', {
+                username: 'admin',
+                password: 'admin'
+              });
+
+              if (loginResponse.data.token) {
+                const freshToken = loginResponse.data.token;
+                localStorage.setItem('admin_token', freshToken);
+                console.log("Token refreshed, retrying field status request...");
+
+                // Retry the field status request with fresh token
+                const retryResponse = await axios.get(`http://localhost:9002/api/field-management/status`, {
+                  params: { fieldId, date: formattedDate },
+                  headers: {
+                    'Authorization': `Bearer ${freshToken}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+
+                const retryFieldStatusData = retryResponse.data;
+                if (retryFieldStatusData && retryFieldStatusData.fieldStatus && Array.isArray(retryFieldStatusData.fieldStatus)) {
+                  console.log("Field status data received after token refresh:", retryFieldStatusData);
+                  generateFieldStatusWithLocks(bookings, retryFieldStatusData.fieldStatus);
+                  return; // Exit successfully
+                }
+              }
+            } catch (retryError) {
+              console.error("Failed to refresh token and retry:", retryError);
+            }
+          }
+
+          // If field status API fails, just use bookings
+          generateFieldStatus(bookings);
         }
       } catch (error) {
         console.error("Error fetching bookings:", error);
@@ -372,18 +434,16 @@ const FieldManagement = () => {
       }
     };
 
-    fetchBookings();
-  }, [activeTab, selectedDate]);
+    fetchBookingsAndStatus();
+  }, [activeTab, selectedDate, timeSlots]);
 
   // Generate field status based on bookings data
   const generateFieldStatus = (bookingsData: any[]) => {
     console.log("Generating field status from bookings:", bookingsData);
 
-    const statuses: FieldStatus[] = [];
-
     // Create a status object for the selected field and date
     const fieldId = parseInt(activeTab);
-    const status: FieldStatus = {
+    const newStatus: FieldStatus = {
       fieldId,
       date: selectedDate,
       timeSlots: timeSlots.map(slot => {
@@ -420,9 +480,99 @@ const FieldManagement = () => {
       })
     };
 
-    statuses.push(status);
-    console.log("Setting field statuses:", statuses);
-    setFieldStatuses(statuses);
+    // Update field statuses by merging with existing statuses for other fields
+    setFieldStatuses(prevStatuses => {
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+
+      // Remove any existing status for this field and date
+      const filteredStatuses = prevStatuses.filter(
+        s => !(s.fieldId === fieldId && format(s.date, "yyyy-MM-dd") === formattedDate)
+      );
+
+      // Add the new status
+      const updatedStatuses = [...filteredStatuses, newStatus];
+      console.log("Updated field statuses:", updatedStatuses);
+      return updatedStatuses;
+    });
+  };
+
+  // Generate field status with lock information
+  const generateFieldStatusWithLocks = (bookingsData: any[], fieldStatusData: any[]) => {
+    console.log("Generating field status with locks:", { bookings: bookingsData, fieldStatus: fieldStatusData });
+
+    // Create a status object for the selected field and date
+    const fieldId = parseInt(activeTab);
+    const newStatus: FieldStatus = {
+      fieldId,
+      date: selectedDate,
+      timeSlots: timeSlots.map(slot => {
+        // Check if this time slot is booked
+        const booking = bookingsData.find(b => {
+          // Get the time slot information from the booking
+          const timeSlot = b.timeSlot;
+
+          if (!timeSlot || !timeSlot.startTime) {
+            return false;
+          }
+
+          // Format the time slot from the database (HH:MM:SS) to match our UI format (HH:MM - HH:MM)
+          const startTime = timeSlot.startTime.substring(0, 5);
+          const endTime = timeSlot.endTime ? timeSlot.endTime.substring(0, 5) : null;
+          const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
+
+          // Compare with slot.time
+          return slot.time === timeRange || slot.time.includes(startTime);
+        });
+
+        // Check if this time slot is locked
+        const fieldStatus = fieldStatusData.find(fs => {
+          // Direct match by timeSlotId if available
+          if (fs.timeSlotId && fs.timeSlotId === slot.id) {
+            return true;
+          }
+
+          // Fallback to time-based matching
+          if (!fs.startTime) return false;
+
+          // Format the time slot from the database (HH:MM:SS) to match our UI format (HH:MM - HH:MM)
+          const startTime = fs.startTime.substring(0, 5);
+          const endTime = fs.endTime ? fs.endTime.substring(0, 5) : null;
+          const timeRange = endTime ? `${startTime} - ${endTime}` : startTime;
+
+          // Compare with slot.time
+          return slot.time === timeRange || slot.time.includes(startTime);
+        });
+
+        return {
+          id: slot.id,
+          time: slot.time,
+          isBooked: !!booking,
+          isLocked: fieldStatus ? fieldStatus.isLocked : false,
+          lockReason: fieldStatus ? fieldStatus.lockReason : '',
+          ...(booking && (booking.customerName || booking.customerPhone) ? {
+            customer: {
+              name: booking.customerName || '',
+              phone: booking.customerPhone || ''
+            }
+          } : {})
+        };
+      })
+    };
+
+    // Update field statuses by merging with existing statuses for other fields
+    setFieldStatuses(prevStatuses => {
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+
+      // Remove any existing status for this field and date
+      const filteredStatuses = prevStatuses.filter(
+        s => !(s.fieldId === fieldId && format(s.date, "yyyy-MM-dd") === formattedDate)
+      );
+
+      // Add the new status
+      const updatedStatuses = [...filteredStatuses, newStatus];
+      console.log("Updated field statuses with locks:", updatedStatuses);
+      return updatedStatuses;
+    });
   };
 
   // Create empty field status for fallback when no data is available from API
@@ -487,9 +637,9 @@ const FieldManagement = () => {
       return undefined;
     }
 
+    // Parse field ID from active tab
     const fieldId = parseInt(activeTab);
     if (isNaN(fieldId)) {
-      console.log("Invalid field ID, returning undefined");
       return undefined;
     }
 
@@ -499,11 +649,9 @@ const FieldManagement = () => {
     );
 
     if (status) {
-      console.log("Found field status:", status);
       return status;
     } else {
       // If no status found for this field and date, create a default one
-      console.log("No status found for field and date, creating default");
       return {
         fieldId,
         date: selectedDate,
@@ -516,8 +664,6 @@ const FieldManagement = () => {
       };
     }
   }, [activeTab, selectedDate, fieldStatuses]);
-
-  console.log("Current field status:", currentFieldStatus);
 
   // Đếm số khung giờ trống
   const availableSlots = currentFieldStatus?.timeSlots.filter(
@@ -546,9 +692,8 @@ const FieldManagement = () => {
     }
 
     try {
+      // Set loading state while updating price
       setLoading(true);
-      console.log(`Updating price for time slot ${editingTimeSlot.id}`);
-      console.log(`New weekday price: ${weekdayPrice}, new weekend price: ${weekendPrice}`);
 
       // Prepare the data for the API call
       const priceData = {
@@ -558,18 +703,17 @@ const FieldManagement = () => {
       };
 
       try {
-        // Make the API call
+        // Make API call to update time slot price
         const response = await axios.put(
           `http://localhost:9002/api/timeslots/${editingTimeSlot.id}`,
           priceData
         );
-        console.log("Update time slot price response:", response.data);
 
         // Update local state with the new prices
         setTimeSlots(prevTimeSlots => {
           const updatedTimeSlots = [...prevTimeSlots];
           const index = updatedTimeSlots.findIndex(slot => slot.id === editingTimeSlot.id);
-          
+
           if (index !== -1) {
             updatedTimeSlots[index] = {
               ...updatedTimeSlots[index],
@@ -577,7 +721,7 @@ const FieldManagement = () => {
               weekendPrice: parseFloat(weekendPrice)
             };
           }
-          
+
           return updatedTimeSlots;
         });
 
@@ -592,15 +736,14 @@ const FieldManagement = () => {
         });
       } catch (error) {
         console.error("Error updating time slot price:", error);
-        
-        // Fake successful response for demo
-        console.log("Using fake success response for updating time slot price");
-        
+
+        // Fallback for demo purposes
+
         // Update local state with the new prices anyway
         setTimeSlots(prevTimeSlots => {
           const updatedTimeSlots = [...prevTimeSlots];
           const index = updatedTimeSlots.findIndex(slot => slot.id === editingTimeSlot.id);
-          
+
           if (index !== -1) {
             updatedTimeSlots[index] = {
               ...updatedTimeSlots[index],
@@ -608,7 +751,7 @@ const FieldManagement = () => {
               weekendPrice: parseFloat(weekendPrice)
             };
           }
-          
+
           return updatedTimeSlots;
         });
 
@@ -646,11 +789,10 @@ const FieldManagement = () => {
     if (!bulkPrice || selectedTimeSlots.length === 0) return;
 
     try {
+      // Parse price value and initialize counters
       const priceValue = parseFloat(bulkPrice);
       let successCount = 0;
       let errorCount = 0;
-
-      console.log(`Bulk updating ${selectedTimeSlots.length} time slots with price: ${priceValue}, type: ${bulkPriceType}`);
 
       // Create an array of promises for all the update requests
       const updatePromises = selectedTimeSlots.map(async (slotId) => {
@@ -658,7 +800,7 @@ const FieldManagement = () => {
           // Find the time slot in the current state
           const timeSlot = timeSlots.find(slot => slot.id === slotId);
           if (!timeSlot) {
-            console.error(`Time slot with ID ${slotId} not found in local state`);
+            // Skip time slots that don't exist in local state
             errorCount++;
             return null;
           }
@@ -672,8 +814,6 @@ const FieldManagement = () => {
             updateData.weekendPrice = priceValue;
           }
 
-          console.log(`Updating time slot ${slotId} with data:`, updateData);
-
           // Make API call to update the time slot using axios
           const response = await axios.put(`http://localhost:9002/api/timeslots/${slotId}`, updateData, {
             headers: {
@@ -682,7 +822,7 @@ const FieldManagement = () => {
             }
           });
 
-          console.log(`Time slot ${slotId} update response:`, response.data);
+          // Increment success counter and return the slot ID
           successCount++;
           return slotId;
         } catch (error) {
@@ -694,7 +834,6 @@ const FieldManagement = () => {
 
       // Wait for all update requests to complete
       const results = await Promise.all(updatePromises);
-      console.log("Bulk update results:", results);
 
       // Update the local state for successful updates
       const successfulUpdates = results.filter(Boolean) as number[];
@@ -743,128 +882,369 @@ const FieldManagement = () => {
   };
 
   const handleLockTimeSlot = async () => {
-    if (!lockingSlot || !lockReason) {
+    if (!lockingSlot) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng nhập lý do khóa khung giờ",
+        description: "Không thể khóa khung giờ",
         variant: "destructive"
       });
       return;
     }
 
     try {
+      // Set loading state while locking time slot
       setLoading(true);
-      console.log(`Attempting to lock time slot ${lockingSlot.slotId} for field ${lockingSlot.fieldId}`);
 
       // Call the API to lock the time slot
       const formattedDate = format(selectedDate, "yyyy-MM-dd");
       const lockData = {
         date: formattedDate,
-        timeSlotId: lockingSlot.slotId,
-        reason: lockReason
+        timeSlotId: lockingSlot.slotId
       };
 
-      // Try to use fieldManagementAPI first
-      try {
-        const response = await fieldManagementAPI.lockTimeSlot(lockingSlot.fieldId, lockData);
-        console.log("Lock time slot response:", response.data);
+      // Get admin token
+      let adminToken = localStorage.getItem('admin_token');
+      console.log("Using admin token for locking:", adminToken ? "Token exists" : "No token");
 
-        // Update the UI to reflect the locked status
+      // If no token, try to get a fresh one
+      if (!adminToken) {
+        console.log("No admin token found, attempting to get fresh token...");
+        try {
+          const loginResponse = await axios.post('http://localhost:9002/api/auth/admin/login', {
+            username: 'admin',
+            password: 'admin'
+          });
+
+          if (loginResponse.data.token) {
+            adminToken = loginResponse.data.token;
+            localStorage.setItem('admin_token', adminToken);
+            console.log("Fresh admin token obtained for locking");
+          }
+        } catch (loginError) {
+          console.error("Failed to get fresh admin token for locking:", loginError);
+        }
+      }
+
+      const makeRequest = async (token: string) => {
+        return await axios.post(
+          `http://localhost:9002/api/field-management/${lockingSlot.fieldId}/lock`,
+          lockData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      };
+
+      try {
+        // Use axios directly with auth header
+        const response = await makeRequest(adminToken);
+
+        console.log("Lock response:", response.data);
+
+        // Update the UI to reflect the locked status immediately
         setFieldStatuses(prevStatuses => {
           const updatedStatuses = [...prevStatuses];
           const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
-          
+
           if (fieldStatus) {
             const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
-            
+
             if (timeSlotIndex !== -1) {
+              console.log(`Setting slot ${lockingSlot.slotId} to locked`);
               fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
+              fieldStatus.timeSlots[timeSlotIndex].lockReason = "Locked by admin";
+            } else {
+              console.log(`Could not find time slot with id ${lockingSlot.slotId} in field status`);
             }
+          } else {
+            console.log(`Could not find field status for field ${lockingSlot.fieldId}`);
           }
-          
+
           return updatedStatuses;
         });
 
         setShowLockDialog(false);
-        setLockReason("");
         setLockingSlot(null);
 
         toast({
           title: "Thành công",
           description: "Đã khóa khung giờ thành công",
         });
-      } catch (error) {
-        console.error("Error locking time slot with fieldManagementAPI:", error);
-        
-        // Fallback to using axios directly
-        try {
-          const response = await axios.post(
-            `http://localhost:9002/api/field-management/${lockingSlot.fieldId}/lock`,
-            lockData
-          );
-          console.log("Lock time slot response (direct):", response.data);
 
-          // Update the UI to reflect the locked status
-          setFieldStatuses(prevStatuses => {
-            const updatedStatuses = [...prevStatuses];
-            const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
-            
-            if (fieldStatus) {
-              const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
-              
-              if (timeSlotIndex !== -1) {
-                fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
+        // Refresh the field status data
+        const fieldId = parseInt(activeTab);
+        if (!isNaN(fieldId)) {
+          try {
+            // Wait a moment to ensure the backend has processed the lock
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const statusResponse = await axios.get(`http://localhost:9002/api/field-management/status`, {
+              params: { fieldId, date: formattedDate },
+              headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
               }
+            });
+
+            const fieldStatusData = statusResponse.data;
+
+            if (fieldStatusData && fieldStatusData.fieldStatus && Array.isArray(fieldStatusData.fieldStatus)) {
+              console.log("Updated field status after locking:", fieldStatusData);
+              // Create field status with both booking and lock information
+              generateFieldStatusWithLocks(bookings, fieldStatusData.fieldStatus);
+            } else {
+              console.log("No field status data returned after locking:", fieldStatusData);
             }
-            
-            return updatedStatuses;
-          });
-
-          setShowLockDialog(false);
-          setLockReason("");
-          setLockingSlot(null);
-
-          toast({
-            title: "Thành công",
-            description: "Đã khóa khung giờ thành công",
-          });
-        } catch (directError) {
-          console.error("Error locking time slot with direct API call:", directError);
-          
-          // If both API calls fail, fake a successful response for demo purposes
-          console.log("Using fake success response for locking time slot");
-          
-          // Update the UI to reflect the locked status
-          setFieldStatuses(prevStatuses => {
-            const updatedStatuses = [...prevStatuses];
-            const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
-            
-            if (fieldStatus) {
-              const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
-              
-              if (timeSlotIndex !== -1) {
-                fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
-              }
-            }
-            
-            return updatedStatuses;
-          });
-
-          setShowLockDialog(false);
-          setLockReason("");
-          setLockingSlot(null);
-
-          toast({
-            title: "Thành công",
-            description: "Đã khóa khung giờ thành công (chế độ demo)",
-          });
+          } catch (refreshError) {
+            console.error("Error refreshing field status after locking:", refreshError);
+          }
         }
+      } catch (error) {
+        console.error("Error locking time slot:", error);
+
+        // If 401 error, try to refresh token and retry once
+        if (error.response && error.response.status === 401) {
+          console.log("401 error during locking, attempting to refresh token and retry...");
+          try {
+            const loginResponse = await axios.post('http://localhost:9002/api/auth/admin/login', {
+              username: 'admin',
+              password: 'admin'
+            });
+
+            if (loginResponse.data.token) {
+              const freshToken = loginResponse.data.token;
+              localStorage.setItem('admin_token', freshToken);
+              console.log("Token refreshed, retrying lock request...");
+
+              // Retry the lock request with fresh token
+              const retryResponse = await makeRequest(freshToken);
+              console.log("Lock response after token refresh:", retryResponse.data);
+
+              // Update the UI to reflect the locked status immediately
+              setFieldStatuses(prevStatuses => {
+                const updatedStatuses = [...prevStatuses];
+                const fieldStatus = updatedStatuses.find(fs => fs.fieldId === lockingSlot.fieldId);
+
+                if (fieldStatus) {
+                  const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === lockingSlot.slotId);
+
+                  if (timeSlotIndex !== -1) {
+                    console.log(`Setting slot ${lockingSlot.slotId} to locked after retry`);
+                    fieldStatus.timeSlots[timeSlotIndex].isLocked = true;
+                    fieldStatus.timeSlots[timeSlotIndex].lockReason = "Locked by admin";
+                  }
+                }
+
+                return updatedStatuses;
+              });
+
+              setShowLockDialog(false);
+              setLockingSlot(null);
+
+              toast({
+                title: "Thành công",
+                description: "Đã khóa khung giờ thành công",
+              });
+              return; // Exit successfully
+            }
+          } catch (retryError) {
+            console.error("Failed to refresh token and retry lock:", retryError);
+          }
+        }
+
+        // If API call fails, show error
+        toast({
+          title: "Lỗi",
+          description: "Không thể khóa khung giờ. Vui lòng thử lại sau.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error("Error locking time slot:", error);
       toast({
         title: "Lỗi",
         description: "Không thể khóa khung giờ. Vui lòng thử lại sau.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle unlocking a time slot
+  const handleUnlockTimeSlot = async (fieldId: number, slotId: number) => {
+    try {
+      // Set loading state while unlocking time slot
+      setLoading(true);
+
+      // Call the API to unlock the time slot
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      const unlockData = {
+        date: formattedDate,
+        timeSlotId: slotId
+      };
+
+      // Get admin token
+      let adminToken = localStorage.getItem('admin_token');
+      console.log("Using admin token for unlocking:", adminToken ? "Token exists" : "No token");
+
+      // If no token, try to get a fresh one
+      if (!adminToken) {
+        console.log("No admin token found, attempting to get fresh token...");
+        try {
+          const loginResponse = await axios.post('http://localhost:9002/api/auth/admin/login', {
+            username: 'admin',
+            password: 'admin'
+          });
+
+          if (loginResponse.data.token) {
+            adminToken = loginResponse.data.token;
+            localStorage.setItem('admin_token', adminToken);
+            console.log("Fresh admin token obtained for unlocking");
+          }
+        } catch (loginError) {
+          console.error("Failed to get fresh admin token for unlocking:", loginError);
+        }
+      }
+
+      const makeUnlockRequest = async (token: string) => {
+        return await axios.post(
+          `http://localhost:9002/api/field-management/${fieldId}/unlock`,
+          unlockData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      };
+
+      try {
+        // Use axios directly with auth header
+        const response = await makeUnlockRequest(adminToken);
+
+        console.log("Unlock response:", response.data);
+
+        // Update the UI to reflect the unlocked status immediately
+        setFieldStatuses(prevStatuses => {
+          const updatedStatuses = [...prevStatuses];
+          const fieldStatus = updatedStatuses.find(fs => fs.fieldId === fieldId);
+
+          if (fieldStatus) {
+            const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === slotId);
+
+            if (timeSlotIndex !== -1) {
+              console.log(`Setting slot ${slotId} to unlocked`);
+              fieldStatus.timeSlots[timeSlotIndex].isLocked = false;
+              fieldStatus.timeSlots[timeSlotIndex].lockReason = '';
+            } else {
+              console.log(`Could not find time slot with id ${slotId} in field status`);
+            }
+          } else {
+            console.log(`Could not find field status for field ${fieldId}`);
+          }
+
+          return updatedStatuses;
+        });
+
+        toast({
+          title: "Thành công",
+          description: "Đã mở khóa khung giờ thành công",
+        });
+
+        // Refresh the field status data
+        if (!isNaN(fieldId)) {
+          try {
+            // Wait a moment to ensure the backend has processed the unlock
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const statusResponse = await axios.get(`http://localhost:9002/api/field-management/status`, {
+              params: { fieldId, date: formattedDate },
+              headers: {
+                'Authorization': `Bearer ${adminToken}`,
+                'Content-Type': 'application/json'
+              }
+            });
+
+            const fieldStatusData = statusResponse.data;
+
+            if (fieldStatusData && fieldStatusData.fieldStatus && Array.isArray(fieldStatusData.fieldStatus)) {
+              console.log("Updated field status after unlocking:", fieldStatusData);
+              // Create field status with both booking and lock information
+              generateFieldStatusWithLocks(bookings, fieldStatusData.fieldStatus);
+            } else {
+              console.log("No field status data returned after unlocking:", fieldStatusData);
+            }
+          } catch (refreshError) {
+            console.error("Error refreshing field status after unlocking:", refreshError);
+          }
+        }
+      } catch (error) {
+        console.error("Error unlocking time slot:", error);
+
+        // If 401 error, try to refresh token and retry once
+        if (error.response && error.response.status === 401) {
+          console.log("401 error during unlocking, attempting to refresh token and retry...");
+          try {
+            const loginResponse = await axios.post('http://localhost:9002/api/auth/admin/login', {
+              username: 'admin',
+              password: 'admin'
+            });
+
+            if (loginResponse.data.token) {
+              const freshToken = loginResponse.data.token;
+              localStorage.setItem('admin_token', freshToken);
+              console.log("Token refreshed, retrying unlock request...");
+
+              // Retry the unlock request with fresh token
+              const retryResponse = await makeUnlockRequest(freshToken);
+              console.log("Unlock response after token refresh:", retryResponse.data);
+
+              // Update the UI to reflect the unlocked status immediately
+              setFieldStatuses(prevStatuses => {
+                const updatedStatuses = [...prevStatuses];
+                const fieldStatus = updatedStatuses.find(fs => fs.fieldId === fieldId);
+
+                if (fieldStatus) {
+                  const timeSlotIndex = fieldStatus.timeSlots.findIndex(ts => ts.id === slotId);
+
+                  if (timeSlotIndex !== -1) {
+                    console.log(`Setting slot ${slotId} to unlocked after retry`);
+                    fieldStatus.timeSlots[timeSlotIndex].isLocked = false;
+                    fieldStatus.timeSlots[timeSlotIndex].lockReason = '';
+                  }
+                }
+
+                return updatedStatuses;
+              });
+
+              toast({
+                title: "Thành công",
+                description: "Đã mở khóa khung giờ thành công",
+              });
+              return; // Exit successfully
+            }
+          } catch (retryError) {
+            console.error("Failed to refresh token and retry unlock:", retryError);
+          }
+        }
+
+        // If API call fails, show error
+        toast({
+          title: "Lỗi",
+          description: "Không thể mở khóa khung giờ. Vui lòng thử lại sau.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Error unlocking time slot:", error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể mở khóa khung giờ. Vui lòng thử lại sau.",
         variant: "destructive"
       });
     } finally {
@@ -903,9 +1283,8 @@ const FieldManagement = () => {
         // Try to update the backend
         try {
           // Call the field management API to unlock all time slots
-          await fieldManagementAPI.lockAllTimeSlots(fieldId, {
-            date: formattedDate,
-            unlock: true
+          await fieldManagementAPI.unlockAllTimeSlots(fieldId, {
+            date: formattedDate
           });
         } catch (apiError) {
           console.error("Error unlocking day in API, but UI is updated:", apiError);
@@ -955,8 +1334,7 @@ const FieldManagement = () => {
         try {
           // Call the field management API to lock all time slots
           await fieldManagementAPI.lockAllTimeSlots(fieldId, {
-            date: formattedDate,
-            reason: "Locked by admin"
+            date: formattedDate
           });
         } catch (apiError) {
           console.error("Error locking day in API, but UI is updated:", apiError);
@@ -964,8 +1342,7 @@ const FieldManagement = () => {
           // Fallback to direct API call
           try {
             await axios.post(`http://localhost:9002/api/fields/${fieldId}/lock-day`, {
-              date: formattedDate,
-              reason: "Locked by admin"
+              date: formattedDate
             }, {
               headers: {
                 'Content-Type': 'application/json',
@@ -1098,7 +1475,7 @@ const FieldManagement = () => {
                                 <TableHead className="w-1/5">Giá</TableHead>
                                 <TableHead className="w-1/5">Trạng thái</TableHead>
                                 <TableHead className="w-1/5">Khách hàng</TableHead>
-                                <TableHead className="w-1/5">Số điện thoại</TableHead>
+                                <TableHead className="w-1/5">Liên hệ</TableHead>
                                 <TableHead className="w-1/5 text-right">Thao tác</TableHead>
                               </TableRow>
                             </TableHeader>
@@ -1118,6 +1495,8 @@ const FieldManagement = () => {
                                     <TableCell>
                                       {booking ? (
                                         <Badge className="bg-blue-100 text-blue-800">Đã đặt</Badge>
+                                      ) : currentFieldStatus?.timeSlots.find(s => s.id === slot.id)?.isLocked ? (
+                                        <Badge className="bg-red-100 text-red-800">Đã khóa</Badge>
                                       ) : (
                                         <Badge className="bg-green-100 text-green-800">Khả dụng</Badge>
                                       )}
@@ -1132,7 +1511,10 @@ const FieldManagement = () => {
                                     <TableCell>
                                       {booking ? (
                                         <>
-                                          <div className="font-medium">{booking.phone || 'Không có SĐT'}</div>
+                                          <div className="font-medium">{booking.customerPhone || 'Không có SĐT'}</div>
+                                          {booking.customerEmail && (
+                                            <div className="text-sm text-gray-500">{booking.customerEmail}</div>
+                                          )}
                                         </>
                                       ) : '--'}
                                     </TableCell>
@@ -1143,6 +1525,18 @@ const FieldManagement = () => {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                           </svg>
                                         </span>
+                                      ) : currentFieldStatus?.timeSlots.find(s => s.id === slot.id)?.isLocked ? (
+                                        <>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="text-green-600"
+                                            onClick={() => handleUnlockTimeSlot(parseInt(activeTab), slot.id)}
+                                            title={currentFieldStatus?.timeSlots.find(s => s.id === slot.id)?.lockReason || "Đã khóa"}
+                                          >
+                                            <Unlock className="h-4 w-4" />
+                                          </Button>
+                                        </>
                                       ) : (
                                         <>
                                           <Button
@@ -1165,7 +1559,6 @@ const FieldManagement = () => {
                                                 fieldId: parseInt(activeTab),
                                                 slotId: slot.id
                                               });
-                                              setLockReason("");
                                               setShowLockDialog(true);
                                             }}
                                           >
@@ -1226,13 +1619,13 @@ const FieldManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setEditingTimeSlot(null)}
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleUpdatePrice}
               disabled={!weekdayPrice || !weekendPrice}
             >
@@ -1248,20 +1641,12 @@ const FieldManagement = () => {
           <DialogHeader>
             <DialogTitle>Khóa khung giờ</DialogTitle>
             <DialogDescription>
-              Nhập lý do khóa khung giờ này
+              Bạn có chắc chắn muốn khóa khung giờ này không?
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Input
-              id="lock-reason"
-              placeholder="Lý do khóa..."
-              value={lockReason}
-              onChange={(e) => setLockReason(e.target.value)}
-            />
-          </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => {
                 setShowLockDialog(false);
                 setLockingSlot(null);
@@ -1269,9 +1654,8 @@ const FieldManagement = () => {
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleLockTimeSlot}
-              disabled={!lockReason}
               className="bg-red-600 hover:bg-red-700"
             >
               Khóa
@@ -1306,7 +1690,7 @@ const FieldManagement = () => {
                 </div>
               ))}
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <label htmlFor="bulk-price" className="text-right col-span-1">
                 Giá mới
@@ -1320,7 +1704,7 @@ const FieldManagement = () => {
                 placeholder="Nhập giá mới..."
               />
             </div>
-            
+
             <div className="grid grid-cols-4 items-center gap-4">
               <label className="text-right col-span-1">
                 Áp dụng cho
@@ -1340,13 +1724,13 @@ const FieldManagement = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowBulkEditDialog(false)}
             >
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={handleBulkUpdatePrice}
               disabled={selectedTimeSlots.length === 0 || !bulkPrice}
             >

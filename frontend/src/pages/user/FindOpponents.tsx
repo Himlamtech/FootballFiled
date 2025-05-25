@@ -83,10 +83,9 @@ const FindOpponents = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
   const [teamName, setTeamName] = useState("");
-  const [level, setLevel] = useState("Trung bình");
-  const [location, setLocation] = useState("");
-  const [members, setMembers] = useState("5");
-  const [dateTime, setDateTime] = useState("");
+  const [level, setLevel] = useState("Trung Bình");
+  const [fieldType, setFieldType] = useState("7"); // New field for field type
+  const [timeSlotId, setTimeSlotId] = useState(""); // New field for time slot selection
   const [contact, setContact] = useState("");
   const [description, setDescription] = useState("");
   const [filter, setFilter] = useState("all");
@@ -94,11 +93,68 @@ const FindOpponents = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [matchDate, setMatchDate] = useState<string>("");
 
+  // New state for available time slots
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<any[]>([]);
+  const [availableFields, setAvailableFields] = useState<any[]>([]);
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [teamsPerPage] = useState(4); // Increased from 3 to 4 to show more teams per page
 
   const { toast } = useToast();
+
+  // Fetch available fields and time slots when date or field type changes
+  useEffect(() => {
+    const fetchFieldsAndTimeSlots = async () => {
+      if (!matchDate || !fieldType) return;
+
+      try {
+        // Get available fields
+        const fieldsResponse = await fieldAPI.getAllFields();
+        const fieldsData = fieldsResponse.data?.fields || fieldsResponse.data || [];
+
+        // Filter fields by type (size)
+        const filteredFields = fieldsData.filter((field: any) => {
+          const fieldSize = field.size || "";
+          if (fieldType === "5") {
+            return fieldSize.includes("5") || fieldSize.toLowerCase().includes("5v5") || fieldSize.toLowerCase().includes("5-a-side");
+          } else if (fieldType === "7") {
+            return fieldSize.includes("7") || fieldSize.toLowerCase().includes("7v7") || fieldSize.toLowerCase().includes("7-a-side");
+          } else if (fieldType === "11") {
+            return fieldSize.includes("11") || fieldSize.toLowerCase().includes("11v11") || fieldSize.toLowerCase().includes("11-a-side");
+          }
+          return false;
+        });
+
+        setAvailableFields(filteredFields);
+
+        // Get time slots for the first available field of the selected type
+        if (filteredFields.length > 0) {
+          const selectedField = filteredFields[0];
+          const fieldId = selectedField.fieldId || selectedField.id;
+
+          const timeSlotsResponse = await axios.get(`http://localhost:9002/api/timeslots?field_id=${fieldId}&date=${matchDate}`);
+          const timeSlotsData = timeSlotsResponse.data || [];
+
+          // Filter only available time slots
+          const availableSlots = timeSlotsData.filter((slot: any) => slot.available);
+          setAvailableTimeSlots(availableSlots);
+
+          // Reset time slot selection when date or field type changes
+          setTimeSlotId("");
+        } else {
+          setAvailableTimeSlots([]);
+          setTimeSlotId("");
+        }
+      } catch (error) {
+        console.error("Error fetching fields and time slots:", error);
+        setAvailableTimeSlots([]);
+        setTimeSlotId("");
+      }
+    };
+
+    fetchFieldsAndTimeSlots();
+  }, [matchDate, fieldType]);
 
   // Fetch opponents from API
   useEffect(() => {
@@ -185,12 +241,24 @@ const FindOpponents = () => {
             const startTime = timeSlot?.start_time || timeSlot?.startTime;
             const endTime = timeSlot?.end_time || timeSlot?.endTime;
 
-            // Determine level based on field size
-            let level = "Trung bình";
-            if (fieldSize === "5-a-side" || fieldSize === "5v5") {
-              level = "Thấp";
-            } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
-              level = "Cao";
+            // Determine level based on skill_level from opponent data or field size as fallback
+            let level = "Trung Bình";
+            const skillLevel = opponent.skill_level || opponent.skillLevel;
+            if (skillLevel) {
+              if (skillLevel === "beginner") {
+                level = "Yếu";
+              } else if (skillLevel === "advanced") {
+                level = "Khá";
+              } else {
+                level = "Trung Bình";
+              }
+            } else {
+              // Fallback to field size mapping
+              if (fieldSize === "5-a-side" || fieldSize === "5v5" || fieldSize.includes("5")) {
+                level = "Yếu";
+              } else if (fieldSize === "11-a-side" || fieldSize === "11v11" || fieldSize.includes("11")) {
+                level = "Khá";
+              }
             }
 
             // Format time from timeSlot
@@ -199,12 +267,18 @@ const FindOpponents = () => {
               timeString = `${startTime.substring(0, 5)} - ${endTime.substring(0, 5)}`;
             }
 
-            // Determine number of members based on field size
+            // Determine number of members based on player_count from opponent data or field size as fallback
             let members = 7; // Default to 7-a-side
-            if (fieldSize === "5-a-side" || fieldSize === "5v5") {
-              members = 5;
-            } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
-              members = 11;
+            const playerCount = opponent.player_count || opponent.playerCount;
+            if (playerCount) {
+              members = playerCount;
+            } else {
+              // Fallback to field size mapping
+              if (fieldSize === "5-a-side" || fieldSize === "5v5" || fieldSize.includes("5")) {
+                members = 5;
+              } else if (fieldSize === "11-a-side" || fieldSize === "11v11" || fieldSize.includes("11")) {
+                members = 11;
+              }
             }
 
             // Lấy trường expireDate
@@ -253,41 +327,132 @@ const FindOpponents = () => {
 
     try {
       // Validate form data
-      if (!teamName || !contact || !dateTime || !location || !matchDate) {
+      if (!teamName || !contact || !timeSlotId || !matchDate || !fieldType) {
         toast({
           title: "Thiếu thông tin",
-          description: "Vui lòng điền đầy đủ thông tin đội bóng, bao gồm ngày giao lưu",
+          description: "Vui lòng điền đầy đủ thông tin đội bóng, bao gồm ngày giao lưu và khung giờ",
           variant: "destructive"
         });
         setIsSubmitting(false);
         return;
       }
 
-      // Tạo dữ liệu mẫu để hiển thị UI ngay lập tức
-      const bookingDate = matchDate ? new Date(matchDate) : new Date();
+      // Validate that we have available fields and time slots
+      if (availableFields.length === 0) {
+        toast({
+          title: "Không có sân phù hợp",
+          description: `Không tìm thấy sân ${fieldType} người cho ngày đã chọn`,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-      // Tạo đối tượng team mới để hiển thị ngay trên UI
-      const newTeam: Team = {
-        id: Date.now(), // Tạm thời dùng timestamp làm ID
-        name: teamName,
-        level,
-        location,
-        members: parseInt(members),
-        date: bookingDate,
-        time: dateTime,
+      if (availableTimeSlots.length === 0) {
+        toast({
+          title: "Không có khung giờ trống",
+          description: "Không có khung giờ nào còn trống cho ngày và sân đã chọn",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Get the selected field and time slot
+      const selectedField = availableFields[0]; // Use first available field of the selected type
+      const fieldId = selectedField.fieldId || selectedField.id;
+      const selectedTimeSlot = availableTimeSlots.find(slot => slot.id == timeSlotId);
+
+      if (!selectedTimeSlot) {
+        toast({
+          title: "Lỗi khung giờ",
+          description: "Khung giờ đã chọn không còn khả dụng",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log("Creating booking with:", {
+        fieldId,
+        timeSlotId: parseInt(timeSlotId),
+        matchDate,
+        teamName,
         contact,
-        description,
-        fieldId: 1, // Placeholder
-        fieldName: "Sân bóng", // Placeholder
-        bookingId: Date.now() // Placeholder
+        selectedTimeSlot
+      });
+
+      // Create booking first
+      const bookingData = {
+        fieldId: fieldId,
+        timeSlotId: parseInt(timeSlotId),
+        bookingDate: matchDate,
+        totalPrice: selectedTimeSlot.price || 200000,
+        customerName: teamName,
+        customerPhone: contact,
+        customerEmail: "",
+        notes: description,
       };
 
-      // Add to local state for immediate UI update
-      setTeams([newTeam, ...teams]);
-      
+      let bookingResponse;
+      try {
+        bookingResponse = await bookingAPI.createBooking(bookingData);
+      } catch (error: any) {
+        console.error("Booking creation error:", error);
+
+        let errorMessage = "Không thể tạo booking. Vui lòng thử lại.";
+        if (error.response?.data?.errors) {
+          errorMessage = error.response.data.errors.map((err: any) => err.msg).join(", ");
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+
+        toast({
+          title: "Lỗi tạo booking",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      console.log("Booking response:", bookingResponse.data);
+
+      // Extract booking ID
+      const bookingId = bookingResponse.data?.booking?.id ||
+                       bookingResponse.data?.booking?.bookingId ||
+                       bookingResponse.data?.id ||
+                       bookingResponse.data?.bookingId;
+
+      if (!bookingId) {
+        console.error('Failed to get booking ID from response');
+        toast({
+          title: "Lỗi tạo booking",
+          description: "Không thể tạo booking. Vui lòng thử lại.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      console.log(`Created booking with ID: ${bookingId}`);
+
+      // Create opponent
+      const opponentData = {
+        bookingId: bookingId,
+        teamName: teamName,
+        contactPhone: contact,
+        contactEmail: "",
+        description: description,
+        skillLevel: level === "Yếu" ? "beginner" : level === "Khá" ? "advanced" : "intermediate",
+        playerCount: parseInt(fieldType)
+      };
+
+      const opponentResponse = await opponentAPI.createOpponent(opponentData);
+      console.log("Opponent response:", opponentResponse.data);
+
       // Close dialog and show success message
       setIsDialogOpen(false);
-      
+
       toast({
         title: "Đăng tin thành công!",
         description: "Thông tin của bạn đã được đăng lên hệ thống.",
@@ -295,91 +460,20 @@ const FindOpponents = () => {
 
       // Reset form
       setTeamName("");
-      setLevel("Trung bình");
-      setLocation("");
-      setMembers("5");
-      setDateTime("");
+      setLevel("Trung Bình");
+      setFieldType("7");
+      setTimeSlotId("");
       setContact("");
       setDescription("");
       setMatchDate("");
 
-      // Now make the actual API call in the background
+      // Refresh the opponents list to show the new entry
       try {
-        // Get available fields
-        console.log("Fetching available fields...");
-        const fieldsResponse = await fieldAPI.getAllFields();
-        const fieldsData = fieldsResponse.data?.fields || fieldsResponse.data || [];
-        
-        if (!fieldsData || fieldsData.length === 0) {
-          console.error('No fields available');
-          return;
-        }
 
-        // Get first available field
-        const field = fieldsData[0];
-        const fieldId = field.fieldId || field.id;
-        console.log(`Selected field: ${fieldId}`);
-
-        // Get time slots for the field
-        const timeSlotsResponse = await axios.get(`http://localhost:9002/api/timeslots?field_id=${fieldId}`);
-        const timeSlotsData = timeSlotsResponse.data?.timeSlots || timeSlotsResponse.data?.data || timeSlotsResponse.data || [];
-        
-        if (!timeSlotsData || timeSlotsData.length === 0) {
-          console.error('No time slots available');
-          return;
-        }
-
-        // Get first available time slot
-        const timeSlot = timeSlotsData[0];
-        const timeSlotId = timeSlot.id || timeSlot.timeSlotId;
-        console.log(`Selected time slot: ${timeSlotId}`);
-
-        // Create booking
-        const bookingData = {
-          fieldId: fieldId,
-          timeSlotId: timeSlotId,
-          bookingDate: matchDate,
-          totalPrice: 200000,
-          customerName: teamName,
-          customerPhone: contact,
-          customerEmail: "",
-          notes: description,
-        };
-
-        const bookingResponse = await bookingAPI.createBooking(bookingData);
-        console.log("Booking response:", bookingResponse.data);
-        
-        // Extract booking ID
-        const bookingId = bookingResponse.data?.booking?.id || 
-                         bookingResponse.data?.booking?.bookingId ||
-                         bookingResponse.data?.id ||
-                         bookingResponse.data?.bookingId;
-        
-        if (!bookingId) {
-          console.error('Failed to get booking ID from response');
-          return;
-        }
-
-        console.log(`Created booking with ID: ${bookingId}`);
-
-        // Create opponent
-        const opponentData = {
-          bookingId: bookingId,
-          teamName: teamName,
-          contactPhone: contact,
-          contactEmail: "",
-          description: description,
-          skillLevel: level.toLowerCase() === "thấp" ? "beginner" : level.toLowerCase() === "cao" ? "advanced" : "intermediate",
-          playerCount: parseInt(members)
-        };
-
-        const opponentResponse = await opponentAPI.createOpponent(opponentData);
-        console.log("Opponent response:", opponentResponse.data);
-        
         // Refresh opponent list
         const refreshResponse = await opponentAPI.getAllOpponents();
         const opponentsData = refreshResponse.data?.opponents || refreshResponse.data || [];
-        
+
         if (opponentsData.length > 0) {
           // Process the new data to match our Team interface
           const fetchedTeams = opponentsData.map((opponent: any) => {
@@ -388,11 +482,11 @@ const FindOpponents = () => {
             const teamName = opponent.teamName || opponent.team_name;
             const contactPhone = opponent.contactPhone || opponent.contact_phone;
             const description = opponent.description;
-            
+
             const booking = opponent.booking || opponent.Booking;
             const field = booking?.field || booking?.Field;
             const timeSlot = booking?.time_slot || booking?.TimeSlot || booking?.timeSlot;
-            
+
             let level = "Trung bình";
             const fieldSize = field?.size || "";
             if (fieldSize === "5-a-side" || fieldSize === "5v5") {
@@ -400,26 +494,26 @@ const FindOpponents = () => {
             } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
               level = "Cao";
             }
-            
+
             let timeString = "";
             const startTime = timeSlot?.start_time || timeSlot?.startTime;
             const endTime = timeSlot?.end_time || timeSlot?.endTime;
             if (startTime && endTime) {
               timeString = `${startTime.substring(0, 5)} - ${endTime.substring(0, 5)}`;
             }
-            
+
             let members = 7;
             if (fieldSize === "5-a-side" || fieldSize === "5v5") {
               members = 5;
             } else if (fieldSize === "11-a-side" || fieldSize === "11v11") {
               members = 11;
             }
-            
+
             const bookingDate = booking?.bookingDate || booking?.booking_date || booking?.date;
-            
+
             // Lấy trường expireDate
             const expireDate = opponent.expireDate || opponent.expire_date;
-            
+
             return {
               id: opponentId,
               name: teamName,
@@ -436,7 +530,7 @@ const FindOpponents = () => {
               expireDate: expireDate,
             };
           });
-          
+
           // Update teams state with actual data from server
           setTeams(fetchedTeams);
         }
@@ -505,7 +599,7 @@ const FindOpponents = () => {
                   <div className="py-2">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div>
-                        <label className="text-sm font-medium">Tên đội bóng</label>
+                        <label className="text-sm font-medium">Tên Đội</label>
                         <Input
                           placeholder="Nhập tên đội bóng"
                           value={teamName}
@@ -519,46 +613,53 @@ const FindOpponents = () => {
                           value={level}
                           onChange={(e) => setLevel(e.target.value)}
                         >
-                          <option>Thấp</option>
-                          <option>Trung bình</option>
-                          <option>Cao</option>
+                          <option value="Yếu">Yếu</option>
+                          <option value="Trung Bình">Trung Bình</option>
+                          <option value="Khá">Khá</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Số người/đội</label>
+                        <label className="text-sm font-medium">Sân</label>
                         <select
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
-                          value={members}
-                          onChange={(e) => setMembers(e.target.value)}
+                          value={fieldType}
+                          onChange={(e) => setFieldType(e.target.value)}
                         >
-                          <option>5</option>
-                          <option>7</option>
-                          <option>11</option>
+                          <option value="5">5</option>
+                          <option value="7">7</option>
+                          <option value="11">11</option>
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium">Địa điểm</label>
-                        <Input
-                          placeholder="Nhập địa điểm"
-                          value={location}
-                          onChange={(e) => setLocation(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Thời gian</label>
-                        <Input
-                          placeholder="VD: 18:00 - 19:30"
-                          value={dateTime}
-                          onChange={(e) => setDateTime(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Ngày giao lưu</label>
+                        <label className="text-sm font-medium">Ngày tháng</label>
                         <Input
                           type="date"
                           value={matchDate}
                           onChange={(e) => setMatchDate(e.target.value)}
                         />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="text-sm font-medium">Khung giờ</label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-field-500"
+                          value={timeSlotId}
+                          onChange={(e) => setTimeSlotId(e.target.value)}
+                          disabled={!matchDate || !fieldType || availableTimeSlots.length === 0}
+                        >
+                          <option value="">
+                            {!matchDate || !fieldType
+                              ? "Vui lòng chọn ngày và loại sân trước"
+                              : availableTimeSlots.length === 0
+                                ? "Không có khung giờ trống"
+                                : "Chọn khung giờ"}
+                          </option>
+                          {availableTimeSlots.map((slot) => (
+                            <option key={slot.id} value={slot.id}>
+                              {slot.start_time?.substring(0, 5)} - {slot.end_time?.substring(0, 5)}
+                              ({new Intl.NumberFormat('vi-VN').format(slot.price)}đ)
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div className="md:col-span-2">
                         <label className="text-sm font-medium">Liên hệ</label>
@@ -569,7 +670,7 @@ const FindOpponents = () => {
                         />
                       </div>
                       <div className="md:col-span-2">
-                        <label className="text-sm font-medium">Mô tả thêm</label>
+                        <label className="text-sm font-medium">Thông tin thêm</label>
                         <Textarea
                           placeholder="Mô tả thêm về đội bóng và yêu cầu"
                           value={description}
@@ -619,22 +720,22 @@ const FindOpponents = () => {
                     Tất cả
                   </Badge>
                   <Badge
-                    className={`cursor-pointer ${filter === "thấp" ? "bg-field-700" : "bg-gray-200 hover:bg-gray-300 text-gray-800"}`}
-                    onClick={() => setFilter("thấp")}
+                    className={`cursor-pointer ${filter === "yếu" ? "bg-field-700" : "bg-gray-200 hover:bg-gray-300 text-gray-800"}`}
+                    onClick={() => setFilter("yếu")}
                   >
-                    Thấp
+                    Yếu
                   </Badge>
                   <Badge
                     className={`cursor-pointer ${filter === "trung bình" ? "bg-field-700" : "bg-gray-200 hover:bg-gray-300 text-gray-800"}`}
                     onClick={() => setFilter("trung bình")}
                   >
-                    Trung bình
+                    Trung Bình
                   </Badge>
                   <Badge
-                    className={`cursor-pointer ${filter === "cao" ? "bg-field-700" : "bg-gray-200 hover:bg-gray-300 text-gray-800"}`}
-                    onClick={() => setFilter("cao")}
+                    className={`cursor-pointer ${filter === "khá" ? "bg-field-700" : "bg-gray-200 hover:bg-gray-300 text-gray-800"}`}
+                    onClick={() => setFilter("khá")}
                   >
-                    Cao
+                    Khá
                   </Badge>
                 </div>
               </div>
@@ -674,8 +775,8 @@ const FindOpponents = () => {
                         )}
                       </div>
                       <Badge className={
-                        team.level === "Cao" ? "bg-red-500" :
-                        team.level === "Trung bình" ? "bg-yellow-500" :
+                        team.level === "Khá" ? "bg-red-500" :
+                        team.level === "Trung Bình" ? "bg-yellow-500" :
                         "bg-green-500"
                       }>
                         {team.level}

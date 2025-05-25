@@ -1,32 +1,42 @@
 -- Football Field Management System Database Schema (MySQL version)
+-- Optimized schema with 6 core tables only: Admin, Fields, TimeSlots, Bookings, Opponents, Feedback
+-- Removed excess tables: Reviews, Notifications, FieldManagement for better maintainability
 
 -- Drop database if exists and create a new one
 DROP DATABASE IF EXISTS FootballField;
 CREATE DATABASE FootballField;
 USE FootballField;
 
--- Users Table
-CREATE TABLE Users (
-    userId INT AUTO_INCREMENT PRIMARY KEY,
+-- Admin Table (Simplified from Users table - only for admin accounts)
+CREATE TABLE Admin (
+    adminId INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(15),
-    role VARCHAR(20) NOT NULL DEFAULT 'admin', -- chỉ có 'admin'
-    isActive BOOLEAN DEFAULT TRUE
+    isActive BOOLEAN DEFAULT TRUE,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_admin_username (username),
+    INDEX idx_admin_email (email)
 );
 
--- Fields Table (Football Fields)
+-- Fields Table (Exactly 4 fixed football fields)
 CREATE TABLE Fields (
     fieldId INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    description VARCHAR(500),
-    size VARCHAR(50) NOT NULL, -- '5v5', '7v7', '11v11'
+    description TEXT,
+    size ENUM('5v5', '7v7', '11v11') NOT NULL,
     imageUrl VARCHAR(255),
-    isActive BOOLEAN DEFAULT TRUE
+    isActive BOOLEAN DEFAULT TRUE,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_field_size (size),
+    INDEX idx_field_active (isActive)
 );
 
--- TimeSlots Table
+-- TimeSlots Table (Pricing by time periods)
 CREATE TABLE TimeSlots (
     timeSlotId INT AUTO_INCREMENT PRIMARY KEY,
     fieldId INT NOT NULL,
@@ -34,89 +44,63 @@ CREATE TABLE TimeSlots (
     endTime TIME NOT NULL,
     weekdayPrice DECIMAL(10, 2) NOT NULL,
     weekendPrice DECIMAL(10, 2) NOT NULL,
-    isActive BOOLEAN DEFAULT TRUE,
+    isActive BOOLEAN DEFAULT TRUE COMMENT 'For locking/unlocking time slots',
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (fieldId) REFERENCES Fields(fieldId) ON DELETE CASCADE,
     UNIQUE KEY UQ_FieldTimeSlot (fieldId, startTime, endTime),
-    INDEX idx_timeslot_active (isActive)
+    INDEX idx_timeslot_field (fieldId),
+    INDEX idx_timeslot_active (isActive),
+    INDEX idx_timeslot_time (startTime, endTime)
 );
 
--- Bookings Table
+-- Bookings Table (User booking history and records)
 CREATE TABLE Bookings (
     bookingId INT AUTO_INCREMENT PRIMARY KEY,
     fieldId INT NOT NULL,
     timeSlotId INT NOT NULL,
     bookingDate DATE NOT NULL,
     totalPrice DECIMAL(10, 2) NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'Đã đặt', -- chỉ có 'Đã đặt'
-    paymentStatus VARCHAR(50) DEFAULT 'pending',
-    customerName VARCHAR(100),
-    customerPhone VARCHAR(20),
+    status ENUM('Đã đặt', 'Đã hủy', 'Hoàn thành') DEFAULT 'Đã đặt',
+    paymentStatus ENUM('pending', 'paid', 'failed', 'refunded') DEFAULT 'pending',
+    customerName VARCHAR(100) NOT NULL,
+    customerPhone VARCHAR(20) NOT NULL,
     customerEmail VARCHAR(100),
     notes TEXT,
-    paymentMethod VARCHAR(50) DEFAULT 'vietqr',
+    paymentMethod ENUM('vietqr', 'cash', 'transfer') DEFAULT 'vietqr',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (fieldId) REFERENCES Fields(fieldId) ON DELETE CASCADE,
     FOREIGN KEY (timeSlotId) REFERENCES TimeSlots(timeSlotId) ON DELETE CASCADE,
     UNIQUE KEY UQ_Booking (fieldId, timeSlotId, bookingDate),
     INDEX idx_booking_date (bookingDate),
-    INDEX idx_booking_status (status)
+    INDEX idx_booking_status (status),
+    INDEX idx_booking_payment (paymentStatus),
+    INDEX idx_booking_customer (customerName, customerPhone)
 );
 
--- Reviews Table
-CREATE TABLE Reviews (
-    reviewId INT AUTO_INCREMENT PRIMARY KEY,
-    userId INT NOT NULL,
-    fieldId INT NOT NULL,
-    bookingId INT NOT NULL,
-    rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
-    comment VARCHAR(500),
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE CASCADE,
-    FOREIGN KEY (fieldId) REFERENCES Fields(fieldId) ON DELETE CASCADE,
-    FOREIGN KEY (bookingId) REFERENCES Bookings(bookingId) ON DELETE CASCADE,
-    UNIQUE KEY UQ_UserBookingReview (userId, bookingId),
-    INDEX idx_review_rating (rating)
-);
-
--- Notifications Table
-CREATE TABLE Notifications (
-    notificationId INT AUTO_INCREMENT PRIMARY KEY,
-    userId INT NOT NULL,
-    title VARCHAR(100) NOT NULL,
-    message VARCHAR(500) NOT NULL,
-    type VARCHAR(50) DEFAULT 'info', -- 'info', 'warning', 'success', 'error'
-    relatedId INT, -- ID of related entity (booking, review, etc.)
-    relatedType VARCHAR(50), -- Type of related entity ('booking', 'review', etc.)
-    isRead BOOLEAN DEFAULT FALSE,
-    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userId) REFERENCES Users(userId) ON DELETE CASCADE,
-    INDEX idx_notification_user (userId),
-    INDEX idx_notification_read (isRead),
-    INDEX idx_notification_type (type)
-);
-
--- Opponents Table
+-- Opponents Table (Posts for finding football opponents)
 CREATE TABLE Opponents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     booking_id INT NOT NULL,
     team_name VARCHAR(100) NOT NULL,
-    contact_phone VARCHAR(15) NOT NULL,
+    contact_phone VARCHAR(20) NOT NULL,
     contact_email VARCHAR(100),
     description TEXT,
-    skill_level VARCHAR(20) DEFAULT 'intermediate', -- 'beginner', 'intermediate', 'advanced'
-    player_count INT DEFAULT 5,
+    skill_level ENUM('beginner', 'intermediate', 'advanced') DEFAULT 'intermediate',
+    player_count INT DEFAULT 5 CHECK (player_count BETWEEN 1 AND 22),
     status ENUM('searching', 'matched', 'cancelled') DEFAULT 'searching',
-    expireDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expireDate DATETIME NOT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (booking_id) REFERENCES Bookings(bookingId) ON DELETE CASCADE,
     INDEX idx_opponent_status (status),
-    INDEX idx_opponent_skill (skill_level)
+    INDEX idx_opponent_skill (skill_level),
+    INDEX idx_opponent_expire (expireDate),
+    INDEX idx_opponent_booking (booking_id)
 );
 
--- Feedback Table
+-- Feedback Table (Customer feedback and reviews)
 CREATE TABLE Feedback (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -124,9 +108,12 @@ CREATE TABLE Feedback (
     content TEXT NOT NULL,
     status ENUM('new', 'read', 'responded') DEFAULT 'new',
     response TEXT,
-    user_id INT,
+    adminId INT,
+    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(userId) ON DELETE SET NULL,
-    INDEX idx_feedback_status (status)
+    FOREIGN KEY (adminId) REFERENCES Admin(adminId) ON DELETE SET NULL,
+    INDEX idx_feedback_status (status),
+    INDEX idx_feedback_priority (priority),
+    INDEX idx_feedback_admin (adminId)
 );

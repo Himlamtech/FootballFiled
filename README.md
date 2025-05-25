@@ -1,202 +1,456 @@
-# Hệ Thống Quản Lý Sân Bóng Đá
+# ⚽ Football Field Management System San Bong Xanh
 
-Ứng dụng web toàn diện để quản lý đặt sân bóng đá, tìm đối thủ và quản lý phản hồi. Hệ thống cho phép người dùng đặt sân bóng đá, tìm đối thủ để thi đấu, đồng thời cung cấp cho quản trị viên các công cụ để quản lý sân, lịch đặt và phản hồi từ khách hàng.
+A comprehensive, production-ready web application for managing football field bookings, community opponent finding, and administrative operations with real-time analytics.
 
-## Tính Năng
+## 🌟 Features
 
-- **Quản Lý Người Dùng**
-  - Xác thực và phân quyền
-  - Quản lý vai trò (Người dùng, Quản trị viên)
-  - Quản lý thông tin cá nhân
+### 🏟️ **Core Functionality**
+- **Smart Field Booking System**: Real-time availability checking with dynamic pricing
+- **Community Opponent Finding**: Advanced matchmaking for teams seeking opponents
+- **Comprehensive Admin Dashboard**: Business analytics, revenue tracking, and operational insights
+- **Automated Email Notifications**: Booking confirmations and customer communications
+- **Multi-Payment Integration**: VietQR, cash, and bank transfer support
+- **Customer Feedback System**: Integrated support and feedback management
 
-- **Quản Lý Sân Bóng**
-  - Nhiều loại sân (5v5, 7v7, 11v11)
-  - Theo dõi tình trạng sân
-  - Thông tin chi tiết và hình ảnh sân
+### 📊 **Business Intelligence**
+- **Revenue Analytics**: Real-time financial tracking and reporting
+- **Field Utilization Metrics**: Optimize field usage and pricing strategies
+- **Customer Insights**: Booking patterns and customer behavior analysis
+- **Automated Reporting**: Daily, weekly, monthly, and yearly business reports
 
-- **Hệ Thống Đặt Sân**
-  - Kiểm tra tình trạng sân theo thời gian thực
-  - Tạo và quản lý lịch đặt sân
-  - Theo dõi lịch sử và trạng thái đặt sân
+### 🔧 **Administrative Tools**
+- **Time Slot Management**: Dynamic locking/unlocking with auto-expiry
+- **Customer Management**: Comprehensive booking and customer history
+- **Feedback Management**: Priority-based customer support system
+- **Automated Maintenance**: Scheduled cleanup and data optimization
 
-- **Tìm Đối Thủ**
-  - Đăng ký tìm đối thủ
-  - Ghép cặp đối thủ phù hợp
-  - Quản lý trạng thái tìm đối
+## 🚀 Tech Stack
 
-- **Hệ Thống Đánh Giá**
-  - Đánh giá và nhận xét về sân
-  - Quản lý đánh giá
+### **Backend Architecture**
+- **Runtime**: Node.js (v18+) with Express.js framework
+- **Database**: MySQL (v8.0+) with Sequelize ORM for data modeling
+- **Authentication**: JWT-based secure authentication system
+- **Email Service**: Nodemailer with Gmail SMTP integration
+- **Task Scheduling**: Node-schedule for automated background processes
+- **Security**: CORS, input validation, and error handling middleware
 
-- **Phản Hồi Khách Hàng**
-  - Gửi phản hồi
-  - Quản lý và phản hồi từ quản trị viên
+### **Frontend Architecture**
+- **Framework**: React 18 with TypeScript for type safety
+- **Build Tool**: Vite for fast development and optimized builds
+- **Styling**: Tailwind CSS with custom component library
+- **Routing**: React Router v6 for SPA navigation
+- **HTTP Client**: Axios with interceptors for API communication
+- **Form Management**: React Hook Form with validation
+- **UI Components**: Custom component library with accessibility support
 
-## Công Nghệ Sử Dụng
+### **Development & Deployment**
+- **Package Management**: npm with workspace support
+- **Code Quality**: ESLint, TypeScript strict mode
+- **Testing**: Playwright for end-to-end testing
+- **Documentation**: Comprehensive API and setup documentation
 
-### Backend
-- Node.js
-- Express.js
-- MySQL
-- Sequelize ORM
-- JWT Authentication
+## 📋 Prerequisites
 
-### Frontend
-- React
-- TypeScript
-- Material-UI
-- Redux quản lý state
-- Axios gọi API
+### **System Requirements**
+- **Node.js**: v18.0.0 or higher ([Download](https://nodejs.org/))
+- **MySQL**: v8.0 or higher ([Download](https://dev.mysql.com/downloads/))
+- **npm**: v8.0.0 or higher (included with Node.js)
+- **Git**: For version control ([Download](https://git-scm.com/))
 
-## Cấu Trúc Dự Án
+### **Development Environment**
+- **Operating System**: Windows, macOS, or Linux
+- **Memory**: Minimum 4GB RAM (8GB recommended)
+- **Storage**: At least 2GB free space
+- **Network**: Internet connection for package installation
+
+## 🛠️ Installation & Setup
+
+### **1. Repository Setup**
+```bash
+# Clone the repository
+git clone https://github.com/Himlamtech/FootballFiled.git
+cd FootballField
+
+# Install all dependencies (root, backend, frontend)
+npm run install:all
+```
+
+### **2. Database Configuration**
+```bash
+# Ensure MySQL is running on port 3306
+# Create database and user (if needed)
+mysql -u root -p
+CREATE DATABASE FootballField;
+```
+
+### **3. Environment Configuration**
+```bash
+# Copy environment template
+cp .env.example .env
+```
+
+**Configure your `.env` file:**
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=FootballField
+DB_USER=root
+DB_PASSWORD=Himlam04@
+
+# JWT Security
+JWT_SECRET=your_super_secure_jwt_secret_key_here
+JWT_EXPIRES_IN=7d
+
+# Email Service (Gmail SMTP)
+EMAIL_USER=himlam.cursor1@gmail.com
+EMAIL_PASS=tbuq mqvt abgr mfxu
+EMAIL_FROM=himlam.cursor1@gmail.com
+EMAIL_SERVICE=gmail
+
+# Server Configuration
+PORT=9002
+FRONTEND_PORT=9001
+NODE_ENV=development
+
+# Optional: SendGrid Alternative
+USE_SENDGRID=false
+SENDGRID_API_KEY=your_sendgrid_api_key
+```
+
+### **4. Database Initialization**
+```bash
+# Initialize database with schema and sample data
+cd backend
+node database/init-database.js
+cd ..
+```
+
+### **5. Application Startup**
+```bash
+# Start both frontend and backend concurrently
+npm start
+
+# Or start services individually:
+npm run start:backend   # Backend API (port 9002)
+npm run start:frontend  # Frontend UI (port 9001)
+```
+
+## 🌐 Application Access
+
+### **User Interface**
+- **Homepage**: http://localhost:9001
+- **Field Booking**: Browse available fields and make reservations
+- **Opponent Finding**: Post team information and find opponents
+- **Customer Feedback**: Submit feedback and view responses
+
+### **Administrative Interface**
+- **Admin Dashboard**: http://localhost:9001/admin
+- **Default Credentials**:
+  - **Username**: `admin`
+  - **Password**: `admin`
+- **Features**:
+  - Real-time business analytics and revenue tracking
+  - Field and time slot management
+  - Customer booking management
+  - Feedback and support system
+  - Financial reporting and insights
+
+### **API Access**
+- **Base URL**: http://localhost:9002/api
+- **Health Check**: http://localhost:9002/api/ping
+- **Documentation**: See `docs/API_DOCUMENTATION.md`
+
+## 📚 Documentation
+
+### **Available Documentation**
+1. **`docs/API_DOCUMENTATION.md`** - Complete API reference with 25+ endpoints
+2. **`docs/FINAL_TESTING_REPORT.md`** - Comprehensive testing results and system analysis
+3. **`README.md`** - This setup and overview guide
+
+### **Key API Endpoints**
+```bash
+# Authentication
+POST /api/auth/admin/login     # Admin login
+GET  /api/auth/admin/me        # Get current admin
+
+# Field Management
+GET  /api/fields               # Get all fields
+GET  /api/fields/:id           # Get field by ID
+GET  /api/timeslots           # Get available time slots
+
+# Booking System
+GET  /api/bookings            # Get all bookings (admin)
+POST /api/bookings            # Create new booking
+GET  /api/bookings/:id        # Get booking details
+PUT  /api/bookings/:id        # Update booking (admin)
+
+# Opponent Finding
+GET  /api/opponents           # Get opponent posts
+POST /api/opponents           # Create opponent post
+DELETE /api/opponents/:id     # Delete opponent post
+
+# Feedback System
+GET  /api/feedback            # Get all feedback (admin)
+POST /api/feedback            # Submit feedback
+POST /api/feedback/:id/reply  # Reply to feedback (admin)
+
+# Analytics & Dashboard
+GET  /api/dashboard/stats     # Get dashboard statistics
+GET  /api/dashboard/chart     # Get chart data
+GET  /api/dashboard/bookings  # Get booking history
+```
+
+## 🗄️ Database Schema
+
+### **Core Tables (6 Tables)**
+1. **Admin** - System administrators and authentication
+2. **Fields** - Football field information (4 fixed fields)
+3. **TimeSlots** - Available time slots with dynamic pricing
+4. **Bookings** - Field reservations and payment tracking
+5. **Opponents** - Team opponent finding and matchmaking
+6. **Feedback** - Customer feedback and support system
+
+### **Key Features**
+- **Optimized Indexing**: Strategic indexes for performance
+- **Data Integrity**: Foreign key constraints and validation
+- **Automated Cleanup**: Scheduled removal of expired data
+- **Audit Trail**: Creation and modification timestamps
+
+## 🏗️ Project Structure
 
 ```
 FootballField/
-├── backend/                 # Mã nguồn backend
-│   ├── config/              # Cấu hình
-│   ├── controllers/         # Bộ điều khiển
-│   ├── database/            # Cơ sở dữ liệu
-│   │   ├── create-database.sql  # Tạo cấu trúc cơ sở dữ liệu
-│   │   ├── seed-data.sql        # Dữ liệu mẫu
-│   │   ├── database.sh          # Script khởi tạo cơ sở dữ liệu (Linux/Mac)
-│   │   └── init-database.js     # Script khởi tạo cơ sở dữ liệu (Windows)
-│   ├── middleware/          # Middleware Express
-│   ├── models/              # Mô hình Sequelize
-│   ├── routes/              # Định tuyến API
-│   └── utils/               # Tiện ích
-├── frontend/                # Mã nguồn frontend
-│   ├── public/              # Tệp tĩnh
-│   └── src/                 # Mã nguồn React
-│       ├── components/      # Các component
-│       ├── hooks/           # Custom hooks
-│       ├── pages/           # Các trang
-│       ├── services/        # Dịch vụ API
-│       ├── utils/           # Tiện ích
-│       └── App.tsx          # Component App chính
-├── .env                     # Biến môi trường
-├── package.json             # Tệp cấu hình NPM
-└── README.md                # Tài liệu dự án
+├── 📁 backend/                    # Node.js Backend API
+│   ├── 📁 controllers/           # Business logic controllers
+│   ├── 📁 models/               # Database models (Sequelize)
+│   ├── 📁 routes/               # API route definitions
+│   ├── 📁 utils/                # Utility functions and helpers
+│   ├── 📁 config/               # Configuration files
+│   ├── 📁 database/             # Database setup and migrations
+│   ├── 📄 server.js             # Application entry point
+│   ├── 📄 package.json          # Backend dependencies
+│   └── 📄 .env                  # Environment configuration
+├── 📁 frontend/                   # React Frontend Application
+│   ├── 📁 src/
+│   │   ├── 📁 components/       # Reusable React components
+│   │   ├── 📁 pages/            # Page-level components
+│   │   ├── 📁 services/         # API service layer
+│   │   ├── 📁 utils/            # Frontend utilities
+│   │   ├── 📁 hooks/            # Custom React hooks
+│   │   └── 📁 layouts/          # Layout components
+│   ├── 📁 public/               # Static assets
+│   ├── 📄 package.json          # Frontend dependencies
+│   └── 📄 vite.config.ts        # Vite configuration
+├── 📁 docs/                      # Documentation
+│   ├── 📄 API_DOCUMENTATION.md  # Complete API reference
+│   └── 📄 FINAL_TESTING_REPORT.md # Testing and analysis
+├── 📁 tests/                     # Test files (Playwright)
+├── 📄 package.json              # Root package configuration
+├── 📄 .env.example              # Environment template
+├── 📄 cleanup.sh                # Project cleanup script
+└── 📄 README.md                 # This file
 ```
 
-## Bắt Đầu
+## 💻 Development
 
-### Yêu Cầu Hệ Thống
+### **Available Scripts**
 
-- Node.js (v14 trở lên)
-- MySQL Server
-- npm hoặc yarn
+#### **Root Level Commands**
+```bash
+npm start                    # Start both frontend and backend
+npm run install:all         # Install all dependencies
+npm run build               # Build frontend for production
+npm test                    # Run comprehensive tests
+npm run dev                 # Start development mode
+```
 
-### Cài Đặt
+#### **Backend Commands**
+```bash
+cd backend
+npm start                   # Start production server
+npm run dev                 # Start development server with nodemon
+npm run db:init            # Initialize database
+npm run cleanup            # Clean expired opponent data
+```
 
-1. Clone repository
-   ```
-   git clone https://github.com/your-username/football-field-management.git
-   cd football-field-management
-   ```
+#### **Frontend Commands**
+```bash
+cd frontend
+npm run dev                # Start development server (Vite)
+npm run build              # Build for production
+npm run preview            # Preview production build
+npm run lint               # Run ESLint
+```
 
-2. Cài đặt các gói phụ thuộc
-   ```
-   npm install
-   ```
+### **Development Workflow**
+1. **Setup**: Follow installation instructions
+2. **Development**: Use `npm run dev` for hot reloading
+3. **Testing**: Run `npm test` before committing
+4. **Building**: Use `npm run build` for production builds
+5. **Deployment**: Follow deployment guide below
 
-3. Thiết lập biến môi trường
-   Tạo tệp `.env` trong thư mục gốc với các biến sau:
-   ```
-   PORT=9002
-   NODE_ENV=development
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_NAME=FootballField
-   DB_USER=root
-   DB_PASSWORD=2123
-   JWT_SECRET=football_field_management_jwt_secret_key
-   JWT_EXPIRES_IN=24h
-   CORS_ORIGIN=http://localhost:9001
-   ```
+## 🚀 Production Deployment
 
-4. Khởi tạo cơ sở dữ liệu
+### **Environment Setup**
+```bash
+# Set production environment
+export NODE_ENV=production
 
-   **Đối với Linux/Mac:**
-   ```
-   cd backend/database
-   chmod +x database.sh
-   ./database.sh
-   ```
+# Build frontend
+npm run build
 
-   **Đối với Windows:**
-   ```
-   cd backend/database
-   node init-database.js
-   ```
+# Start production server
+npm start
+```
 
-5. Khởi động backend server
-   ```
-   cd backend
-   npm run dev
-   ```
+### **Database Optimization**
+```sql
+-- Optimize database for production
+OPTIMIZE TABLE Admin, Fields, TimeSlots, Bookings, Opponents, Feedback;
 
-6. Cài đặt và khởi động frontend
-   ```
-   cd frontend
-   npm install
-   npm start
-   ```
+-- Create additional indexes for performance
+CREATE INDEX idx_bookings_date_status ON Bookings(bookingDate, status);
+CREATE INDEX idx_opponents_expire ON Opponents(expireDate);
+```
 
-7. Truy cập ứng dụng tại `http://localhost:9001`
+### **Security Checklist**
+- [ ] Change default admin credentials
+- [ ] Use strong JWT secret
+- [ ] Enable HTTPS in production
+- [ ] Configure firewall rules
+- [ ] Set up database backups
+- [ ] Monitor application logs
 
-## API Endpoints
+## 🧪 Testing
 
-### Xác thực
+### **Test Coverage**
+- **End-to-End Testing**: Playwright for user workflows
+- **API Testing**: Comprehensive endpoint testing
+- **Database Testing**: Data integrity and performance
+- **Security Testing**: Authentication and authorization
 
-- `POST /api/auth/register` - Đăng ký người dùng mới
-- `POST /api/auth/login` - Đăng nhập và nhận token
-- `POST /api/auth/admin/login` - Đăng nhập quản trị viên
-- `GET /api/auth/me` - Lấy thông tin người dùng hiện tại
+### **Running Tests**
+```bash
+# Run all tests
+npm test
 
-### Sân bóng
+# Run specific test suites
+npx playwright test tests/focused-system.test.js
 
-- `GET /api/fields` - Lấy tất cả sân bóng
-- `GET /api/fields/:id` - Lấy sân bóng theo ID
-- `POST /api/fields` - Tạo sân bóng mới (Chỉ Admin)
-- `PUT /api/fields/:id` - Cập nhật sân bóng (Chỉ Admin)
-- `DELETE /api/fields/:id` - Xóa sân bóng (Chỉ Admin)
+# Generate test reports
+npx playwright test --reporter=html
+```
 
-### Khung giờ
+## 🔧 Troubleshooting
 
-- `GET /api/timeslots` - Lấy khung giờ có sẵn
-- `GET /api/timeslots/all` - Lấy tất cả khung giờ
-- `POST /api/timeslots` - Tạo khung giờ mới (Chỉ Admin)
-- `PUT /api/timeslots/:id` - Cập nhật khung giờ (Chỉ Admin)
-- `DELETE /api/timeslots/:id` - Xóa khung giờ (Chỉ Admin)
+### **Common Issues**
 
-### Đặt sân
+#### **Database Connection Issues**
+```bash
+# Check MySQL service
+sudo systemctl status mysql
 
-- `GET /api/bookings` - Lấy tất cả lịch đặt sân
-- `GET /api/bookings/:id` - Lấy lịch đặt sân theo ID
-- `GET /api/bookings/timeslots` - Lấy khung giờ còn trống
-- `GET /api/bookings/field/:id` - Lấy lịch đặt sân theo sân
-- `POST /api/bookings` - Tạo lịch đặt sân mới
-- `PATCH /api/bookings/:id/status` - Cập nhật trạng thái đặt sân
+# Restart MySQL
+sudo systemctl restart mysql
 
-### Tìm đối thủ
+# Check database exists
+mysql -u root -p -e "SHOW DATABASES;"
+```
 
-- `GET /api/opponents` - Lấy tất cả đối thủ
-- `GET /api/opponents/available` - Lấy đối thủ đang tìm
-- `GET /api/opponents/:id` - Lấy đối thủ theo ID
-- `POST /api/opponents` - Đăng ký tìm đối thủ
-- `PUT /api/opponents/:id` - Cập nhật thông tin đối thủ
-- `DELETE /api/opponents/:id` - Hủy tìm đối thủ
+#### **Port Conflicts**
+```bash
+# Check port usage
+lsof -i :9001  # Frontend
+lsof -i :9002  # Backend
+lsof -i :3306  # MySQL
 
-### Phản hồi
+# Kill processes if needed
+kill -9 <PID>
+```
 
-- `GET /api/feedback` - Lấy tất cả phản hồi (Chỉ Admin)
-- `GET /api/feedback/:id` - Lấy phản hồi theo ID (Chỉ Admin)
-- `POST /api/feedback` - Gửi phản hồi mới
-- `PATCH /api/feedback/:id/status` - Cập nhật trạng thái phản hồi (Chỉ Admin)
-- `DELETE /api/feedback/:id` - Xóa phản hồi (Chỉ Admin)
+#### **Email Configuration Issues**
+- Verify Gmail app password is correct
+- Check firewall settings for SMTP
+- Test email configuration with simple send
 
-### Bảng điều khiển
+### **Performance Optimization**
+- **Database**: Regular optimization and indexing
+- **Frontend**: Code splitting and lazy loading
+- **Backend**: Connection pooling and caching
+- **Monitoring**: Set up application monitoring
 
-- `GET /api/dashboard/stats` - Lấy thống kê tổng quan
-- `GET /api/dashboard/chart` - Lấy dữ liệu biểu đồ đặt sân
-- `GET /api/dashboard/popular-fields` - Lấy sân phổ biến nhất
+## 📈 Business Metrics
+
+### **Key Performance Indicators**
+- **Revenue Tracking**: Real-time financial analytics
+- **Field Utilization**: Booking efficiency metrics
+- **Customer Satisfaction**: Feedback analysis
+- **System Performance**: Response time monitoring
+
+### **Analytics Features**
+- **Dashboard**: Real-time business insights
+- **Reports**: Automated daily/weekly/monthly reports
+- **Trends**: Booking patterns and seasonal analysis
+- **Forecasting**: Revenue and demand predictions
+
+## 🤝 Contributing
+
+### **Development Guidelines**
+1. **Fork** the repository
+2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** your changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to the branch (`git push origin feature/amazing-feature`)
+5. **Open** a Pull Request
+
+### **Code Standards**
+- **TypeScript**: Use strict type checking
+- **ESLint**: Follow configured linting rules
+- **Comments**: Document complex business logic
+- **Testing**: Include tests for new features
+
+## 📄 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+### **Getting Help**
+- **Documentation**: Check `docs/` directory
+- **Issues**: Create GitHub issues for bugs
+- **Discussions**: Use GitHub discussions for questions
+- **Email**: Contact development team
+
+### **Maintenance**
+- **Regular Updates**: Keep dependencies updated
+- **Security Patches**: Apply security updates promptly
+- **Backup Strategy**: Implement regular database backups
+- **Monitoring**: Set up application and server monitoring
+
+---
+
+## 🎯 Quick Start Summary
+
+```bash
+# 1. Clone and setup
+git clone https://github.com/Himlamtech/FootballFiled.git
+cd FootballField
+npm run install:all
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# 3. Initialize database
+cd backend && node database/init-database.js
+
+# 4. Start application
+npm start
+
+# 5. Access application
+# Frontend: http://localhost:9001
+# Admin: http://localhost:9001/admin (admin/admin)
+# API: http://localhost:9002/api
+```
+
+**🎉 Your Football Field Management System is now ready for production use!**

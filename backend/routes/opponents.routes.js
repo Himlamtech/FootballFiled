@@ -30,7 +30,8 @@ router.get('/', async (req, res) => {
             }
           ]
         }
-      ]
+      ],
+      order: [['createdAt', 'DESC']] // Sort by creation date, newest first
     });
 
     console.log(`Found ${opponents.length} valid opponents`);
@@ -45,7 +46,9 @@ router.get('/', async (req, res) => {
         teamName: plainOpponent.team_name,
         contactPhone: plainOpponent.contact_phone,
         contactEmail: plainOpponent.contact_email,
-        expireDate: plainOpponent.expireDate,
+        skillLevel: plainOpponent.skill_level,
+        playerCount: plainOpponent.player_count,
+        expireDate: plainOpponent.expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now if missing
       };
     });
 
@@ -105,6 +108,9 @@ router.get('/available', async (req, res) => {
         teamName: plainOpponent.team_name,
         contactPhone: plainOpponent.contact_phone,
         contactEmail: plainOpponent.contact_email,
+        skillLevel: plainOpponent.skill_level,
+        playerCount: plainOpponent.player_count,
+        expireDate: plainOpponent.expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now if missing
         // Keep the original snake_case properties too for backward compatibility
       };
     });
@@ -167,6 +173,9 @@ router.get('/:id', async (req, res) => {
       teamName: plainOpponent.team_name,
       contactPhone: plainOpponent.contact_phone,
       contactEmail: plainOpponent.contact_email,
+      skillLevel: plainOpponent.skill_level,
+      playerCount: plainOpponent.player_count,
+      expireDate: plainOpponent.expireDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 7 days from now if missing
       // Keep the original snake_case properties too for backward compatibility
     };
 
@@ -196,10 +205,12 @@ router.post('/', async (req, res) => {
     const contactPhone = req.body.contactPhone || req.body.contact_phone;
     const contactEmail = req.body.contactEmail || req.body.contact_email;
     const description = req.body.description;
+    const skillLevel = req.body.skillLevel || req.body.skill_level;
+    const playerCount = req.body.playerCount || req.body.player_count;
     const expireDate = req.body.expireDate || req.body.expire_date || new Date();
 
     console.log('Processed opponent parameters:', {
-      bookingId, teamName, contactPhone, contactEmail
+      bookingId, teamName, contactPhone, contactEmail, skillLevel, playerCount, expireDate
     });
 
     // Validate required fields
@@ -210,14 +221,35 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Check if booking exists
-    const booking = await Booking.findByPk(bookingId);
+    // Check if booking exists and get the match date/time
+    const booking = await Booking.findByPk(bookingId, {
+      include: [
+        {
+          model: TimeSlot,
+          attributes: ['timeSlotId', 'startTime', 'endTime']
+        }
+      ]
+    });
+
     if (!booking) {
       return res.status(404).json({
         success: false,
         message: 'Booking not found'
       });
     }
+
+    // Calculate expireDate based on the actual match date and time
+    const matchDate = new Date(booking.bookingDate);
+    const timeSlot = booking.TimeSlot;
+
+    // Parse the end time (format: "HH:MM:SS")
+    const [hours, minutes] = timeSlot.endTime.split(':').map(Number);
+
+    // Set the expire date to the end time of the match
+    const calculatedExpireDate = new Date(matchDate);
+    calculatedExpireDate.setHours(hours, minutes, 0, 0);
+
+    console.log(`Setting expireDate to match end time: ${calculatedExpireDate} (Match: ${matchDate}, End time: ${timeSlot.endTime})`);
 
     // Create opponent
     const opponent = await Opponent.create({
@@ -226,8 +258,10 @@ router.post('/', async (req, res) => {
       contact_phone: contactPhone,
       contact_email: contactEmail || null,
       description: description || null,
+      skill_level: skillLevel || 'intermediate',
+      player_count: playerCount || 5,
       status: 'searching',
-      expireDate: expireDate
+      expireDate: calculatedExpireDate
     });
 
     res.status(201).json({

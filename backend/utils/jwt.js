@@ -5,17 +5,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 /**
- * Generate a JWT token for a user
- * @param {Object} user - User object with id and role properties
+ * Generate a JWT token for an admin
+ * @param {Object} admin - Admin object with id and role properties
  * @returns {String} JWT token
  */
-const generateToken = (user) => {
+const generateToken = (admin) => {
   return jwt.sign(
-    { 
-      id: user.userId, 
-      name: user.name,
-      email: user.email,
-      role: user.role 
+    {
+      id: admin.id || admin.adminId,
+      username: admin.username,
+      name: admin.name,
+      email: admin.email,
+      role: admin.role || 'admin'
     },
     JWT_SECRET,
     {
@@ -40,4 +41,4 @@ const verifyToken = (token) => {
 module.exports = {
   generateToken,
   verifyToken
-}; 
+};

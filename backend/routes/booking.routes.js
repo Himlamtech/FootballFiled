@@ -58,4 +58,28 @@ router.post(
   bookingController.createBooking
 );
 
+/**
+ * @route   PUT /api/bookings/:id
+ * @desc    Update a booking
+ * @access  Private/Admin
+ */
+router.put(
+  '/:id',
+  authenticate,
+  isAdmin,
+  bookingController.updateBooking
+);
+
+/**
+ * @route   DELETE /api/bookings/:id
+ * @desc    Delete a booking
+ * @access  Private/Admin
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  isAdmin,
+  bookingController.deleteBooking
+);
+
 module.exports = router;

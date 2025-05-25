@@ -21,7 +21,7 @@ const Opponent = sequelize.define('Opponent', {
     allowNull: false
   },
   contact_phone: {
-    type: DataTypes.STRING(15),
+    type: DataTypes.STRING(20),
     allowNull: false
   },
   contact_email: {
@@ -33,17 +33,18 @@ const Opponent = sequelize.define('Opponent', {
     allowNull: true
   },
   skill_level: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.ENUM('beginner', 'intermediate', 'advanced'),
     allowNull: true,
-    defaultValue: 'intermediate',
-    validate: {
-      isIn: [['beginner', 'intermediate', 'advanced']]
-    }
+    defaultValue: 'intermediate'
   },
   player_count: {
     type: DataTypes.INTEGER,
     allowNull: true,
-    defaultValue: 5
+    defaultValue: 5,
+    validate: {
+      min: 1,
+      max: 22
+    }
   },
   status: {
     type: DataTypes.ENUM('searching', 'matched', 'cancelled'),
@@ -74,6 +75,14 @@ const Opponent = sequelize.define('Opponent', {
     {
       fields: ['skill_level'],
       name: 'idx_opponent_skill'
+    },
+    {
+      fields: ['expireDate'],
+      name: 'idx_opponent_expire'
+    },
+    {
+      fields: ['booking_id'],
+      name: 'idx_opponent_booking'
     }
   ]
 });
